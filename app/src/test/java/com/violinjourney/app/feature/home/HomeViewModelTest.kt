@@ -4,6 +4,7 @@ import com.violinjourney.app.core.domain.home.FakeHomeRepository
 import com.violinjourney.app.core.domain.home.HomeCatalog
 import com.violinjourney.app.core.domain.home.HomeRules
 import com.violinjourney.app.core.domain.journey.FakeJourneyRepository
+import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.journey.JourneyRoute
 import com.violinjourney.app.core.domain.journey.TaktEarning
 import com.violinjourney.app.core.domain.venue.FakeVenueStore
@@ -48,8 +49,8 @@ class HomeViewModelTest {
 
     private suspend fun earn(takts: Int) = journey.earn(TaktEarning(clock.millis(), takts, takts, 0, takts))
 
-    private fun TestScope.viewModel(): Pair<HomeViewModel, MutableList<HomeEffect>> {
-        val viewModel = HomeViewModel(home, journey, clock, Venues(venueStore, journey))
+    private fun TestScope.viewModel(config: JourneyConfig = JourneyConfig()): Pair<HomeViewModel, MutableList<HomeEffect>> {
+        val viewModel = HomeViewModel(home, journey, clock, Venues(venueStore, journey), config)
         val effects = mutableListOf<HomeEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
@@ -181,6 +182,21 @@ class HomeViewModelTest {
         viewModel.onIntent(HomeIntent.LiveHere("villa"))
         runCurrent()
         assertEquals(HomeCatalog.START_HOUSE, viewModel.state.value.house)
+    }
+
+    /**
+     * The sheet of a house says «примерно N занятий» under the plate of what is missing (spec 3.36.7, 5.18) by the numbers of the
+     * journey the graph gives — the same [JourneyConfig] as the journey's own screens — not by a constant of its own: the screens read
+     * it from [HomeUi.config], loaded or not.
+     */
+    @Test
+    fun theUiCarriesTheConfigOfTheGraph() = runTest(dispatcher) {
+        val config = JourneyConfig(taktsPerSessionHint = 250)
+        val (viewModel, _) = viewModel(config)
+        assertEquals(config, viewModel.state.value.config)
+        assertFalse("loaded", viewModel.state.value.loading)
+        // and before anything is read: the first value of the state is the screen's own
+        assertEquals(config, HomeViewModel(home, journey, clock, Venues(venueStore, journey), config).state.value.config)
     }
 
     @Test

@@ -12,9 +12,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.domain.home.HomeState
 import com.violinjourney.app.core.domain.journey.Arrival
+import com.violinjourney.app.core.domain.journey.BoughtExtra
 import com.violinjourney.app.core.domain.journey.JourneyConfig
+import com.violinjourney.app.core.domain.journey.JourneyExtra
 import com.violinjourney.app.core.domain.journey.JourneyProgress
 import com.violinjourney.app.core.domain.journey.JourneyRoute
+import com.violinjourney.app.core.domain.journey.JourneyRules
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import kotlinx.datetime.LocalDate
@@ -164,3 +167,169 @@ private fun FrenchPreview() = Journey(stateAt(JourneyRoute.indexOf("london"), 14
 @Preview(name = "Путешествие · fr 360, шрифт 1,3: число под строкой пути, если слово не встаёт рядом", locale = "fr", fontScale = 1.3f, device = "spec:width=360dp,height=640dp")
 @Composable
 private fun FrenchLargeShortPreview() = Journey(stateAt(JourneyRoute.indexOf("london"), 1_472))
+
+// The stop, the map and the passport of R7 (spec 3.36.7; journey-home.html 3–5, landscape.html «Остановка»): Vienna on 20 September.
+
+private val CREMONA = JourneyRoute.indexOf("cremona")
+
+/**
+ * The stop [index] with [balance] in the purse and the extras [bought] — as [StopViewModel] reads them: the views bought are open, the
+ * one shown is [inside] (the main view where not given) and by [day].
+ */
+private fun stopAt(index: Int, balance: Long, bought: Set<JourneyExtra> = emptySet(), day: Boolean = false, inside: Boolean? = null, fullscreen: Boolean = false): StopState {
+    val stop = JourneyRoute.stops[index]
+    val config = JourneyConfig()
+    val progress = progressAt(index, balance).copy(extras = bought.map { BoughtExtra(stop.id, it) }.toSet())
+    val mainInside = stop.views.firstOrNull()?.inside ?: false
+    val secondView = JourneyExtra.SECOND_VIEW in bought
+    return StopState(
+        loading = false,
+        stop = stop,
+        index = index,
+        totalStops = JourneyReducer.totalStops,
+        arrivedAtEpochMs = dayMs(index),
+        balance = balance,
+        offers = JourneyRules.offers(stop, progress).map { extra ->
+            val owned = extra in bought
+            ExtraOffer(extra, JourneyRules.priceOf(extra, config), owned, affordable = !owned && JourneyRules.canBuy(stop, extra, progress, config))
+        },
+        day = day && JourneyExtra.SECOND_TIME in bought,
+        inside = if (secondView) inside ?: mainInside else mainInside,
+        dayUnlocked = JourneyExtra.SECOND_TIME in bought,
+        secondViewUnlocked = secondView,
+        fullscreen = fullscreen,
+    )
+}
+
+private val BothViews = setOf(JourneyExtra.SECOND_TIME, JourneyExtra.SECOND_VIEW)
+
+@Composable
+private fun Stop(state: StopState) {
+    ViolinTheme {
+        CompositionLocalProvider(LocalReduceMotion provides true, LocalHomeLook provides Home) {
+            Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).padding(top = StatusBar)) {
+                StopScreen(state, onIntent = {})
+            }
+        }
+    }
+}
+
+@Composable
+private fun RouteMap(state: JourneyState) {
+    ViolinTheme {
+        CompositionLocalProvider(LocalReduceMotion provides true, LocalHomeLook provides Home) {
+            Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).padding(top = StatusBar)) {
+                MapScreen(state, onIntent = {})
+            }
+        }
+    }
+}
+
+@Preview(name = "Остановка · ничего не куплено: цены в капсулах, плашек на открытке нет, «Играть здесь · Live · Золотой зал» и «Домой»", locale = "ru", device = "spec:width=412dp,height=892dp")
+@Composable
+private fun StopPreview() = Stop(stopAt(VIENNA, 47_884))
+
+@Preview(name = "Остановка · куплены оба вида: плашки «вечер | день» и «снаружи | внутри» в ряд на открытке, «✓ открыто»", locale = "ru", device = "spec:width=412dp,height=892dp")
+@Composable
+private fun StopBoughtPreview() = Stop(stopAt(VIENNA, 47_884, BothViews, day = true))
+
+@Preview(name = "Остановка · de 360: две плашки не встают в ряд рядом со значком — вторая над первой", locale = "de", device = "spec:width=360dp,height=640dp")
+@Composable
+private fun StopTwoPlatesGermanPreview() = Stop(stopAt(VIENNA, 47_884, BothViews))
+
+@Preview(name = "Остановка · не хватает на второй вид: «400» словом серым, без капсулы", locale = "ru", device = "spec:width=412dp,height=892dp")
+@Composable
+private fun StopShortPreview() = Stop(stopAt(VIENNA, 300))
+
+@Preview(name = "Остановка · Кремона: «Второй вид · вид снаружи», «Live · мастерская»", locale = "ru", device = "spec:width=412dp,height=892dp")
+@Composable
+private fun StopCremonaPreview() = Stop(stopAt(CREMONA, 47_884))
+
+@Preview(name = "Остановка · landscape 892 × 412: открытка 180 и строка «Играть здесь» · «Домой» слева, слова и дополнения справа", locale = "ru", device = "spec:width=892dp,height=412dp")
+@Composable
+private fun StopLandscapePreview() = Stop(stopAt(VIENNA, 47_884, BothViews))
+
+@Preview(name = "Остановка · landscape 603 × 308 (эмулятор за вырезом): кнопки 48, открытка над затуханием зоны", locale = "ru", device = "spec:width=603dp,height=308dp")
+@Composable
+private fun StopLandscape603Preview() = Stop(stopAt(VIENNA, 47_884, BothViews))
+
+@Preview(name = "Остановка · it, landscape 603 × 308: «✓ sbloccato» под словами строки — «momento» рядом с ним рвался", locale = "it", device = "spec:width=603dp,height=308dp")
+@Composable
+private fun StopLandscape603ItalianPreview() = Stop(stopAt(VIENNA, 47_884, setOf(JourneyExtra.SECOND_TIME)))
+
+@Preview(name = "Остановка · ru 360: две плашки — вторая над первой (ряд 298 при месте 256 рядом со значком)", locale = "ru", device = "spec:width=360dp,height=640dp")
+@Composable
+private fun StopTwoPlatesRussianPreview() = Stop(stopAt(VIENNA, 47_884, BothViews))
+
+@Preview(name = "Остановка · 360 × 640, шрифт 1,3: строка места переносится, «Live · Золотой зал» в одну строку", locale = "ru", fontScale = 1.3f, device = "spec:width=360dp,height=640dp")
+@Composable
+private fun StopSmallLargePreview() = Stop(stopAt(VIENNA, 300, setOf(JourneyExtra.SECOND_TIME)))
+
+@Preview(name = "Остановка · полный экран: плашки внизу на стекле", locale = "ru", device = "spec:width=412dp,height=892dp")
+@Composable
+private fun StopFullscreenPreview() = Stop(stopAt(VIENNA, 47_884, BothViews, fullscreen = true))
+
+@Preview(name = "Карта · Вена: карточка «вы здесь · до Праги хватает» под схемой", locale = "ru", device = "spec:width=412dp,height=892dp")
+@Composable
+private fun MapPreview() = RouteMap(Enough)
+
+@Preview(name = "Карта · не хватает: «вы здесь · до Праги 1 128»", locale = "ru", device = "spec:width=412dp,height=892dp")
+@Composable
+private fun MapShortPreview() = RouteMap(Short)
+
+@Preview(name = "Карта · дома: «Дом», «вы здесь · до Кремоны хватает»", locale = "ru", device = "spec:width=412dp,height=892dp")
+@Composable
+private fun MapHomePreview() = RouteMap(AtHome)
+
+@Preview(name = "Карта · маршрут пройден: «Сидней», «вы здесь · маршрут пройден»", locale = "ru", device = "spec:width=412dp,height=892dp")
+@Composable
+private fun MapTourDonePreview() = RouteMap(TourDone)
+
+@Preview(name = "Карта · 360 × 640: Сидней и Буэнос-Айрес над карточкой", locale = "ru", device = "spec:width=360dp,height=640dp")
+@Composable
+private fun MapSmallPreview() = RouteMap(Enough)
+
+@Preview(name = "Карта · landscape 892 × 412: карточка 360 слева снизу, схема правее", locale = "ru", device = "spec:width=892dp,height=412dp")
+@Composable
+private fun MapLandscapePreview() = RouteMap(Enough)
+
+@Preview(name = "Паспорт · три в ряд по 96, у Праги — «следующая»", locale = "ru", device = "spec:width=412dp,height=892dp")
+@Composable
+private fun PassportPreview() {
+    ViolinTheme {
+        CompositionLocalProvider(LocalReduceMotion provides true) {
+            Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).padding(top = StatusBar)) {
+                PassportScreen(Enough, onIntent = {})
+            }
+        }
+    }
+}
+
+@Preview(name = "Паспорт · 360 × 640, сувенир у Кремоны: наклейка выходит за ячейку и не срезана; «Санкт-Петербург» — 11 sp целиком", locale = "ru", device = "spec:width=360dp,height=640dp")
+@Composable
+private fun PassportSouvenirPreview() {
+    val souvenir = JourneyReducer.stateOf(
+        progressAt(VIENNA, 47_884).copy(extras = setOf(BoughtExtra(JourneyRoute.stops[CREMONA].id, JourneyExtra.SOUVENIR))),
+        null,
+        JourneyConfig(),
+    )
+    ViolinTheme {
+        CompositionLocalProvider(LocalReduceMotion provides true) {
+            Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).padding(top = StatusBar)) {
+                PassportScreen(souvenir, onIntent = {})
+            }
+        }
+    }
+}
+
+@Preview(name = "Паспорт · 360 × 640, шрифт 1,3: «Санкт-Петербург» мельче до 10 sp, одной строкой, дальше — многоточие", locale = "ru", fontScale = 1.3f, device = "spec:width=360dp,height=640dp")
+@Composable
+private fun PassportSmallLargePreview() {
+    ViolinTheme {
+        CompositionLocalProvider(LocalReduceMotion provides true) {
+            Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).padding(top = StatusBar)) {
+                PassportScreen(Enough, onIntent = {})
+            }
+        }
+    }
+}

@@ -615,7 +615,7 @@
         <item>Mozart\'s house and the fortress above the city</item>
         <item>Musikverein, the Golden Hall</item>
         <item>Rudolfinum</item>
-        <item>Gewandhaus · St Thomas Church</item>
+        <item>Gewandhaus, St Thomas Church</item>
         <item>Philharmonie</item>
         <item>Concertgebouw</item>
         <item>Opéra Garnier</item>
@@ -731,11 +731,18 @@
     <string name="journey_extra_view">Second view</string>
     <string name="journey_extra_souvenir">Souvenir for the passport</string>
     <string name="journey_extra_bought">unlocked</string>
+    <string name="journey_extras_hint">small goals on the road</string>
+    <string name="journey_extra_time_note">day instead of evening</string>
+    <string name="journey_extra_view_inside">the view from inside</string>
+    <string name="journey_extra_view_outside">the view from outside</string>
+    <string name="journey_extra_souvenir_note">a sticker beside the stamp</string>
+    <string name="journey_go_home">Home</string>
     <string name="journey_extra_buy">Unlock for %1$s</string>
     <string name="journey_fullscreen">Full screen</string>
     <string name="journey_fullscreen_close">Exit full screen</string>
     <string name="journey_fullscreen_hint">Drag sideways to look around · pinch to zoom in</string>
     <string name="journey_passport_soon">soon</string>
+    <string name="journey_passport_next">next</string>
     <string name="journey_passport_count">%1$d of %2$d</string>
     <string name="journey_earned">+%1$s</string>
     <string name="journey_earned_detail">%1$s + %2$s for time</string>
@@ -750,6 +757,9 @@
     <string name="journey_stamp_description">Stamp: %1$s</string>
     <string name="journey_stamp_locked_description">%1$s — still ahead</string>
     <string name="journey_map_description">Route map: visited %1$d of %2$d</string>
+    <string name="journey_here">you are here</string>
+    <string name="journey_here_enough">enough to reach %1$s</string>
+    <string name="journey_here_end">route complete</string>
     <string name="section_pieces">Pieces</string>
     <string name="section_scales">Scales</string>
     <string name="section_etudes">Études</string>
@@ -1065,7 +1075,7 @@
     <string name="venue_home">At home</string>
     <string name="venue_pair">%1$s · %2$s</string>
     <string name="venue_play_here">Play here</string>
-    <string name="venue_play_here_hint">Live will open here; the choice is kept.</string>
+    <string name="venue_play_here_caption">Live · %1$s</string>
     <string-array name="venue_halls">
         <item></item>
         <item>workshop</item>

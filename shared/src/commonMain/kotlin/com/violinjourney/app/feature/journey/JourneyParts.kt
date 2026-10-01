@@ -2,10 +2,12 @@ package com.violinjourney.app.feature.journey
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -13,7 +15,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,6 +34,7 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.PathParser
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -59,6 +64,7 @@ import com.violinjourney.app.shared.resources.takt_few
 import com.violinjourney.app.shared.resources.takt_icon
 import com.violinjourney.app.shared.resources.takt_many
 import com.violinjourney.app.shared.resources.takt_one
+import com.violinjourney.app.shared.resources.venue_halls
 import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -81,6 +87,13 @@ fun factOf(index: Int): String = stringArrayResource(Res.array.journey_facts).ge
 
 @Composable
 fun roadOf(index: Int): String = stringArrayResource(Res.array.journey_roads).getOrElse(index) { "" }
+
+/**
+ * The hall of the stop [index] by its short name, in the nominative — «Золотой зал», «мастерская» of Cremona (spec 3.27, 3.36.7: the
+ * caption «Live · Золотой зал» of «Играть здесь»); empty for home.
+ */
+@Composable
+fun hallOf(index: Int): String = stringArrayResource(Res.array.venue_halls).getOrElse(index) { "" }
 
 /** «1 640 тактов», «1 такт», «2 такта». */
 @Composable
@@ -175,12 +188,22 @@ object StampFit {
     fun frame(room: Dp): Dp = room.coerceIn(FrameMin, FrameMax)
 }
 
+/** The size of [GlassSquare] (spec 5.29 R7, «Стекло на картинах»): what lies beside it on a picture leaves it its room. */
+object GlassSquareDefaults {
+    /** Seen and pressed: a square of 48. */
+    val Size = 48.dp
+}
+
 // A square of glass over a picture and the purse in a pill (spec 5.29 R7, «Стекло на картинах», «Общее»).
-private val GlassSquareSize = 48.dp
 private val GlassSquareIcon = 24.dp
 private val BalanceHeight = 34.dp
 private val BalanceSide = 12.dp
 private val BalanceSign = 15.dp
+
+// The outlined pill of a price and of «Жить здесь» (spec 5.29 R7: «контурные 40 с касанием 48»).
+private val PillHeight = 40.dp
+private val PillBorder = 1.5.dp
+private val PillSide = 14.dp
 
 /**
  * A square of smoked glass over a picture (spec 5.29 R7): 48, rounded 12, glass 0.72, the [icon] of 24 in the colour of the words —
@@ -191,7 +214,7 @@ private val BalanceSign = 15.dp
 fun GlassSquare(icon: ImageVector, contentDescription: String?, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .size(GlassSquareSize)
+            .size(GlassSquareDefaults.Size)
             .clip(AppShapes.S)
             .glass(AppShapes.S)
             .then(if (onClick != null) Modifier.clickable(onClickLabel = contentDescription, role = Role.Button, onClick = onClick) else Modifier),
@@ -221,6 +244,41 @@ fun BalancePill(balance: Long, modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, lineHeight = 18.sp, fontWeight = FontWeight.ExtraBold),
         )
     }
+}
+
+/**
+ * A small outlined button in a row (spec 3.36.7, 5.29 R7): a capsule of 40 with a frame of 1.5 in the colour of the borders, pressed
+ * over 48 — the slot it takes in its row ([minimumInteractiveComponentSize]), the strips over and under the capsule its own too. The
+ * price of an extra of a stop, «Жить здесь» of a home of «Дома»; its words are the [content]'s, 14 sp, and a reader hears them as a
+ * button — unless its row speaks for it (an extra of a stop is one phrase).
+ */
+@Composable
+internal fun PillButton(onClick: () -> Unit, modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
+    Row(
+        modifier = modifier
+            .minimumInteractiveComponentSize()
+            .heightIn(min = PillHeight)
+            .clip(CircleShape)
+            .border(PillBorder, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = PillSide),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) { content() }
+    }
+}
+
+/**
+ * A [PillButton] whose touch over and under its capsule lies in the fields of its row (spec 5.29 R7, «Остановка»: a row of 60 with
+ * fields of 8 and a capsule of 40 — the mockup's `.addon`, the capsule 10 from the edges of the row): laid out as high as its capsule,
+ * with the strips of its 48 over and under it standing in those fields, so a row with a price is as high as a row with «открыто» or
+ * with a price in words, and its words keep their fields of 8 at a large font. Pressed over 48 as before: the strips stay its own.
+ */
+internal fun Modifier.touchInRowFields(): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints.copy(minHeight = 0))
+    val air = ((placeable.height - PillHeight.roundToPx()) / 2).coerceAtLeast(0)
+    layout(placeable.width, placeable.height - 2 * air) { placeable.place(0, -air) }
 }
 
 /** Inks of the stamps (handoff `tokens`): four, in turn — none of them the green or the amber of a zone. */

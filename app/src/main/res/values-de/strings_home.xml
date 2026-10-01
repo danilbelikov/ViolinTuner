@@ -19,7 +19,6 @@
     <string name="home_gift_title">Das erste Geschenk wartet im Laden</string>
     <string name="home_gift_text">Ein Ständer – die Geige kommt aus dem Kasten. Kostenlos.</string>
     <string name="home_gift_take">Abholen</string>
-    <string name="home_brought">Von der Reise mitgebracht</string>
     <string name="home_next_house">Nächstes Haus</string>
     <string name="home_all_houses">Alle Häuser</string>
     <string name="home_have">%1$s / %2$s</string>
@@ -83,6 +82,7 @@
     <string name="houses_title">Häuser</string>
     <string name="houses_live_here">hier wohne ich</string>
     <string name="houses_live">Hier wohnen</string>
+    <string name="houses_enough">reicht · %1$s</string>
     <string name="houses_of">Haus %1$d von %2$d</string>
     <string name="houses_news">Was neu ist</string>
     <string name="houses_moving_text">Alle Dinge ziehen von selbst um und kommen an dieselben Plätze. Das frühere Zuhause bleibt – Sie können jederzeit zurück.</string>

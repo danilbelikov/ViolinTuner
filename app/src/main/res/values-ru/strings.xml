@@ -615,7 +615,7 @@
         <item>Дом Моцарта и крепость над городом</item>
         <item>Музикферайн, Золотой зал</item>
         <item>Рудольфинум</item>
-        <item>Гевандхаус · церковь Св. Фомы</item>
+        <item>Гевандхаус, церковь Св. Фомы</item>
         <item>Филармония</item>
         <item>Консертгебау</item>
         <item>Опера Гарнье</item>
@@ -731,11 +731,18 @@
     <string name="journey_extra_view">Второй вид</string>
     <string name="journey_extra_souvenir">Сувенир в паспорт</string>
     <string name="journey_extra_bought">открыто</string>
+    <string name="journey_extras_hint">маленькие цели в дороге</string>
+    <string name="journey_extra_time_note">день вместо вечера</string>
+    <string name="journey_extra_view_inside">вид изнутри</string>
+    <string name="journey_extra_view_outside">вид снаружи</string>
+    <string name="journey_extra_souvenir_note">наклейка рядом со штампом</string>
+    <string name="journey_go_home">Домой</string>
     <string name="journey_extra_buy">Открыть за %1$s</string>
     <string name="journey_fullscreen">На весь экран</string>
     <string name="journey_fullscreen_close">Свернуть</string>
     <string name="journey_fullscreen_hint">Потяните в сторону — осмотреться · щипок — ближе</string>
     <string name="journey_passport_soon">скоро</string>
+    <string name="journey_passport_next">следующая</string>
     <string name="journey_passport_count">%1$d из %2$d</string>
     <string name="journey_earned">+%1$s</string>
     <string name="journey_earned_detail">%1$s + %2$s за время</string>
@@ -750,6 +757,9 @@
     <string name="journey_stamp_description">Штамп: %1$s</string>
     <string name="journey_stamp_locked_description">%1$s — ещё впереди</string>
     <string name="journey_map_description">Карта маршрута: пройдено %1$d из %2$d</string>
+    <string name="journey_here">вы здесь</string>
+    <string name="journey_here_enough">до %1$s хватает</string>
+    <string name="journey_here_end">маршрут пройден</string>
     <string name="section_pieces">Произведения</string>
     <string name="section_scales">Гаммы</string>
     <string name="section_etudes">Этюды</string>
@@ -1065,7 +1075,7 @@
     <string name="venue_home">Дома</string>
     <string name="venue_pair">%1$s · %2$s</string>
     <string name="venue_play_here">Играть здесь</string>
-    <string name="venue_play_here_hint">Live откроется здесь; выбор запомнится.</string>
+    <string name="venue_play_here_caption">Live · %1$s</string>
     <string-array name="venue_halls">
         <item></item>
         <item>мастерская</item>

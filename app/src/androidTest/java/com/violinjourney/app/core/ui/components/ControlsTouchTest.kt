@@ -6,11 +6,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -27,6 +31,7 @@ import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
@@ -35,10 +40,12 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.feature.home.TwoWay
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -174,6 +181,41 @@ class ControlsTouchTest {
         compose.runOnIdle { assertEquals(1, presses) }
     }
 
+    /**
+     * «Комната | Снаружи» on a picture (spec 3.36.7, 5.29 R7): the capsule seen is 40, but the switch lays itself out 48 high and its two
+     * tabs are pressed over the whole of it — the strip under the capsule is the switch's, not the neighbour's under it — with the
+     * widening of touch targets off, so only its own 48 can catch it. Each half is a tab of one group, the chosen one selected.
+     */
+    @Test
+    fun aTwoWayOnAPictureAnswersOverFortyEight() {
+        val chosen = mutableListOf<Boolean>()
+        compose.setContent {
+            val base = LocalViewConfiguration.current
+            val noWidening = remember(base) { object : ViewConfiguration by base { override val minimumTouchTargetSize = DpSize.Zero } }
+            CompositionLocalProvider(LocalViewConfiguration provides noWidening) {
+                ViolinTheme {
+                    Column(Modifier.fillMaxWidth()) {
+                        Box(Modifier.testTag(SLOT)) { TwoWay(ROOM, OUTSIDE, secondChosen = false, onChoose = { chosen += it }) }
+                        Box(Modifier.fillMaxWidth().height(48.dp).testTag(NEIGHBOUR).clickable { neighbour++ })
+                    }
+                }
+            }
+        }
+        compose.onNodeWithTag(SLOT).assertHeightIsEqualTo(48.dp)
+        val room = compose.onNode(hasText(ROOM) and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab))
+        val outside = compose.onNode(hasText(OUTSIDE) and SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab))
+        room.assertIsSelected().assertHeightIsAtLeast(48.dp)
+        outside.assertIsNotSelected()
+        // 2 dp over the bottom of the 48: under the capsule of 40, which ends 4 over it
+        val slot = compose.onNodeWithTag(SLOT).getUnclippedBoundsInRoot()
+        val bounds = outside.getUnclippedBoundsInRoot()
+        compose.onRoot().performTouchInput { click(Offset(((bounds.left + bounds.right) / 2).toPx(), (slot.bottom - 2.dp).toPx())) }
+        compose.runOnIdle {
+            assertEquals("the strip under the capsule is the switch's", listOf(true), chosen)
+            assertEquals("not the neighbour's", 0, neighbour)
+        }
+    }
+
     @Test
     fun aDimmedButtonSaysWhyAndIsNotPressed() {
         compose.setContent {
@@ -215,6 +257,8 @@ class ControlsTouchTest {
         const val NEIGHBOUR = "neighbour"
         const val REASON = "Чтобы записать дубль, нужен доступ к микрофону."
         const val GRANT = "Разрешить доступ"
+        const val ROOM = "Комната"
+        const val OUTSIDE = "Снаружи"
         /** What a long press does, as TalkBack puts it in «дважды нажмите и удерживайте, чтобы …»: a verb, not a sentence of its own. */
         const val REMOVE = "Удалить"
     }

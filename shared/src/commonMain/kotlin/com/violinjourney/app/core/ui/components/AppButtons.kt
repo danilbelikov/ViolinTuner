@@ -207,18 +207,19 @@ fun appButtonBeside(text: String, width: Dp, style: AppButtonStyle, compact: Boo
  * too): the size of their styles where the widest word of each fits its button, else all of them 0.5 sp smaller together down to
  * [minSp] ([ButtonFit.sharedSize]). Null where not even [minSp] keeps every word whole: the caller stands the buttons one under the
  * other. For «Без тональности · Готово» of the sheet «Тональность» on a phone of 360 with a large font (5.29 R4). Words are split
- * at spaces only: a non-breaking space keeps its two words one.
+ * at spaces only: a non-breaking space keeps its two words one. [icons] — each button has an icon before its words, its size by the
+ * style with its gap: «Лавка» and «Обставить» of the zone of the home (5.29 R7); [AppButtonStyle.Danger] brings its bin anyway.
  */
 @Composable
-fun appButtonsSharedSize(buttons: List<Pair<String, AppButtonStyle>>, width: Dp, compact: Boolean, minSp: Float): TextUnit? {
+fun appButtonsSharedSize(buttons: List<Pair<String, AppButtonStyle>>, width: Dp, compact: Boolean, minSp: Float, icons: Boolean = false): TextUnit? {
     val looks = buttons.map { (_, style) -> lookOf(style, compact) }
     val words = looks.map { wordsStyleOf(it) }
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
-    return remember(buttons, width, looks, words, minSp, measurer, density) {
+    return remember(buttons, width, looks, words, minSp, icons, measurer, density) {
         val rooms = buttons.mapIndexed { i, (_, style) ->
-            val bin = if (style == AppButtonStyle.Danger) looks[i].icon + IconSizes.ButtonGap else 0.dp
-            with(density) { (width - looks[i].padding * 2 - bin - OneLineSlack).toPx() }
+            val icon = if (icons || style == AppButtonStyle.Danger) looks[i].icon + IconSizes.ButtonGap else 0.dp
+            with(density) { (width - looks[i].padding * 2 - icon - OneLineSlack).toPx() }
         }
         val split = buttons.map { (text, _) -> text.split(' ', '\n', '\t').filter { it.isNotEmpty() } }
         ButtonFit.sharedSize(maxSp = looks.minOf { it.fontSize.value }, minSp = minSp) { sizeSp ->

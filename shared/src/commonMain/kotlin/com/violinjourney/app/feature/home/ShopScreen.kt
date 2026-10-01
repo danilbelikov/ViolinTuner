@@ -75,6 +75,7 @@ import com.violinjourney.app.feature.home.art.HomePicture
 import com.violinjourney.app.feature.home.art.CARD_MAX_SCALE
 import com.violinjourney.app.feature.home.art.ItemThumb
 import com.violinjourney.app.feature.home.art.rememberHomeTime
+import com.violinjourney.app.feature.journey.BalancePill
 import com.violinjourney.app.feature.journey.JourneyTopBar
 import com.violinjourney.app.feature.journey.TaktAmount
 import com.violinjourney.app.feature.journey.art.SceneMode
@@ -259,7 +260,7 @@ fun ShopScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier = 
     val today = rememberHomeTime().date
     val tags = remember(ui.home, ui.progress, ui.house, today) { ShelfTags(ui.home, ui.progress, ui.house, today) }
     Column(modifier.fillMaxSize().background(colors.surface), horizontalAlignment = Alignment.CenterHorizontally) {
-        JourneyTopBar(stringResource(Res.string.home_shop), onBack = { onIntent(HomeIntent.BackClicked) }) { Balance(ui) }
+        JourneyTopBar(stringResource(Res.string.home_shop), onBack = { onIntent(HomeIntent.BackClicked) }) { if (!ui.loading) BalancePill(ui.balance) }
         if (ui.loading) return@Column
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(selected = ui.category == null, onClick = { onIntent(HomeIntent.CategorySelected(null)) }, label = { Text(stringResource(Res.string.shop_all)) })
@@ -458,7 +459,8 @@ fun ArrangeScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier
     val colors = MaterialTheme.colorScheme
     Column(modifier.fillMaxSize().background(colors.surface), horizontalAlignment = Alignment.CenterHorizontally) {
         JourneyTopBar(stringResource(Res.string.arrange_title), onBack = { onIntent(HomeIntent.BackClicked) }) {
-            TwoWay(stringResource(Res.string.home_room), stringResource(Res.string.home_outside), ui.outside, { onIntent(HomeIntent.SideSelected(it)) })
+            // no picture under it in the bar: the solid plate it always had (spec 3.36.7, «Обставить»)
+            TwoWay(stringResource(Res.string.home_room), stringResource(Res.string.home_outside), ui.outside, { onIntent(HomeIntent.SideSelected(it)) }, onPicture = false)
         }
         if (ui.loading) return@Column
         HomePicture(

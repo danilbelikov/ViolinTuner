@@ -1,6 +1,7 @@
 package com.violinjourney.app.feature.home
 
 import com.violinjourney.app.core.domain.home.HomeRepository
+import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.journey.JourneyRepository
 import com.violinjourney.app.core.domain.venue.Venues
 import com.violinjourney.app.core.time.WallClock
@@ -14,4 +15,5 @@ class HiltHomeViewModel @Inject constructor(
     journey: JourneyRepository,
     clock: WallClock,
     venues: Venues,
-) : HomeViewModel(home, journey, clock, venues)
+    config: JourneyConfig,
+) : HomeViewModel(home, journey, clock, venues, config)

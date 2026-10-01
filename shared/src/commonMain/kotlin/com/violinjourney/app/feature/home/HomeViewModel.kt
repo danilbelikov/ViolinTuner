@@ -6,6 +6,7 @@ import com.violinjourney.app.core.domain.home.HomeCatalog
 import com.violinjourney.app.core.domain.home.HomeRepository
 import com.violinjourney.app.core.domain.home.HomeRules
 import com.violinjourney.app.core.domain.home.HomeState
+import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.journey.JourneyProgress
 import com.violinjourney.app.core.domain.journey.JourneyRepository
 import com.violinjourney.app.core.domain.venue.Venues
@@ -22,15 +23,21 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** The home: what stands in it, the shop with its trying-on, the wardrobe, the homes (spec 3.24). */
+/**
+ * The home: what stands in it, the shop with its trying-on, the wardrobe, the homes (spec 3.24). [config] — the numbers of the journey:
+ * the hint «примерно N занятий» of the sheet of a house (3.36.7), carried to the screens in [HomeUi.config].
+ */
 open class HomeViewModel(
     private val home: HomeRepository,
     journey: JourneyRepository,
     private val clock: WallClock,
     private val venues: Venues,
+    config: JourneyConfig,
 ) : ViewModel() {
     /** What only the screen decides. */
-    private val look = MutableStateFlow(HomeUi(loading = true, home = HomeState.EMPTY, progress = JourneyProgress.EMPTY, house = HomeCatalog.START_HOUSE))
+    private val look = MutableStateFlow(
+        HomeUi(loading = true, home = HomeState.EMPTY, progress = JourneyProgress.EMPTY, house = HomeCatalog.START_HOUSE, config = config),
+    )
     private var reduceMotion = false
 
     // intents read these, not state.value: it lags a frame behind the stores

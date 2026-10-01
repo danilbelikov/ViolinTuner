@@ -82,6 +82,19 @@ class LocalizationTest {
     }
 
     /**
+     * The place of a stop stands in one line with its country and its count, joined by « · » (spec 3.36.7: «Музикферайн, Золотой
+     * зал · Австрия · 4 из 16 · с 20 сентября»): a « · » inside a place would split it there — Leipzig's two halls are joined by a
+     * comma (in Chinese and Japanese by their own «，» and «、»), in every language.
+     */
+    @Test
+    fun `no place of the journey holds the separator of its line`() {
+        val problems = languages().flatMap { (tag, dir) ->
+            read(dir).arrays.getValue(PLACES).withIndex().filter { (_, place) -> SEPARATOR in place }.map { (i, place) -> "$tag: «$PLACES»[$i] = «$place»" }
+        }
+        assertTrue(problems.joinToString("\n", prefix = "${problems.size} places with « $SEPARATOR »:\n"), problems.isEmpty())
+    }
+
+    /**
      * Android takes a double quote without `\` for a mark that keeps spaces and drops it from the text; the copy the
      * shared code and iOS read keeps it, so iOS would show quotes Android never does. An escape the copy cannot undo is
      * refused by the copy itself (`syncComposeStrings` in shared/build.gradle.kts); a bare quote is Android's syntax too,
@@ -96,5 +109,10 @@ class LocalizationTest {
                 texts.arrays.filterValues { items -> items.any { bare.containsMatchIn(it) } }.keys.map { "$tag: array «$it»" }
         }
         assertTrue(problems.joinToString("\n", prefix = "${problems.size} texts with a bare double quote:\n"), problems.isEmpty())
+    }
+
+    private companion object {
+        const val PLACES = "journey_places"
+        const val SEPARATOR = '·'
     }
 }

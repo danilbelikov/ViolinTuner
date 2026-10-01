@@ -615,7 +615,7 @@
         <item>モーツァルトの生家と街を見下ろす城塞</item>
         <item>楽友協会、黄金のホール</item>
         <item>ルドルフィヌム</item>
-        <item>ゲヴァントハウス · 聖トーマス教会</item>
+        <item>ゲヴァントハウス、聖トーマス教会</item>
         <item>フィルハーモニー</item>
         <item>コンセルトヘボウ</item>
         <item>オペラ・ガルニエ</item>
@@ -731,11 +731,18 @@
     <string name="journey_extra_view">もうひとつの眺め</string>
     <string name="journey_extra_souvenir">パスポートに貼るおみやげ</string>
     <string name="journey_extra_bought">入手済み</string>
+    <string name="journey_extras_hint">旅の小さな目標</string>
+    <string name="journey_extra_time_note">夕方のかわりに昼</string>
+    <string name="journey_extra_view_inside">中からの眺め</string>
+    <string name="journey_extra_view_outside">外からの眺め</string>
+    <string name="journey_extra_souvenir_note">スタンプの横に貼るシール</string>
+    <string name="journey_go_home">家へ</string>
     <string name="journey_extra_buy">%1$s で開く</string>
     <string name="journey_fullscreen">全画面</string>
     <string name="journey_fullscreen_close">全画面を終了</string>
     <string name="journey_fullscreen_hint">横にドラッグで見回す · ピンチで拡大</string>
     <string name="journey_passport_soon">もうすぐ</string>
+    <string name="journey_passport_next">次</string>
     <string name="journey_passport_count">%1$d / %2$d</string>
     <string name="journey_earned">+%1$s</string>
     <string name="journey_earned_detail">%1$s + 時間の分 %2$s</string>
@@ -750,6 +757,9 @@
     <string name="journey_stamp_description">スタンプ：%1$s</string>
     <string name="journey_stamp_locked_description">%1$s — まだこの先</string>
     <string name="journey_map_description">旅の地図：%2$d のうち %1$d を通過</string>
+    <string name="journey_here">現在地</string>
+    <string name="journey_here_enough">%1$sまで行けます</string>
+    <string name="journey_here_end">旅路を巡り終えました</string>
     <string name="section_pieces">曲</string>
     <string name="section_scales">音階</string>
     <string name="section_etudes">練習曲</string>
@@ -1065,7 +1075,7 @@
     <string name="venue_home">家</string>
     <string name="venue_pair">%1$s · %2$s</string>
     <string name="venue_play_here">ここで弾く</string>
-    <string name="venue_play_here_hint">Live はここで開きます。選んだ場所は保存されます。</string>
+    <string name="venue_play_here_caption">Live · %1$s</string>
     <string-array name="venue_halls">
         <item></item>
         <item>工房</item>

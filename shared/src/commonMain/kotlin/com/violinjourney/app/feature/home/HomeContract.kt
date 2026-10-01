@@ -4,6 +4,7 @@ import com.violinjourney.app.core.domain.home.HomeGroup
 import com.violinjourney.app.core.domain.home.HomeHouse
 import com.violinjourney.app.core.domain.home.HomeItem
 import com.violinjourney.app.core.domain.home.HomeState
+import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.journey.JourneyProgress
 import com.violinjourney.app.feature.journey.art.SceneMode
 
@@ -30,6 +31,11 @@ data class HomeUi(
     val moving: HomeHouse? = null,
     /** The home alone on the whole screen, seen whole (spec 3.25). */
     val fullscreen: Boolean = false,
+    /**
+     * The numbers of the journey, as the graph gives them: «примерно N занятий» under the plate of what is missing in the sheet of a
+     * house (spec 3.36.7, 5.18 — [com.violinjourney.app.core.domain.journey.JourneyRules.sessionsLeft]).
+     */
+    val config: JourneyConfig = JourneyConfig(),
 ) {
     val balance: Long get() = progress.balance
 }

@@ -11,14 +11,14 @@ import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,6 +42,7 @@ import com.violinjourney.app.core.ui.components.KeepScreenOn
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
+import com.violinjourney.app.feature.home.TwoWay
 import com.violinjourney.app.feature.journey.art.Postcard
 import com.violinjourney.app.feature.journey.art.SceneFrame
 import com.violinjourney.app.feature.journey.art.SceneMode
@@ -60,6 +61,9 @@ import com.violinjourney.app.shared.resources.journey_mode_outside
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 
+/** Between the plates of the views at the bottom of the whole screen (spec 3.36.7): a plate is 48 high, so in two rows they are 8 apart. */
+private val PlatesGap = 8.dp
+
 /**
  * The postcard alone on the whole screen (spec 3.23). It opens at the widest view the scene's frame
  * still covers: a place drawn for the whole screen — whole by its width, the card's band in the
@@ -69,6 +73,7 @@ import org.jetbrains.compose.resources.stringResource
  * shown. A double tap walks round the zooms. The panel leaves after a few seconds and comes back on
  * a tap, as on the music stand; the screen stays on.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun FullscreenPostcard(state: StopState, city: String, onIntent: (StopIntent) -> Unit, modifier: Modifier = Modifier) {
     val reduce = LocalReduceMotion.current
@@ -152,16 +157,20 @@ internal fun FullscreenPostcard(state: StopState, city: String, onIntent: (StopI
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     if (state.dayUnlocked || state.secondViewUnlocked) {
-                        val chip = FilterChipDefaults.filterChipColors(labelColor = Color.White, containerColor = Color.Black.copy(alpha = 0.35f))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        // the plates of the postcard, on the glass here too (spec 3.36.7): a touch keeps the panel up a while longer
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(PlatesGap)) {
                             fun touched(intent: StopIntent) { touches++; onIntent(intent) }
                             if (state.dayUnlocked) {
-                                FilterChip(selected = !state.day, onClick = { touched(StopIntent.DaySelected(false)) }, label = { Text(stringResource(Res.string.journey_mode_evening)) }, colors = chip)
-                                FilterChip(selected = state.day, onClick = { touched(StopIntent.DaySelected(true)) }, label = { Text(stringResource(Res.string.journey_mode_day)) }, colors = chip)
+                                TwoWay(
+                                    stringResource(Res.string.journey_mode_evening), stringResource(Res.string.journey_mode_day), state.day,
+                                    onChoose = { touched(StopIntent.DaySelected(it)) },
+                                )
                             }
                             if (state.secondViewUnlocked) {
-                                FilterChip(selected = !state.inside, onClick = { touched(StopIntent.InsideSelected(false)) }, label = { Text(stringResource(Res.string.journey_mode_outside)) }, colors = chip)
-                                FilterChip(selected = state.inside, onClick = { touched(StopIntent.InsideSelected(true)) }, label = { Text(stringResource(Res.string.journey_mode_inside)) }, colors = chip)
+                                TwoWay(
+                                    stringResource(Res.string.journey_mode_outside), stringResource(Res.string.journey_mode_inside), state.inside,
+                                    onChoose = { touched(StopIntent.InsideSelected(it)) },
+                                )
                             }
                         }
                     }

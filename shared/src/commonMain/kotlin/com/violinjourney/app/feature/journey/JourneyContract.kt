@@ -141,7 +141,7 @@ sealed interface StopIntent {
     /** «Играть здесь»: go to this city; Live opens on its stage (spec 3.27). */
     data object PlayHereClicked : StopIntent
 
-    /** The round door beside it: go home. */
+    /** «Домой» under it (spec 3.36.7; the round door before R7): go home, through its title card. */
     data object HomeClicked : StopIntent
 }
 

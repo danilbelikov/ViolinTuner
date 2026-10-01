@@ -442,7 +442,7 @@ private fun shareViewModel(graph: IosGraph, texts: IosTexts) = ShareViewModel(
     analytics = graph.analytics, io = graph.io,
 )
 
-private fun homeViewModel(graph: IosGraph) = HomeViewModel(graph.home, graph.journey, graph.clock, graph.venues)
+private fun homeViewModel(graph: IosGraph) = HomeViewModel(graph.home, graph.journey, graph.clock, graph.venues, graph.journeyConfig)
 
 private fun openAppSettings() {
     NSURL.URLWithString(UIApplicationOpenSettingsURLString)?.let { UIApplication.sharedApplication.openURL(it, emptyMap<Any?, Any?>(), null) }

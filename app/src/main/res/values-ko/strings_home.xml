@@ -19,7 +19,6 @@
     <string name="home_gift_title">첫 선물이 상점에서 기다리고 있어요</string>
     <string name="home_gift_text">스탠드 — 바이올린이 케이스 밖으로 나옵니다. 무료.</string>
     <string name="home_gift_take">받기</string>
-    <string name="home_brought">여행에서 가져온 것</string>
     <string name="home_next_house">다음 집</string>
     <string name="home_all_houses">모든 집</string>
     <string name="home_have">%1$s / %2$s</string>
@@ -83,6 +82,7 @@
     <string name="houses_title">집</string>
     <string name="houses_live_here">여기 살아요</string>
     <string name="houses_live">여기서 살기</string>
+    <string name="houses_enough">충분해요 · %1$s</string>
     <string name="houses_of">집 %1$d / %2$d</string>
     <string name="houses_news">새로운 점</string>
     <string name="houses_moving_text">모든 물건이 알아서 옮겨져 같은 자리에 놓입니다. 이전 집은 그대로 남으니 언제든 돌아갈 수 있어요.</string>

@@ -19,7 +19,6 @@
     <string name="home_gift_title">最初の贈り物がお店で待っています</string>
     <string name="home_gift_text">スタンド — ヴァイオリンがケースから出てきます。無料です。</string>
     <string name="home_gift_take">受け取る</string>
-    <string name="home_brought">旅から持ち帰ったもの</string>
     <string name="home_next_house">次の家</string>
     <string name="home_all_houses">すべての家</string>
     <string name="home_have">%1$s / %2$s</string>
@@ -83,6 +82,7 @@
     <string name="houses_title">家</string>
     <string name="houses_live_here">ここに住んでいます</string>
     <string name="houses_live">ここに住む</string>
+    <string name="houses_enough">足ります · %1$s</string>
     <string name="houses_of">家 %1$d / %2$d</string>
     <string name="houses_news">新しいところ</string>
     <string name="houses_moving_text">持ち物はすべてひとりでに引っ越して、同じ場所に収まります。前の家は残るので、いつでも戻れます。</string>

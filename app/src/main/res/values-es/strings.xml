@@ -615,7 +615,7 @@
         <item>La casa de Mozart y la fortaleza sobre la ciudad</item>
         <item>Musikverein, Sala Dorada</item>
         <item>Rudolfinum</item>
-        <item>Gewandhaus · iglesia de Santo Tomás</item>
+        <item>Gewandhaus, iglesia de Santo Tomás</item>
         <item>Philharmonie</item>
         <item>Concertgebouw</item>
         <item>Ópera Garnier</item>
@@ -731,11 +731,18 @@
     <string name="journey_extra_view">Segunda vista</string>
     <string name="journey_extra_souvenir">Recuerdo para el pasaporte</string>
     <string name="journey_extra_bought">abierto</string>
+    <string name="journey_extras_hint">pequeñas metas por el camino</string>
+    <string name="journey_extra_time_note">el día en vez de la tarde</string>
+    <string name="journey_extra_view_inside">la vista desde dentro</string>
+    <string name="journey_extra_view_outside">la vista desde fuera</string>
+    <string name="journey_extra_souvenir_note">una pegatina junto al sello</string>
+    <string name="journey_go_home">A casa</string>
     <string name="journey_extra_buy">Abrir por %1$s</string>
     <string name="journey_fullscreen">Pantalla completa</string>
     <string name="journey_fullscreen_close">Reducir</string>
     <string name="journey_fullscreen_hint">Arrastra para mirar alrededor · pellizca para acercar</string>
     <string name="journey_passport_soon">pronto</string>
+    <string name="journey_passport_next">la siguiente</string>
     <string name="journey_passport_count">%1$d de %2$d</string>
     <string name="journey_earned">+%1$s</string>
     <string name="journey_earned_detail">%1$s + %2$s por el tiempo</string>
@@ -750,6 +757,9 @@
     <string name="journey_stamp_description">Sello: %1$s</string>
     <string name="journey_stamp_locked_description">%1$s — aún por delante</string>
     <string name="journey_map_description">Mapa de la ruta: recorrido %1$d de %2$d</string>
+    <string name="journey_here">estás aquí</string>
+    <string name="journey_here_enough">alcanza hasta %1$s</string>
+    <string name="journey_here_end">ruta completada</string>
     <string name="section_pieces">Obras</string>
     <string name="section_scales">Escalas</string>
     <string name="section_etudes">Estudios</string>
@@ -1065,7 +1075,7 @@
     <string name="venue_home">En casa</string>
     <string name="venue_pair">%1$s · %2$s</string>
     <string name="venue_play_here">Tocar aquí</string>
-    <string name="venue_play_here_hint">Live se abrirá aquí; la elección se guarda.</string>
+    <string name="venue_play_here_caption">Live · %1$s</string>
     <string-array name="venue_halls">
         <item></item>
         <item>taller</item>

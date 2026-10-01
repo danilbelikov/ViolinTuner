@@ -43,6 +43,23 @@ fun assertWholeOnOneLine(node: SemanticsNodeInteraction, what: String) {
 }
 
 /**
+ * The words of [node] stand whole on as many lines as they take: every line but the last ends at a space — no word broken by the
+ * letter or at its hyphen — and nothing is cut, by an ellipsis or by the lines its `maxLines` drops. The semantics layout of a plain
+ * text is laid out anew at the width it was offered, but whenever the words wrap its lines break where the drawn ones do; an
+ * auto-sized text hands the layout drawn (with the asked size in its style — its lines are still those drawn). [what] names the words.
+ */
+fun assertWordsWhole(node: SemanticsNodeInteraction, what: String) {
+    val layout = node.textLayout()
+    val text = layout.layoutInput.text.text
+    for (line in 0 until layout.lineCount - 1) {
+        val end = layout.getLineEnd(line)
+        assertTrue("«$what» breaks inside a word after «${text.substring(0, end)}» — ${layout.numbers(node)}", end > 0 && text[end - 1].isWhitespace())
+    }
+    val cut = layout.lineCount > 0 && layout.isLineEllipsized(layout.lineCount - 1) || layout.multiParagraph.didExceedMaxLines
+    assertTrue("«$what» is not cut — ${layout.numbers(node)}", !cut)
+}
+
+/**
  * The numbers of this layout of [node], for a failure to explain itself: its lines and what cut them, the width the words need on
  * one line, the size of the node against the paragraph and the room it was laid out in (pixels), and where the node stands (dp).
  */

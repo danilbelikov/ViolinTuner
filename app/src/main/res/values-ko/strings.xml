@@ -615,7 +615,7 @@
         <item>모차르트 생가와 도시 위의 요새</item>
         <item>무지크페라인 황금홀</item>
         <item>루돌피눔</item>
-        <item>게반트하우스 · 성 토마스 교회</item>
+        <item>게반트하우스, 성 토마스 교회</item>
         <item>필하모니</item>
         <item>콘세르트헤바우</item>
         <item>오페라 가르니에</item>
@@ -731,11 +731,18 @@
     <string name="journey_extra_view">또 다른 풍경</string>
     <string name="journey_extra_souvenir">여권에 붙일 기념품</string>
     <string name="journey_extra_bought">열림</string>
+    <string name="journey_extras_hint">여행길의 작은 목표</string>
+    <string name="journey_extra_time_note">저녁 대신 낮</string>
+    <string name="journey_extra_view_inside">안에서 본 풍경</string>
+    <string name="journey_extra_view_outside">밖에서 본 풍경</string>
+    <string name="journey_extra_souvenir_note">도장 옆에 붙이는 스티커</string>
+    <string name="journey_go_home">집으로</string>
     <string name="journey_extra_buy">열기 · %1$s</string>
     <string name="journey_fullscreen">전체 화면</string>
     <string name="journey_fullscreen_close">전체 화면 닫기</string>
     <string name="journey_fullscreen_hint">옆으로 끌면 둘러보기 · 두 손가락으로 확대</string>
     <string name="journey_passport_soon">곧</string>
+    <string name="journey_passport_next">다음</string>
     <string name="journey_passport_count">%1$d / %2$d</string>
     <string name="journey_earned">+%1$s</string>
     <string name="journey_earned_detail">%1$s + 시간으로 %2$s</string>
@@ -750,6 +757,9 @@
     <string name="journey_stamp_description">도장: %1$s</string>
     <string name="journey_stamp_locked_description">%1$s — 아직 앞에 있어요</string>
     <string name="journey_map_description">여행 경로 지도: %2$d곳 중 %1$d곳 통과</string>
+    <string name="journey_here">현재 위치</string>
+    <string name="journey_here_enough">%1$s까지 갈 수 있어요</string>
+    <string name="journey_here_end">여정 완주</string>
     <string name="section_pieces">곡</string>
     <string name="section_scales">음계</string>
     <string name="section_etudes">연습곡</string>
@@ -1065,7 +1075,7 @@
     <string name="venue_home">집</string>
     <string name="venue_pair">%1$s · %2$s</string>
     <string name="venue_play_here">여기서 연주</string>
-    <string name="venue_play_here_hint">Live가 여기서 열려요. 선택은 기억돼요.</string>
+    <string name="venue_play_here_caption">Live · %1$s</string>
     <string-array name="venue_halls">
         <item></item>
         <item>공방</item>

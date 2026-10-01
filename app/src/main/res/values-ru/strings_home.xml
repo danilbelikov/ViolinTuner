@@ -19,7 +19,6 @@
     <string name="home_gift_title">Первый подарок ждёт в лавке</string>
     <string name="home_gift_text">Подставка — скрипка выходит из футляра. Бесплатно.</string>
     <string name="home_gift_take">Забрать</string>
-    <string name="home_brought">Привезено из путешествия</string>
     <string name="home_next_house">Следующий дом</string>
     <string name="home_all_houses">Все дома</string>
     <string name="home_have">%1$s / %2$s</string>
@@ -83,6 +82,7 @@
     <string name="houses_title">Дома</string>
     <string name="houses_live_here">здесь живу</string>
     <string name="houses_live">Жить здесь</string>
+    <string name="houses_enough">хватает · %1$s</string>
     <string name="houses_of">дом %1$d из %2$d</string>
     <string name="houses_news">Что нового</string>
     <string name="houses_moving_text">Все вещи переедут сами и встанут на те же места. Прежний дом останется — можно вернуться в любой день.</string>

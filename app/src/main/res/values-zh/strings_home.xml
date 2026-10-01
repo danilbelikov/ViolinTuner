@@ -19,7 +19,6 @@
     <string name="home_gift_title">第一份礼物在小店里等着</string>
     <string name="home_gift_text">琴架——让小提琴走出琴盒。免费。</string>
     <string name="home_gift_take">领取</string>
-    <string name="home_brought">从旅途带回</string>
     <string name="home_next_house">下一个家</string>
     <string name="home_all_houses">所有的家</string>
     <string name="home_have">%1$s / %2$s</string>
@@ -83,6 +82,7 @@
     <string name="houses_title">家</string>
     <string name="houses_live_here">我住在这里</string>
     <string name="houses_live">住在这里</string>
+    <string name="houses_enough">够了 · %1$s</string>
     <string name="houses_of">第 %1$d 个家，共 %2$d 个</string>
     <string name="houses_news">有什么新变化</string>
     <string name="houses_moving_text">所有物品会自己搬过去，摆在原来的位置。原来的家会保留——哪天都可以回去。</string>
