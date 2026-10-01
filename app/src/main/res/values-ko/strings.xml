@@ -38,15 +38,21 @@
     <string name="onboarding_mic_title">바이올린 소리를 들려주세요</string>
     <string name="onboarding_mic_text">음을 들으려면 마이크가 필요해요. 소리는 휴대폰 안에서 바로 분석되고, 직접 녹음을 누르기 전에는 녹음되지 않아요.</string>
     <string name="onboarding_mic_cta">마이크 허용</string>
+    <string name="onboarding_mic_hint_lead">어떻게 답해도 다음으로 넘어가요</string>
+    <string name="onboarding_mic_hint_text">— 나중에 Live에서 허용해도 돼요.</string>
     <string name="onboarding_a4_title">어떤 음에 맞춰 조율하나요?</string>
-    <string name="onboarding_a4_text">집이나 학교에서는 보통 440 Hz, 오케스트라는 442를 자주 씁니다. 설정에서 바꿀 수 있어요.</string>
+    <string name="onboarding_a4_text">A4 음의 주파수예요. 모든 음과 현이 이 값을 기준으로 계산돼요.</string>
+    <string name="onboarding_a4_hint_lead">잘 모르겠다면 440 그대로 두세요.</string>
+    <string name="onboarding_a4_hint_text">오케스트라는 442를 자주 써요.</string>
     <string name="onboarding_tolerance_title">얼마나 엄격하게 볼까요?</string>
-    <string name="onboarding_tolerance_text">초록 구간의 너비입니다. 넉넉하게 시작하세요 — 언제든 좁힐 수 있어요.</string>
+    <string name="onboarding_tolerance_text">넉넉하게 시작하세요 — ‘설정’에서 언제든 좁힐 수 있어요.</string>
     <string name="onboarding_tolerance_cta">연주 시작</string>
     <string name="onboarding_skip">건너뛰기</string>
     <string name="onboarding_next">다음</string>
-    <string name="onboarding_page_description">%1$d / %2$d 페이지</string>
-    <string name="onboarding_setup_progress">설정 · %1$d/%2$d</string>
+    <string name="onboarding_part_intro">소개</string>
+    <string name="onboarding_part_setup">설정</string>
+    <string name="onboarding_progress_count">%1$d/%2$d</string>
+    <string name="onboarding_progress_description">%1$s, %3$d개 중 %2$d번째 화면</string>
     <string name="onboarding_welcome_text">연주를 듣고 음정이 맞는지 바로 보여 줘요. 그리고 연습은 여행이 돼요 — 내 방에서 세계의 콘서트홀까지.</string>
     <string name="onboarding_welcome_cta">시작하기</string>
     <string name="onboarding_live_title">곁눈으로도 보여요</string>
@@ -76,6 +82,9 @@
     <string name="tolerance_pro_name">전문가</string>
     <string name="tolerance_pro_text">엄격하게</string>
     <string name="tolerance_cents">±%1$d센트</string>
+    <string name="tolerance_cents_spoken_one">플러스마이너스 %1$d센트</string>
+    <string name="tolerance_cents_spoken_few">플러스마이너스 %1$d센트</string>
+    <string name="tolerance_cents_spoken_many">플러스마이너스 %1$d센트</string>
     <string name="a4_option_description">%1$d헤르츠</string>
 
     <string name="settings_a4_title">기준음 A4</string>

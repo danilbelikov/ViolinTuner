@@ -38,15 +38,21 @@
     <string name="onboarding_mic_title">Lassen Sie mich die Geige hören</string>
     <string name="onboarding_mic_text">Um die Töne zu hören, braucht die App das Mikrofon. Der Klang wird direkt auf dem Telefon ausgewertet und erst aufgenommen, wenn Sie selbst auf Aufnahme tippen.</string>
     <string name="onboarding_mic_cta">Mikrofon erlauben</string>
+    <string name="onboarding_mic_hint_lead">Jede Antwort führt weiter</string>
+    <string name="onboarding_mic_hint_text">– erlauben können Sie es auch später, in Live.</string>
     <string name="onboarding_a4_title">Worauf stimmen Sie?</string>
-    <string name="onboarding_a4_text">Zu Hause und in der Musikschule meist 440 Hz. Orchester nehmen oft 442. Lässt sich in den Einstellungen ändern.</string>
+    <string name="onboarding_a4_text">Die Frequenz des Tons A4. Von ihr aus werden alle Töne und Saiten berechnet.</string>
+    <string name="onboarding_a4_hint_lead">Unsicher? Lassen Sie 440.</string>
+    <string name="onboarding_a4_hint_text">Orchester nehmen oft 442.</string>
     <string name="onboarding_tolerance_title">Wie streng soll es sein?</string>
-    <string name="onboarding_tolerance_text">Das ist die Breite der grünen Zone. Beginnen Sie milder – enger geht immer.</string>
+    <string name="onboarding_tolerance_text">Beginnen Sie milder – enger stellen können Sie jederzeit unter „Einstellungen“.</string>
     <string name="onboarding_tolerance_cta">Losspielen</string>
     <string name="onboarding_skip">Überspringen</string>
     <string name="onboarding_next">Weiter</string>
-    <string name="onboarding_page_description">Seite %1$d von %2$d</string>
-    <string name="onboarding_setup_progress">Einrichtung · %1$d von %2$d</string>
+    <string name="onboarding_part_intro">Einführung</string>
+    <string name="onboarding_part_setup">Einrichtung</string>
+    <string name="onboarding_progress_count">%1$d\u00A0von\u00A0%2$d</string>
+    <string name="onboarding_progress_description">%1$s, Bildschirm %2$d von %3$d</string>
     <string name="onboarding_welcome_text">Hört, wie Sie spielen, und zeigt sofort, ob es sauber ist. Und Ihr Üben wird zur Reise – vom eigenen Zimmer bis in die Konzertsäle der Welt.</string>
     <string name="onboarding_welcome_cta">Starten</string>
     <string name="onboarding_live_title">Aus dem Augenwinkel lesbar</string>
@@ -76,6 +82,9 @@
     <string name="tolerance_pro_name">Profi</string>
     <string name="tolerance_pro_text">streng</string>
     <string name="tolerance_cents">±%1$d ct</string>
+    <string name="tolerance_cents_spoken_one">plus minus %1$d Cent</string>
+    <string name="tolerance_cents_spoken_few">plus minus %1$d Cent</string>
+    <string name="tolerance_cents_spoken_many">plus minus %1$d Cent</string>
     <string name="a4_option_description">%1$d Hertz</string>
 
     <string name="settings_a4_title">Kammerton A4</string>

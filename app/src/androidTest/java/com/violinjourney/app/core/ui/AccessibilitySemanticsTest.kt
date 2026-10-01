@@ -38,6 +38,11 @@ import com.violinjourney.app.shared.resources.recap_road_enough
 import com.violinjourney.app.shared.resources.recap_title
 import com.violinjourney.app.shared.resources.sound_ab_original
 import com.violinjourney.app.shared.resources.sound_ab_processed
+import com.violinjourney.app.shared.resources.tolerance_cents_spoken_few
+import com.violinjourney.app.shared.resources.tolerance_cents_spoken_many
+import com.violinjourney.app.shared.resources.tolerance_cents_spoken_one
+import com.violinjourney.app.shared.resources.tolerance_intermediate_name
+import com.violinjourney.app.shared.resources.tolerance_intermediate_text
 import com.violinjourney.app.shared.resources.trophies_count
 import com.violinjourney.app.shared.resources.trophies_heading_description
 import com.violinjourney.app.shared.resources.trophies_line_next
@@ -63,6 +68,7 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -136,6 +142,9 @@ import com.violinjourney.app.shared.resources.block_played_title
 import com.violinjourney.app.shared.resources.journey_enough
 import com.violinjourney.app.shared.resources.nav_history
 import com.violinjourney.app.shared.resources.nav_repertoire
+import com.violinjourney.app.shared.resources.onboarding_part_intro
+import com.violinjourney.app.shared.resources.onboarding_part_setup
+import com.violinjourney.app.shared.resources.onboarding_progress_description
 import com.violinjourney.app.shared.resources.onboarding_skip
 import com.violinjourney.app.shared.resources.path_description
 import com.violinjourney.app.shared.resources.practice_day_description
@@ -511,6 +520,61 @@ class AccessibilitySemanticsTest {
     fun theSkipOfAnEarlierPageIsThereForAReader() {
         val skip = showIntroduction(OnboardingStep.WELCOME)
         compose.onAllNodesWithText(skip).assertCountEquals(1)
+    }
+
+    /**
+     * The strip of the way is one phrase for a reader, the part and the screen of seven (spec 3.36.8): «Знакомство, экран 1 из 7» on the
+     * first page — its twin on the page is not heard — and «Настройка, экран 5 из 7» on «Микрофон».
+     */
+    @Test
+    fun theStripOfTheWayIsOnePhraseOfItsPartAndScreen() {
+        var step by mutableStateOf(OnboardingStep.WELCOME)
+        var intro = ""
+        var setup = ""
+        compose.setContent {
+            intro = stringResource(Res.string.onboarding_progress_description, stringResource(Res.string.onboarding_part_intro), 1, OnboardingStep.entries.size)
+            setup = stringResource(Res.string.onboarding_progress_description, stringResource(Res.string.onboarding_part_setup), 5, OnboardingStep.entries.size)
+            ViolinTheme {
+                CompositionLocalProvider(LocalReduceMotion provides true) {
+                    OnboardingScreen(OnboardingState(step, a4Hz = 440, a4OptionsHz = listOf(440, 441, 442, 443), tolerance = TolerancePreset.INTERMEDIATE), onIntent = {})
+                }
+            }
+        }
+        compose.waitForIdle()
+        compose.onAllNodesWithContentDescription(intro).assertCountEquals(1)
+        step = OnboardingStep.MICROPHONE
+        compose.waitForIdle()
+        compose.onAllNodesWithContentDescription(setup).assertCountEquals(1)
+        compose.onAllNodesWithContentDescription(intro).assertCountEquals(0)
+    }
+
+    /**
+     * A card of the tolerance of the setup is a choice that says its name, its caption and its cents — «Средний, чувствуется вибрато,
+     * плюс-минус 8 центов» and «выбрано»; its bar and its parts are not stops of their own (spec 3.36.8).
+     */
+    @Test
+    fun aCardOfTheToleranceSaysItsNameCaptionAndCents() {
+        var said = ""
+        var name = ""
+        compose.setContent {
+            name = stringResource(Res.string.tolerance_intermediate_name)
+            val cents = TolerancePreset.INTERMEDIATE.cents
+            val spoken = stringResource(
+                Formats.plural(cents, Res.string.tolerance_cents_spoken_one, Res.string.tolerance_cents_spoken_few, Res.string.tolerance_cents_spoken_many),
+                cents,
+            )
+            said = "$name, ${stringResource(Res.string.tolerance_intermediate_text)}, $spoken"
+            ViolinTheme {
+                CompositionLocalProvider(LocalReduceMotion provides true) {
+                    OnboardingScreen(OnboardingState(OnboardingStep.TOLERANCE, a4Hz = 440, a4OptionsHz = listOf(440, 441, 442, 443), tolerance = TolerancePreset.INTERMEDIATE), onIntent = {})
+                }
+            }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription(said)
+            .assertIsSelected()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
+        compose.onAllNodesWithText(name).assertCountEquals(0)
     }
 
     /** «Репертуар» reads as its neighbours do — a tab, its name and «выбрано» (spec 3.36.1); the item is pressed at its full height. */

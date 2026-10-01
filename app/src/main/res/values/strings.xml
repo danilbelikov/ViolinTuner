@@ -38,15 +38,21 @@
     <string name="onboarding_mic_title">Let me hear your violin</string>
     <string name="onboarding_mic_text">The microphone lets me hear the notes. Sound is analysed right on the phone and isn\'t recorded until you press record yourself.</string>
     <string name="onboarding_mic_cta">Allow microphone</string>
+    <string name="onboarding_mic_hint_lead">Either answer moves on</string>
+    <string name="onboarding_mic_hint_text">— you can allow it later, on Live.</string>
     <string name="onboarding_a4_title">What do you tune to?</string>
-    <string name="onboarding_a4_text">At home and at school it is usually 440 Hz. Orchestras often take 442. You can change it in Settings.</string>
+    <string name="onboarding_a4_text">The frequency of the note A4. All notes and strings are measured from it.</string>
+    <string name="onboarding_a4_hint_lead">Not sure? Keep 440.</string>
+    <string name="onboarding_a4_hint_text">Orchestras often take 442.</string>
     <string name="onboarding_tolerance_title">How strict should I be?</string>
-    <string name="onboarding_tolerance_text">This is the width of the green zone. Start gently — you can always narrow it.</string>
+    <string name="onboarding_tolerance_text">Start gently — you can always narrow it in “Settings”.</string>
     <string name="onboarding_tolerance_cta">Start playing</string>
     <string name="onboarding_skip">Skip</string>
     <string name="onboarding_next">Next</string>
-    <string name="onboarding_page_description">Page %1$d of %2$d</string>
-    <string name="onboarding_setup_progress">Setup · %1$d of %2$d</string>
+    <string name="onboarding_part_intro">Introduction</string>
+    <string name="onboarding_part_setup">Setup</string>
+    <string name="onboarding_progress_count">%1$d\u00A0of\u00A0%2$d</string>
+    <string name="onboarding_progress_description">%1$s, screen %2$d of %3$d</string>
     <string name="onboarding_welcome_text">Hears you play and shows at once whether you\'re in tune. And your practice adds up to a journey — from your own room to the concert halls of the world.</string>
     <string name="onboarding_welcome_cta">Get started</string>
     <string name="onboarding_live_title">Seen from the corner of your eye</string>
@@ -76,6 +82,9 @@
     <string name="tolerance_pro_name">Pro</string>
     <string name="tolerance_pro_text">strict</string>
     <string name="tolerance_cents">±%1$d c</string>
+    <string name="tolerance_cents_spoken_one">plus or minus %1$d cent</string>
+    <string name="tolerance_cents_spoken_few">plus or minus %1$d cents</string>
+    <string name="tolerance_cents_spoken_many">plus or minus %1$d cents</string>
     <string name="a4_option_description">%1$d hertz</string>
 
     <string name="settings_a4_title">Reference pitch A4</string>

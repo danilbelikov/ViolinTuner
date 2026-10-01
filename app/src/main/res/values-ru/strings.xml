@@ -38,15 +38,21 @@
     <string name="onboarding_mic_title">Дайте мне услышать скрипку</string>
     <string name="onboarding_mic_text">Чтобы слышать ноты, нужен микрофон. Звук разбирается прямо на телефоне и не записывается, пока вы сами не нажмёте запись.</string>
     <string name="onboarding_mic_cta">Разрешить микрофон</string>
+    <string name="onboarding_mic_hint_lead">Любой ответ ведёт дальше</string>
+    <string name="onboarding_mic_hint_text">— разрешить можно и потом, на Live.</string>
     <string name="onboarding_a4_title">К чему настраиваетесь?</string>
-    <string name="onboarding_a4_text">Дома и в школе обычно 440 Гц. Оркестры часто берут 442. Можно поменять в настройках.</string>
+    <string name="onboarding_a4_text">Частота ноты A4. От неё считаются все ноты и струны.</string>
+    <string name="onboarding_a4_hint_lead">Не знаете — оставьте 440.</string>
+    <string name="onboarding_a4_hint_text">Оркестры часто берут 442.</string>
     <string name="onboarding_tolerance_title">Насколько строго судить?</string>
-    <string name="onboarding_tolerance_text">Это ширина зелёной зоны. Начните мягче — сузить всегда можно.</string>
+    <string name="onboarding_tolerance_text">Начните мягче — сузить всегда можно в «Настройках».</string>
     <string name="onboarding_tolerance_cta">Начать играть</string>
     <string name="onboarding_skip">Пропустить</string>
     <string name="onboarding_next">Дальше</string>
-    <string name="onboarding_page_description">Страница %1$d из %2$d</string>
-    <string name="onboarding_setup_progress">Настройка · %1$d из %2$d</string>
+    <string name="onboarding_part_intro">Знакомство</string>
+    <string name="onboarding_part_setup">Настройка</string>
+    <string name="onboarding_progress_count">%1$d\u00A0из\u00A0%2$d</string>
+    <string name="onboarding_progress_description">%1$s, экран %2$d из %3$d</string>
     <string name="onboarding_welcome_text">Слышит, как вы играете, и сразу показывает, чисто ли. А занятия складываются в дорогу — от своей комнаты до концертных залов мира.</string>
     <string name="onboarding_welcome_cta">Начать</string>
     <string name="onboarding_live_title">Видно краем глаза</string>
@@ -76,6 +82,9 @@
     <string name="tolerance_pro_name">Профи</string>
     <string name="tolerance_pro_text">строго</string>
     <string name="tolerance_cents">±%1$d ц</string>
+    <string name="tolerance_cents_spoken_one">плюс-минус %1$d цент</string>
+    <string name="tolerance_cents_spoken_few">плюс-минус %1$d цента</string>
+    <string name="tolerance_cents_spoken_many">плюс-минус %1$d центов</string>
     <string name="a4_option_description">%1$d герц</string>
 
     <string name="settings_a4_title">Эталон A4</string>

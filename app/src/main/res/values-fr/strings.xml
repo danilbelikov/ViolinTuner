@@ -38,15 +38,21 @@
     <string name="onboarding_mic_title">Laissez-moi entendre le violon</string>
     <string name="onboarding_mic_text">Pour entendre les notes, il faut le micro. Le son est analysé directement sur le téléphone et n\'est enregistré que si vous lancez vous-même l\'enregistrement.</string>
     <string name="onboarding_mic_cta">Autoriser le micro</string>
+    <string name="onboarding_mic_hint_lead">Toute réponse permet de continuer</string>
+    <string name="onboarding_mic_hint_text">— vous pourrez l\'autoriser plus tard, dans Live.</string>
     <string name="onboarding_a4_title">Sur quel la vous accordez-vous ?</string>
-    <string name="onboarding_a4_text">À la maison et à l\'école, c\'est en général 440 Hz. Les orchestres prennent souvent 442. Modifiable dans les réglages.</string>
+    <string name="onboarding_a4_text">La fréquence de la note A4. Toutes les notes et les cordes en découlent.</string>
+    <string name="onboarding_a4_hint_lead">Vous ne savez pas\u00A0? Gardez 440.</string>
+    <string name="onboarding_a4_hint_text">Les orchestres prennent souvent 442.</string>
     <string name="onboarding_tolerance_title">Avec quelle sévérité juger ?</string>
-    <string name="onboarding_tolerance_text">C\'est la largeur de la zone verte. Commencez large — on peut toujours la resserrer.</string>
+    <string name="onboarding_tolerance_text">Commencez large — vous pourrez toujours resserrer la zone dans «\u00A0Réglages\u00A0».</string>
     <string name="onboarding_tolerance_cta">Commencer à jouer</string>
     <string name="onboarding_skip">Passer</string>
     <string name="onboarding_next">Suivant</string>
-    <string name="onboarding_page_description">Page %1$d sur %2$d</string>
-    <string name="onboarding_setup_progress">Configuration · %1$d sur %2$d</string>
+    <string name="onboarding_part_intro">Introduction</string>
+    <string name="onboarding_part_setup">Configuration</string>
+    <string name="onboarding_progress_count">%1$d\u00A0sur\u00A0%2$d</string>
+    <string name="onboarding_progress_description">%1$s, écran %2$d sur %3$d</string>
     <string name="onboarding_welcome_text">Entend votre jeu et montre aussitôt si c\'est juste. Et vos séances deviennent un voyage — de votre chambre jusqu\'aux salles de concert du monde.</string>
     <string name="onboarding_welcome_cta">Commencer</string>
     <string name="onboarding_live_title">Lisible du coin de l\'œil</string>
@@ -76,6 +82,9 @@
     <string name="tolerance_pro_name">Pro</string>
     <string name="tolerance_pro_text">strict</string>
     <string name="tolerance_cents">±%1$d cts</string>
+    <string name="tolerance_cents_spoken_one">plus ou moins %1$d cent</string>
+    <string name="tolerance_cents_spoken_few">plus ou moins %1$d cents</string>
+    <string name="tolerance_cents_spoken_many">plus ou moins %1$d cents</string>
     <string name="a4_option_description">%1$d hertz</string>
 
     <string name="settings_a4_title">Diapason (la4)</string>

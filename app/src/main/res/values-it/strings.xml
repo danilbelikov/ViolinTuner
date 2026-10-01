@@ -38,15 +38,21 @@
     <string name="onboarding_mic_title">Fammi sentire il violino</string>
     <string name="onboarding_mic_text">Per sentire le note serve il microfono. Il suono viene analizzato direttamente sul telefono e non si registra finché non si preme registra.</string>
     <string name="onboarding_mic_cta">Consenti il microfono</string>
+    <string name="onboarding_mic_hint_lead">Con qualsiasi risposta si va avanti</string>
+    <string name="onboarding_mic_hint_text">— si può consentire anche dopo, in Live.</string>
     <string name="onboarding_a4_title">Su quale La ci si accorda?</string>
-    <string name="onboarding_a4_text">A casa e a scuola di solito 440 Hz. Le orchestre usano spesso 442. Si può cambiare nelle impostazioni.</string>
+    <string name="onboarding_a4_text">La frequenza della nota A4. Da qui si calcolano tutte le note e le corde.</string>
+    <string name="onboarding_a4_hint_lead">Nel dubbio, lascia 440.</string>
+    <string name="onboarding_a4_hint_text">Le orchestre usano spesso 442.</string>
     <string name="onboarding_tolerance_title">Quanto essere severi?</string>
-    <string name="onboarding_tolerance_text">È la larghezza della zona verde. Meglio iniziare larghi: restringere si può sempre.</string>
+    <string name="onboarding_tolerance_text">Meglio iniziare larghi: restringere si può sempre in «Impostazioni».</string>
     <string name="onboarding_tolerance_cta">Inizia a suonare</string>
     <string name="onboarding_skip">Salta</string>
     <string name="onboarding_next">Avanti</string>
-    <string name="onboarding_page_description">Pagina %1$d di %2$d</string>
-    <string name="onboarding_setup_progress">Configurazione · %1$d di %2$d</string>
+    <string name="onboarding_part_intro">Introduzione</string>
+    <string name="onboarding_part_setup">Configurazione</string>
+    <string name="onboarding_progress_count">%1$d\u00A0di\u00A0%2$d</string>
+    <string name="onboarding_progress_description">%1$s, schermata %2$d di %3$d</string>
     <string name="onboarding_welcome_text">Ascolta il suono del violino e mostra subito se è intonato. E lo studio diventa un viaggio: dalla propria stanza alle sale da concerto del mondo.</string>
     <string name="onboarding_welcome_cta">Inizia</string>
     <string name="onboarding_live_title">Si legge con la coda dell\'occhio</string>
@@ -76,6 +82,9 @@
     <string name="tolerance_pro_name">Pro</string>
     <string name="tolerance_pro_text">severo</string>
     <string name="tolerance_cents">±%1$d c</string>
+    <string name="tolerance_cents_spoken_one">più o meno %1$d cent</string>
+    <string name="tolerance_cents_spoken_few">più o meno %1$d cent</string>
+    <string name="tolerance_cents_spoken_many">più o meno %1$d cent</string>
     <string name="a4_option_description">%1$d hertz</string>
 
     <string name="settings_a4_title">La di riferimento (A4)</string>

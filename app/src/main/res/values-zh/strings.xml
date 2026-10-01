@@ -38,15 +38,21 @@
     <string name="onboarding_mic_title">让我听听你的小提琴</string>
     <string name="onboarding_mic_text">要听到音符，需要麦克风。声音就在手机上分析，只有你自己按下录音才会录下来。</string>
     <string name="onboarding_mic_cta">允许使用麦克风</string>
+    <string name="onboarding_mic_hint_lead">无论怎么选都会继续</string>
+    <string name="onboarding_mic_hint_text">——之后也可以在 Live 中允许。</string>
     <string name="onboarding_a4_title">以哪个标准音调音？</string>
-    <string name="onboarding_a4_text">家里和学校通常用 440 Hz，乐团常用 442。之后可在设置中更改。</string>
+    <string name="onboarding_a4_text">A4 音的频率。所有音和弦都以它为基准。</string>
+    <string name="onboarding_a4_hint_lead">不确定就保留 440。</string>
+    <string name="onboarding_a4_hint_text">乐团常用 442。</string>
     <string name="onboarding_tolerance_title">评判要多严格？</string>
-    <string name="onboarding_tolerance_text">这是绿色区域的宽度。先从宽松开始——随时可以收窄。</string>
+    <string name="onboarding_tolerance_text">先从宽松开始——随时可以在“设置”中收窄。</string>
     <string name="onboarding_tolerance_cta">开始演奏</string>
     <string name="onboarding_skip">跳过</string>
     <string name="onboarding_next">下一步</string>
-    <string name="onboarding_page_description">第 %1$d 页，共 %2$d 页</string>
-    <string name="onboarding_setup_progress">设置 · %1$d/%2$d</string>
+    <string name="onboarding_part_intro">引导</string>
+    <string name="onboarding_part_setup">设置</string>
+    <string name="onboarding_progress_count">%1$d/%2$d</string>
+    <string name="onboarding_progress_description">%1$s，第 %2$d 屏，共 %3$d 屏</string>
     <string name="onboarding_welcome_text">听你演奏，立刻显示音准。练习还会连成一段旅程——从自己的房间，到世界各地的音乐厅。</string>
     <string name="onboarding_welcome_cta">开始</string>
     <string name="onboarding_live_title">余光就能看清</string>
@@ -76,6 +82,9 @@
     <string name="tolerance_pro_name">专业</string>
     <string name="tolerance_pro_text">严格</string>
     <string name="tolerance_cents">±%1$d 音分</string>
+    <string name="tolerance_cents_spoken_one">正负 %1$d 音分</string>
+    <string name="tolerance_cents_spoken_few">正负 %1$d 音分</string>
+    <string name="tolerance_cents_spoken_many">正负 %1$d 音分</string>
     <string name="a4_option_description">%1$d 赫兹</string>
 
     <string name="settings_a4_title">标准音 A4</string>

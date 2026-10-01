@@ -38,15 +38,21 @@
     <string name="onboarding_mic_title">Deixe-me ouvir o violino</string>
     <string name="onboarding_mic_text">Para ouvir as notas, é preciso o microfone. O som é analisado no próprio telefone e só é gravado quando você mesmo aperta gravar.</string>
     <string name="onboarding_mic_cta">Permitir microfone</string>
+    <string name="onboarding_mic_hint_lead">Qualquer resposta segue adiante</string>
+    <string name="onboarding_mic_hint_text">— dá para permitir depois, no Live.</string>
     <string name="onboarding_a4_title">Qual é a sua afinação?</string>
-    <string name="onboarding_a4_text">Em casa e na escola costuma ser 440 Hz. Orquestras muitas vezes usam 442. Dá para mudar nos ajustes.</string>
+    <string name="onboarding_a4_text">A frequência da nota A4. Todas as notas e cordas são calculadas a partir dela.</string>
+    <string name="onboarding_a4_hint_lead">Não sabe? Deixe 440.</string>
+    <string name="onboarding_a4_hint_text">Orquestras muitas vezes usam 442.</string>
     <string name="onboarding_tolerance_title">Com que rigor avaliar?</string>
-    <string name="onboarding_tolerance_text">É a largura da zona verde. Comece com mais folga — estreitar é sempre possível.</string>
+    <string name="onboarding_tolerance_text">Comece com mais folga — dá para estreitar a qualquer momento em “Ajustes”.</string>
     <string name="onboarding_tolerance_cta">Começar a tocar</string>
     <string name="onboarding_skip">Pular</string>
     <string name="onboarding_next">Avançar</string>
-    <string name="onboarding_page_description">Página %1$d de %2$d</string>
-    <string name="onboarding_setup_progress">Configuração · %1$d de %2$d</string>
+    <string name="onboarding_part_intro">Introdução</string>
+    <string name="onboarding_part_setup">Configuração</string>
+    <string name="onboarding_progress_count">%1$d\u00A0de\u00A0%2$d</string>
+    <string name="onboarding_progress_description">%1$s, tela %2$d de %3$d</string>
     <string name="onboarding_welcome_text">Ouve você tocar e mostra na hora se está afinado. E a prática vira uma viagem — do seu quarto às salas de concerto do mundo.</string>
     <string name="onboarding_welcome_cta">Começar</string>
     <string name="onboarding_live_title">Dá para ver com o canto do olho</string>
@@ -76,6 +82,9 @@
     <string name="tolerance_pro_name">Pro</string>
     <string name="tolerance_pro_text">rigoroso</string>
     <string name="tolerance_cents">±%1$d c</string>
+    <string name="tolerance_cents_spoken_one">mais ou menos %1$d cent</string>
+    <string name="tolerance_cents_spoken_few">mais ou menos %1$d cents</string>
+    <string name="tolerance_cents_spoken_many">mais ou menos %1$d cents</string>
     <string name="a4_option_description">%1$d hertz</string>
 
     <string name="settings_a4_title">Lá de referência (A4)</string>

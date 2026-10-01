@@ -34,15 +34,21 @@ open class OnboardingViewModel(
     private val effectChannel = Channel<OnboardingEffect>(Channel.BUFFERED)
     val effects: Flow<OnboardingEffect> = effectChannel.receiveAsFlow()
 
+    /** «Начать играть» was taken: a second press — two taps before the next frame — does not finish again. */
+    private var finishing = false
+
     fun onIntent(intent: OnboardingIntent) {
         val step = currentStep()
         when (intent) {
-            OnboardingIntent.PrimaryClicked -> when (step) {
-                OnboardingStep.MICROPHONE -> effectChannel.trySend(OnboardingEffect.RequestMicPermission)
-                OnboardingStep.TOLERANCE -> finish()
-                else -> OnboardingFlow.next(step)?.let(::goTo)
+            // a press acts on the step its button showed, not on the model's (5.29 R8): a second tap that reached the old button
+            // before the next frame moves nothing
+            is OnboardingIntent.PrimaryClicked -> when (val press = OnboardingFlow.press(step, intent.from)) {
+                is OnboardingPress.GoTo -> goTo(press.step)
+                OnboardingPress.AskMicrophone -> effectChannel.trySend(OnboardingEffect.RequestMicPermission)
+                OnboardingPress.Finish -> finish()
+                OnboardingPress.Stay -> Unit
             }
-            OnboardingIntent.SkipClicked -> goTo(OnboardingFlow.skip(step))
+            is OnboardingIntent.SkipClicked -> OnboardingFlow.skipped(step, intent.from)?.let(::goTo)
             is OnboardingIntent.PageShown -> goTo(OnboardingFlow.swipedTo(step, intent.page))
             OnboardingIntent.MicPermissionAnswered ->
                 if (step == OnboardingStep.MICROPHONE) goTo(OnboardingStep.REFERENCE_PITCH)
@@ -53,6 +59,8 @@ open class OnboardingViewModel(
     }
 
     private fun finish() {
+        if (finishing) return
+        finishing = true
         viewModelScope.launch {
             repository.setOnboardingDone(true)
             effectChannel.send(OnboardingEffect.Finished)

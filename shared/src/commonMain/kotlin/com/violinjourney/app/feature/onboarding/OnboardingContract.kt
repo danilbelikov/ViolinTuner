@@ -19,6 +19,9 @@ enum class OnboardingStep(val part: OnboardingPart) {
     /** Place within its own part: the page of the introduction, the step of the setup. */
     val indexInPart: Int get() = entries.filter { it.part == part }.indexOf(this)
 
+    /** Place on the whole way, from 1 to 7: «Знакомство · 1 из 7», «Настройка · 5 из 7» (spec 3.36.8). */
+    val number: Int get() = ordinal + 1
+
     companion object {
         val intro: List<OnboardingStep> = entries.filter { it.part == OnboardingPart.INTRO }
         val setup: List<OnboardingStep> = entries.filter { it.part == OnboardingPart.SETUP }
@@ -36,11 +39,14 @@ data class OnboardingState(
 )
 
 sealed interface OnboardingIntent {
-    /** The big button at the bottom; what it does depends on the step. */
-    data object PrimaryClicked : OnboardingIntent
+    /**
+     * The big button at the bottom, pressed [from] the step it showed; what it does depends on that step ([OnboardingFlow.press]). A
+     * press is bound to its step: a second tap that reaches the same button before the next frame moves nothing again (5.29 R8).
+     */
+    data class PrimaryClicked(val from: OnboardingStep) : OnboardingIntent
 
-    /** «Пропустить» on the first three pages: to the page about the data, never past it. */
-    data object SkipClicked : OnboardingIntent
+    /** «Пропустить» on the first three pages, pressed [from] the page in view: to the page about the data, never past it. */
+    data class SkipClicked(val from: OnboardingStep) : OnboardingIntent
 
     /** A page of the introduction was swiped to. */
     data class PageShown(val page: Int) : OnboardingIntent
@@ -59,6 +65,6 @@ sealed interface OnboardingIntent {
 sealed interface OnboardingEffect {
     data object RequestMicPermission : OnboardingEffect
 
-    /** Settings are stored and the flag is set: open Live. */
+    /** Settings are stored and the flag is set: open «Занятия» (spec 3.25). */
     data object Finished : OnboardingEffect
 }

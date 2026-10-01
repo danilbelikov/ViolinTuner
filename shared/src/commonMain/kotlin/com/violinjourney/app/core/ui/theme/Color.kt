@@ -105,5 +105,3 @@ internal val LearnLearning = Color(0xFF8B74D9)
 internal val InkOnDark = Color(0xFFDDD9E8)
 internal val InkOnPaper = Color(0xFF2A2724)
 
-// «Знакомство» (handoff new_onboarding, 36f): a page of the introduction not in view.
-internal val OnboardingDotIdle = Color(0xFF4A4760)

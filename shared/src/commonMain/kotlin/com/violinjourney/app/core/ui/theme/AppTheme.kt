@@ -60,10 +60,6 @@ object ViolinTheme {
     val venueColors: VenueColors
         @Composable @ReadOnlyComposable get() = LocalVenueColors.current
 
-    /** The dots of «Знакомство»: a page not in view (spec 3.33). */
-    val onboardingDotIdle: Color
-        get() = OnboardingDotIdle
-
     /**
      * The third level of text (spec 5.29): day labels, chevrons, the figures in chips, a placeholder. Only on the background
      * and on surfaceContainer — not on surfaceContainerHigh (dialogs, menus), where it falls under 4.5 : 1.

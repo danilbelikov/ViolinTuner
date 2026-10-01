@@ -84,6 +84,7 @@ object AppIcons {
     val Restore: ImageVector by lazy { icon("Restore", IconPaths.RESTORE) }
     val Archive: ImageVector by lazy { icon("Archive", IconPaths.ARCHIVE) }
     val Device: ImageVector by lazy { icon("Device", IconPaths.DEVICE) }
+    val Chart: ImageVector by lazy { icon("Chart", IconPaths.CHART) }
     val Calendar: ImageVector by lazy { icon("Calendar", IconPaths.CALENDAR) }
     val Headphones: ImageVector by lazy { icon("Headphones", IconPaths.HEADPHONES) }
     val Backing: ImageVector by lazy { icon("Backing", IconPaths.BACKING) }
@@ -167,6 +168,7 @@ object AppIcons {
         "Restore" to { Restore },
         "Archive" to { Archive },
         "Device" to { Device },
+        "Chart" to { Chart },
         "Calendar" to { Calendar },
         "Headphones" to { Headphones },
         "Backing" to { Backing },

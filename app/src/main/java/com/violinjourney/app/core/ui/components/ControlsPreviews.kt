@@ -279,3 +279,29 @@ private fun DimmedRowInGroupPreview() = Kit {
 @Preview(name = "Rows · font 1.3", widthDp = 360, heightDp = 760, locale = "ru", fontScale = 1.3f)
 @Composable
 private fun RowsLargeFontPreview() = Kit { SettingsGroups() }
+
+// The header of a screen over the tabs (spec 3.36.8, 5.29 R8; start.html, `.navbar`): made with R8, «Настройки» and the screens of a
+// copy stand under it from stages 121–122.
+
+@Composable
+private fun Headers() = ViolinTheme {
+    Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)) {
+        ScreenHeader(stringResource(Res.string.nav_settings), onBack = {})
+        ScreenHeader(stringResource(Res.string.restore_title), onBack = {})
+        ScreenHeader(title = null, onBack = {}, close = true)
+        ScreenHeader(stringResource(Res.string.backup_title), onBack = null)
+    }
+}
+
+// the height of a header follows the window (taller than wide — 56), so the upright previews are as tall as a phone
+@Preview(name = "Header · «назад» and the title, ✕ alone, the title alone: 56", widthDp = 412, heightDp = 892, locale = "ru")
+@Composable
+private fun HeadersPreview() = Headers()
+
+@Preview(name = "Header · de 360 at 1.3: «Aus Kopie wiederherstellen» on one line with an ellipsis", widthDp = 360, heightDp = 640, locale = "de", fontScale = 1.3f)
+@Composable
+private fun HeadersGermanPreview() = Headers()
+
+@Preview(name = "Header · lying: 48", widthDp = 892, heightDp = 412, locale = "ru")
+@Composable
+private fun HeadersLyingPreview() = Headers()

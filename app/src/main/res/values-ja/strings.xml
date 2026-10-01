@@ -38,15 +38,21 @@
     <string name="onboarding_mic_title">ヴァイオリンの音を聴かせてください</string>
     <string name="onboarding_mic_text">音を聴くにはマイクが必要です。音は端末内で解析され、自分で録音を押すまで録音されません。</string>
     <string name="onboarding_mic_cta">マイクを許可</string>
+    <string name="onboarding_mic_hint_lead">どちらを選んでも先へ進めます</string>
+    <string name="onboarding_mic_hint_text">— あとから Live で許可することもできます。</string>
     <string name="onboarding_a4_title">どの高さに合わせますか？</string>
-    <string name="onboarding_a4_text">家庭や学校ではふつう440 Hzです。オーケストラでは442 Hzもよく使われます。設定でいつでも変更できます。</string>
+    <string name="onboarding_a4_text">A4 の音の周波数です。すべての音と弦の高さはここから計算されます。</string>
+    <string name="onboarding_a4_hint_lead">わからなければ 440 のままで。</string>
+    <string name="onboarding_a4_hint_text">オーケストラでは 442 もよく使われます。</string>
     <string name="onboarding_tolerance_title">どのくらい厳しく判定しますか？</string>
-    <string name="onboarding_tolerance_text">緑のゾーンの幅です。まずはゆるめに。あとからいつでも狭められます。</string>
+    <string name="onboarding_tolerance_text">まずはゆるめに。「設定」でいつでも狭められます。</string>
     <string name="onboarding_tolerance_cta">演奏を始める</string>
     <string name="onboarding_skip">スキップ</string>
     <string name="onboarding_next">次へ</string>
-    <string name="onboarding_page_description">%2$d ページ中 %1$d ページ</string>
-    <string name="onboarding_setup_progress">設定 · %1$d/%2$d</string>
+    <string name="onboarding_part_intro">はじめに</string>
+    <string name="onboarding_part_setup">設定</string>
+    <string name="onboarding_progress_count">%1$d/%2$d</string>
+    <string name="onboarding_progress_description">%1$s、%3$d画面中%2$d画面目</string>
     <string name="onboarding_welcome_text">演奏を聴いて、音程が合っているかすぐに示します。練習は旅になります——自分の部屋から世界のコンサートホールまで。</string>
     <string name="onboarding_welcome_cta">はじめる</string>
     <string name="onboarding_live_title">視界の端でも読めます</string>
@@ -76,6 +82,9 @@
     <string name="tolerance_pro_name">上級</string>
     <string name="tolerance_pro_text">厳しめ</string>
     <string name="tolerance_cents">±%1$d セント</string>
+    <string name="tolerance_cents_spoken_one">プラスマイナス %1$d セント</string>
+    <string name="tolerance_cents_spoken_few">プラスマイナス %1$d セント</string>
+    <string name="tolerance_cents_spoken_many">プラスマイナス %1$d セント</string>
     <string name="a4_option_description">%1$d ヘルツ</string>
 
     <string name="settings_a4_title">基準ピッチ A4</string>

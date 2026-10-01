@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.liveRegion
@@ -34,6 +35,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -254,6 +256,49 @@ fun appButtonMinWidth(text: String, style: AppButtonStyle = AppButtonStyle.Main,
         val widest = text.split(' ', '\n', '\t').filter { it.isNotEmpty() }
             .maxOfOrNull { measurer.measure(it, words, softWrap = false, maxLines = 1).size.width } ?: 0
         look.padding * 2 + (if (withIcon) look.icon + IconSizes.ButtonGap else 0.dp) + with(density) { widest.toDp() }
+    }
+}
+
+/**
+ * How wide an [AppButton] of [style] stands with [text] on one line at the size of its style: its fields, the icon with its gap
+ * ([icon]; [AppButtonStyle.Danger] has its bin anyway) and the words, never under Material's least width of a button. For a button as
+ * wide as its words with something in the room it leaves: «Начать» of the introduction lying, with «У меня есть копия данных» beside
+ * it (spec 3.36.8).
+ */
+@Composable
+fun appButtonWidth(text: String, style: AppButtonStyle = AppButtonStyle.Main, icon: Boolean = false, compact: Boolean = false): Dp {
+    val look = lookOf(style, compact)
+    val words = wordsStyleOf(look)
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val withIcon = icon || style == AppButtonStyle.Danger
+    return remember(text, look, words, withIcon, measurer, density) {
+        val line = measurer.measure(text, words, softWrap = false, maxLines = 1).size.width
+        val iconPart = if (withIcon) look.icon + IconSizes.ButtonGap else 0.dp
+        maxOf(look.padding * 2 + iconPart + with(density) { line.toDp() } + OneLineSlack, ButtonDefaults.MinWidth)
+    }
+}
+
+/**
+ * Whether the words of an [AppButton] of [style] stand in a button [width] wide on no more than [lines] lines with every word whole —
+ * broken only at a space ([WholeWords]), the way the button lays them out. For a word button beside another one where it may take two
+ * lines but not three, nor break a word: «У меня есть копия данных» beside «Начать» lying goes under it where it does not (spec
+ * 3.36.8). [icon] — an icon before the words, its size by the style with its gap.
+ */
+@Composable
+fun appButtonFitsLines(text: String, width: Dp, style: AppButtonStyle, lines: Int = TEXT_LINES, compact: Boolean = false, icon: Boolean = false): Boolean {
+    val look = lookOf(style, compact)
+    val words = wordsStyleOf(look)
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val direction = LocalLayoutDirection.current
+    val withIcon = icon || style == AppButtonStyle.Danger
+    return remember(text, width, look, words, lines, withIcon, measurer, density, direction) {
+        val iconPart = if (withIcon) look.icon + IconSizes.ButtonGap else 0.dp
+        val room = with(density) { (width - look.padding * 2 - iconPart - OneLineSlack).roundToPx() }
+        if (room <= 0) return@remember false
+        val layout = measurer.measure(text, words, constraints = Constraints(maxWidth = room), layoutDirection = direction, density = density)
+        layout.lineCount <= lines && WholeWords.of(layout)
     }
 }
 
