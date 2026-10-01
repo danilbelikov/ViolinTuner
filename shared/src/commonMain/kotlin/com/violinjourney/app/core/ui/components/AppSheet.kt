@@ -186,16 +186,7 @@ fun <T : Any> AppSheet(
     val dismiss = remember { { if (held.value != null) hide.value(onScreen.value ?: latest.value) } }
     // a face that came in the place of another while the frame stood holds its main button for a double tap
     val arrival = remember(face) { FaceArrival(inPlace = sheetState.isVisible || !goingDown) }
-    val doubleTapMs = LocalViewConfiguration.current.doubleTapTimeoutMillis
-    LaunchedEffect(arrival) {
-        if (!arrival.inPlace) return@LaunchedEffect
-        val start = withFrameMillis { it }
-        // frame by frame, so that a test's clock that stands holds it too; a few frames, only after a face came in place
-        do {
-            val now = withFrameMillis { it }
-        } while (now - start < doubleTapMs)
-        arrival.settled = true
-    }
+    SettleAfterDoubleTap(arrival)
     // made once: the same modifier each time, not a new chain of the sheet at every recomposition of its owner
     val sides = remember { Modifier.clearOfTheSides() }
     val scope = rememberCoroutineScope()
@@ -321,7 +312,9 @@ private class OnScreen<T : Any> {
 
 /**
  * How a face came into the frame: [inPlace] — in the place of another while the frame stood or rose, under the finger that pressed
- * the button before it; [settled] — the time of a double tap has passed since. Read by the main button of the face.
+ * the button before it; [settled] — the time of a double tap has passed since ([SettleAfterDoubleTap]). Read by the main button of
+ * the face. The moments of the journey come in the same way — «В путь» in the place of «Собрать футляр», «Играть здесь» of the
+ * stamp in the place of «Поставить штамп» (spec 5.29 R7) — and hold the buttons of their bottom zone by one of these.
  */
 internal class FaceArrival(val inPlace: Boolean) {
     var settled = false
@@ -332,6 +325,24 @@ internal class FaceArrival(val inPlace: Boolean) {
     companion object {
         /** Outside a frame, or a face that rose with it: nothing is held. */
         val Risen = FaceArrival(inPlace = false)
+    }
+}
+
+/**
+ * Lets [arrival] go once the time of a double tap of the system (`doubleTapTimeoutMillis`: 300 ms on Android) has passed since its
+ * first frame — counted frame by frame, so that a test's clock that stands holds it too; a few frames, and only after something came
+ * in place. One that did not come in place of anything is never held.
+ */
+@Composable
+internal fun SettleAfterDoubleTap(arrival: FaceArrival) {
+    val doubleTapMs = LocalViewConfiguration.current.doubleTapTimeoutMillis
+    LaunchedEffect(arrival) {
+        if (!arrival.inPlace) return@LaunchedEffect
+        val start = withFrameMillis { it }
+        do {
+            val now = withFrameMillis { it }
+        } while (now - start < doubleTapMs)
+        arrival.settled = true
     }
 }
 

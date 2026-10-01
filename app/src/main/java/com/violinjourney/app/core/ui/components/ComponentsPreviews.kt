@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -15,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
@@ -23,6 +26,12 @@ import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.feature.journey.BalancePill
+import com.violinjourney.app.feature.journey.GlassSquare
+import com.violinjourney.app.feature.journey.TaktIcon
+import com.violinjourney.app.feature.journey.cityOf
+import com.violinjourney.app.feature.journey.cityToOf
+import com.violinjourney.app.feature.journey.sessionsInWords
 import com.violinjourney.app.feature.share.ShareInfo
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.backing_heard_violin
@@ -39,6 +48,12 @@ import com.violinjourney.app.shared.resources.dialog_back
 import com.violinjourney.app.shared.resources.dialog_discard_changes
 import com.violinjourney.app.shared.resources.dialog_discard_typed
 import com.violinjourney.app.shared.resources.dialog_name_needed
+import com.violinjourney.app.shared.resources.home_travel
+import com.violinjourney.app.shared.resources.home_travel_line
+import com.violinjourney.app.shared.resources.journey_depart
+import com.violinjourney.app.shared.resources.journey_depart_spend
+import com.violinjourney.app.shared.resources.journey_fullscreen
+import com.violinjourney.app.shared.resources.journey_missing
 import com.violinjourney.app.shared.resources.piece_delete_confirm
 import com.violinjourney.app.shared.resources.piece_delete_text
 import com.violinjourney.app.shared.resources.piece_delete_title
@@ -528,4 +543,128 @@ private fun FieldDePreview() = FieldGround {
         error = stringResource(Res.string.dialog_name_needed),
         counter = stringResource(Res.string.profile_name_counter, 0, SECTION_NAME_MAX),
     )
+}
+
+// ---- Stage 117 (spec 3.36.7, 5.29 R7): the plate of what is missing, the buttons of one line, the square of glass and the purse.
+
+@Composable
+private fun ZoneGround(content: @Composable ColumnScope.() -> Unit) = ViolinTheme {
+    Column(
+        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(DockDefaults.RowGap),
+        content = content,
+    )
+}
+
+/** The stretch of [caption] from the first of the numbers to the end of the other — what a button of one line keeps whole. */
+private fun numbersOf(caption: String, first: String, second: String): String {
+    val start = minOf(caption.indexOf(first), caption.indexOf(second))
+    val end = maxOf(caption.lastIndexOf(first) + first.length, caption.lastIndexOf(second) + second.length)
+    return caption.substring(start, end)
+}
+
+@Composable
+private fun MissingPlate(missing: Long, sessions: Int?, compact: Boolean = false) {
+    val takts = Formats.takts(missing)
+    ShortfallPlate(
+        text = stringResource(Res.string.journey_missing, takts),
+        modifier = Modifier.fillMaxWidth(),
+        caption = sessions?.let { sessionsInWords(it) },
+        compact = compact,
+        keep = takts,
+        leading = { TaktIcon(size = 18.dp) },
+    )
+}
+
+@Preview(name = "Plate · one line: «не хватает 1 128», words, not a sleeping button", widthDp = 412, heightDp = 100, locale = "ru")
+@Composable
+private fun PlateOneLinePreview() = ZoneGround { MissingPlate(1_128, sessions = null) }
+
+@Preview(name = "Plate · two lines: «не хватает 1 128» and «примерно 4 занятия»; under it the main button of the same height", widthDp = 412, heightDp = 170, locale = "ru")
+@Composable
+private fun PlateTwoLinesPreview() = ZoneGround {
+    MissingPlate(1_128, sessions = 4)
+    AppButton(stringResource(Res.string.journey_depart, cityOf(5)), onClick = {}, Modifier.fillMaxWidth(), icon = AppIcons.Travel)
+}
+
+@Preview(name = "Plate · a window no higher than 360: 48, two lines still", widthDp = 640, heightDp = 360, locale = "ru")
+@Composable
+private fun PlateCompactPreview() = ZoneGround { Column(Modifier.width(360.dp)) { MissingPlate(1_128, sessions = 4, compact = true) } }
+
+@Preview(name = "Plate · de 360 at 1.3: «es fehlen 5 999» and «etwa 20 Mal üben», each on one line", widthDp = 360, heightDp = 120, locale = "de", fontScale = 1.3f)
+@Composable
+private fun PlateGermanPreview() = ZoneGround { MissingPlate(5_999, sessions = 20) }
+
+@Composable
+private fun TravelButton(fromIndex: Int, missing: Long) {
+    val takts = Formats.takts(missing)
+    AppButton(
+        text = stringResource(Res.string.home_travel),
+        onClick = {},
+        modifier = Modifier.fillMaxWidth(),
+        icon = AppIcons.Travel,
+        caption = stringResource(Res.string.home_travel_line, cityOf(fromIndex), cityToOf(fromIndex + 1), takts),
+        oneLine = true,
+        keep = takts,
+    )
+}
+
+@Composable
+private fun DepartButton(toIndex: Int, price: Long, purse: Long) {
+    val spent = Formats.takts(price)
+    val balance = Formats.takts(purse)
+    val caption = stringResource(Res.string.journey_depart_spend, spent, balance)
+    AppButton(
+        text = stringResource(Res.string.journey_depart, cityOf(toIndex)),
+        onClick = {},
+        modifier = Modifier.fillMaxWidth(),
+        icon = AppIcons.Travel,
+        caption = caption,
+        oneLine = true,
+        keep = numbersOf(caption, spent, balance),
+    )
+}
+
+@Preview(name = "Button of one line · ru 360: «В дорогу» and «Санкт-Петербург → до Москвы 1 000»; «В путь · Санкт-Петербург»", widthDp = 360, heightDp = 190, locale = "ru")
+@Composable
+private fun OneLineRussianPreview() = ZoneGround {
+    TravelButton(fromIndex = 11, missing = 1_000)
+    DepartButton(toIndex = 11, price = 6_000, purse = 147_884)
+}
+
+@Preview(name = "Button of one line · ru 360 at 1.3: the words step down to 15, the city gives way, the numbers stay whole", widthDp = 360, heightDp = 200, locale = "ru", fontScale = 1.3f)
+@Composable
+private fun OneLineRussianLargePreview() = ZoneGround {
+    TravelButton(fromIndex = 11, missing = 1_000)
+    DepartButton(toIndex = 11, price = 6_000, purse = 147_884)
+}
+
+@Preview(name = "Button of one line · en 360 at 1.3: «Saint Petersburg → 1 000 to Moscow» — the number in the middle stays whole", widthDp = 360, heightDp = 200, locale = "en", fontScale = 1.3f)
+@Composable
+private fun OneLineEnglishLargePreview() = ZoneGround {
+    TravelButton(fromIndex = 11, missing = 1_000)
+    DepartButton(toIndex = 11, price = 6_000, purse = 147_884)
+}
+
+@Preview(name = "Button of one line · de and fr 360 at 1.3: «… werden ab…», «… seront dép…» — the numbers whole", widthDp = 360, heightDp = 200, locale = "de", fontScale = 1.3f)
+@Composable
+private fun OneLineGermanLargePreview() = ZoneGround {
+    DepartButton(toIndex = 11, price = 6_000, purse = 147_884)
+    TravelButton(fromIndex = 11, missing = 1_000)
+}
+
+@Preview(name = "Button of one line · fr 360 at 1.3", widthDp = 360, heightDp = 200, locale = "fr", fontScale = 1.3f)
+@Composable
+private fun OneLineFrenchLargePreview() = ZoneGround {
+    DepartButton(toIndex = 11, price = 6_000, purse = 147_884)
+    TravelButton(fromIndex = 11, missing = 1_000)
+}
+
+@Preview(name = "Glass over a picture · the square «на весь экран» and the purse in its pill (stage 118)", widthDp = 412, heightDp = 200, locale = "ru")
+@Composable
+private fun GlassSquarePreview() = ViolinTheme {
+    Box(Modifier.size(412.dp, 200.dp).background(Brush.linearGradient(listOf(Color(0xFFE0A070), Color(0xFF46306A), Color(0xFF7FB2E0))))) {
+        GlassSquare(AppIcons.Fullscreen, stringResource(Res.string.journey_fullscreen), onClick = {}, modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp))
+        BalancePill(47_884, Modifier.align(Alignment.TopEnd).padding(8.dp))
+    }
 }

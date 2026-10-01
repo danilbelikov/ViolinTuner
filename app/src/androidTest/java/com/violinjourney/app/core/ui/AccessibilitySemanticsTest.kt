@@ -94,6 +94,7 @@ import com.violinjourney.app.feature.history.HistoryFilter
 import com.violinjourney.app.feature.history.HistoryScreen
 import com.violinjourney.app.feature.history.HistoryState
 import com.violinjourney.app.feature.history.components.SessionCard
+import com.violinjourney.app.core.ui.components.ShortfallPlate
 import com.violinjourney.app.feature.home.TwoWay
 import com.violinjourney.app.feature.journey.JourneyReducer
 import com.violinjourney.app.feature.journey.JourneyWindowCard
@@ -211,6 +212,34 @@ class AccessibilitySemanticsTest {
         assertEquals(true, selectedOf(OUTSIDE))
         compose.onNodeWithText(ROOM).performClick()
         assertEquals(listOf(false), chosen)
+    }
+
+    /**
+     * The plate of what is missing (spec 3.36.7, 5.29 R7): it tells, it does not forbid — one text for a reader, its [description] when
+     * given, else the words and the caption; no role of a button, no action, never «disabled», and not a single text of its own left
+     * apart from it.
+     */
+    @Test
+    fun aShortfallPlateIsWordsNotADisabledButton() {
+        compose.setContent {
+            ViolinTheme {
+                Column {
+                    ShortfallPlate(text = SHORT, caption = ABOUT, description = SAID)
+                    ShortfallPlate(text = SHORT, caption = ABOUT)
+                }
+            }
+        }
+        val plates = compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.ContentDescription)).fetchSemanticsNodes()
+        assertEquals(listOf(listOf(SAID), listOf("$SHORT, $ABOUT")), plates.map { it.config[SemanticsProperties.ContentDescription] })
+        plates.forEach { plate ->
+            assertEquals("no role", null, plate.config.getOrNull(SemanticsProperties.Role))
+            assertFalse("not «disabled»", SemanticsProperties.Disabled in plate.config)
+            assertFalse("no touch", SemanticsActions.OnClick in plate.config)
+            assertFalse("no long touch", SemanticsActions.OnLongClick in plate.config)
+        }
+        // the words are in the description, not nodes apart
+        compose.onAllNodesWithText(SHORT, substring = true).assertCountEquals(0)
+        compose.onAllNodesWithText(ABOUT, substring = true).assertCountEquals(0)
     }
 
     /** The player at the bottom of «Звук» (spec 3.36.5): its large A/B are two radio buttons their activation picks; the wave seeks nowhere. */
@@ -794,6 +823,11 @@ class AccessibilitySemanticsTest {
     private companion object {
         const val ROOM = "Room"
         const val OUTSIDE = "Outside"
+
+        /** The plate of the journey short of Prague: 472 of 1 600 in the purse. */
+        const val SHORT = "не хватает 1\u00A0128"
+        const val ABOUT = "примерно 4\u00A0занятия"
+        const val SAID = "не хватает 1\u00A0128 тактов, примерно 4\u00A0занятия"
 
         /** 17 h 27 min — the month of the mockups. */
         const val SEPTEMBER_MS = (17 * 60 + 27) * MS_PER_MINUTE

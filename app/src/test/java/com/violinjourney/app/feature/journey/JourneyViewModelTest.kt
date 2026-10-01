@@ -49,8 +49,8 @@ class JourneyViewModelTest {
 
     private suspend fun earn(takts: Int) = journey.earn(TaktEarning(clock.millis(), takts, takts, 0, takts))
 
-    private fun TestScope.viewModel(): Pair<JourneyViewModel, MutableList<JourneyEffect>> {
-        val viewModel = JourneyViewModel(journey, clock, venues)
+    private fun TestScope.viewModel(config: JourneyConfig = JourneyConfig()): Pair<JourneyViewModel, MutableList<JourneyEffect>> {
+        val viewModel = JourneyViewModel(journey, config, clock, venues)
         val effects = mutableListOf<JourneyEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
@@ -125,6 +125,26 @@ class JourneyViewModelTest {
         assertEquals("cremona", state.current.id)
         assertEquals("milan", state.next?.id)
         assertEquals(listOf("home", "cremona"), state.visited.map { it.stop.id })
+    }
+
+    /**
+     * «примерно N занятий» under the plate of what is missing (spec 3.36.7, 5.18): the takts missing for the next city in practices of
+     * the config — up, at least one — and nothing once the takts are enough.
+     */
+    @Test
+    fun thePracticesLeftAreTheTaktsMissingInPracticesOfTheConfig() = runTest(dispatcher) {
+        journey.start(clock.millis())
+        val (atHome, _) = viewModel()
+        assertEquals(300L, atHome.state.value.missing)
+        assertEquals("300 missing for Cremona: one practice", 1, atHome.state.value.sessionsLeft)
+
+        val (shorter, _) = viewModel(JourneyConfig(taktsPerSessionHint = 100))
+        assertEquals("the config of the graph decides what a practice is", 3, shorter.state.value.sessionsLeft)
+
+        earn(300)
+        runCurrent()
+        assertTrue(atHome.state.value.canDepart)
+        assertEquals("enough — nothing is said", 0, atHome.state.value.sessionsLeft)
     }
 
     @Test

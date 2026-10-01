@@ -1,6 +1,7 @@
 package com.violinjourney.app.feature.journey
 
 import com.violinjourney.app.core.domain.journey.Arrival
+import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.journey.JourneyProgress
 import com.violinjourney.app.core.domain.journey.JourneyRoute
 import kotlin.test.Test
@@ -54,5 +55,19 @@ class JourneyReducerTest {
         )
         assertNull(end.next)
         assertFalse(end.enough)
+    }
+
+    /** «примерно N занятий» under the plate of what is missing (spec 3.36.7, 5.18): in the state of the screen, by the config given. */
+    @Test
+    fun `the state says the practices the missing takts are - by the config - and none once they are enough`() {
+        val progress = JourneyProgress(earned = 172, spent = 0, arrivals = listOf(home), extras = emptySet())
+        val short = JourneyReducer.stateOf(progress, null, JourneyConfig())
+        assertEquals(128L, short.missing)
+        assertEquals(1, short.sessionsLeft)
+        assertEquals(2, JourneyReducer.stateOf(progress, null, JourneyConfig(taktsPerSessionHint = 100)).sessionsLeft)
+        val enough = JourneyReducer.stateOf(progress.copy(earned = 300), null, JourneyConfig())
+        assertTrue(enough.canDepart)
+        assertEquals(0, enough.sessionsLeft)
+        assertEquals(0, JourneyReducer.loading.sessionsLeft)
     }
 }

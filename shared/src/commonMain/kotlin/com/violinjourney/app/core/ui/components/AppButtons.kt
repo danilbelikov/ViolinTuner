@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -57,6 +58,14 @@ private const val CAPTION_ALPHA = 0.8f
 private const val DISABLED_ALPHA = 0.38f
 private const val TEXT_LINES = 2
 
+/** The least size of the words of a button of [AppButton] with `oneLine` (spec 5.29 R7): the size of the words of a button of 48. */
+private const val ONE_LINE_LEAST_SP = 15f
+
+/** The caption of a button of one line: 13 sp, down to 12 where it does not fit (5.29 R7). */
+private const val CAPTION_SP = 13f
+private const val CAPTION_LEAST_SP = 12f
+private const val TABULAR_FIGURES = "tnum"
+
 /**
  * How important the action of an [AppButton] is — the weight of a button is the weight of its action (components.html):
  *
@@ -90,6 +99,13 @@ enum class AppButtonStyle { Main, Outline, Soft, Text, Quiet, Danger, DangerFill
  * With a [reason] or a [reasonReserve] the [modifier] belongs to the column of the reason and the button, and the button is as wide
  * as that column. [fontSize] — the words smaller than the size of the style, where a narrow button keeps them on one line
  * ([appButtonOneLineSize]); unspecified — the size of the style.
+ *
+ * [oneLine] — the words and the [caption] never wrap (spec 3.36.7, 5.29 R7: «В путь · Санкт-Петербург», «спишется 1 600 из
+ * 47 884», «Live · Золотой зал»): each steps down where it does not fit — the words to 15 sp, the caption from 13 to 12, 0.5 sp at a
+ * time ([ButtonFit]) — and then is cut with an ellipsis, measured in the button itself ([OneLineText]); the caption is tabular.
+ * [keep] — the part of the [caption] that is never cut, the number: the caption is laid out as «before · keep · after», and the two
+ * sides give way, each with its own ellipsis ([ButtonLine]) — in English the number of «Vienna → 1 128 to Prague» stands in the
+ * middle. A button of one line still answers intrinsic measurements: a row of buttons of one height may hold it.
  */
 @Composable
 fun AppButton(
@@ -106,9 +122,12 @@ fun AppButton(
     trailingIcon: ImageVector? = null,
     leading: (@Composable () -> Unit)? = null,
     fontSize: TextUnit = TextUnit.Unspecified,
+    oneLine: Boolean = false,
+    keep: String? = null,
 ) {
+    val lines = ButtonLines(oneLine, keep)
     if (reason == null && reasonReserve == null) {
-        StyledButton(text, onClick, modifier, style, icon, caption, enabled, compact, trailingIcon, leading, fontSize)
+        StyledButton(text, onClick, modifier, style, icon, caption, enabled, compact, trailingIcon, leading, fontSize, lines)
         return
     }
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -119,9 +138,13 @@ fun AppButton(
             if (reason != null) Reason(reason, Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         }
         Spacer(Modifier.height(ReasonGap))
-        StyledButton(text, onClick, Modifier.fillMaxWidth(), style, icon, caption, enabled, compact, trailingIcon, leading, fontSize)
+        StyledButton(text, onClick, Modifier.fillMaxWidth(), style, icon, caption, enabled, compact, trailingIcon, leading, fontSize, lines)
     }
 }
+
+/** How the words of a button stand: on up to two lines, or [oneLine] with the [keep] of its caption (see [AppButton]). */
+@Immutable
+private data class ButtonLines(val oneLine: Boolean, val keep: String?)
 
 /**
  * The size of the words of an [AppButton] of [style] [width] wide that keeps [text] on one line: the size of the style where it
@@ -252,6 +275,7 @@ private fun StyledButton(
     trailingIcon: ImageVector?,
     leading: (@Composable () -> Unit)?,
     fontSize: TextUnit,
+    lines: ButtonLines,
 ) {
     val look = lookOf(style, compact).let { if (fontSize.isSpecified) it.copy(fontSize = fontSize) else it }
     val shown = icon ?: if (style == AppButtonStyle.Danger) AppIcons.Trash else null
@@ -286,7 +310,37 @@ private fun StyledButton(
             AppIcon(shown, contentDescription = null, size = look.icon)
             Spacer(Modifier.width(IconSizes.ButtonGap))
         }
-        if (withCaption) {
+        if (lines.oneLine) {
+            // what the icons leave, and no more: the words and the caption find their size in it, and the block stays in the middle
+            Column(Modifier.weight(1f, fill = false), horizontalAlignment = if (withCaption) Alignment.Start else Alignment.CenterHorizontally) {
+                // with a caption the two lines must stand in the 48 of a low window: exact lines (ExactLines) — Android would pad each
+                // back to Manrope's own 1.37 em, and the button grew to 50.7 (stage 117, the emulator lying at 603 × 308)
+                OneLineText(
+                    text = text,
+                    style = words.copy(
+                        lineHeight = look.fontSize * if (withCaption) CAPTION_LINE_HEIGHT else LINE_HEIGHT,
+                        lineHeightStyle = if (withCaption) ExactLines else words.lineHeightStyle,
+                    ),
+                    minSp = ONE_LINE_LEAST_SP,
+                )
+                if (withCaption) {
+                    val content = LocalContentColor.current
+                    OneLineText(
+                        text = caption.orEmpty(),
+                        style = words.copy(
+                            fontSize = CAPTION_SP.sp,
+                            lineHeight = (CAPTION_SP * CAPTION_LINE_HEIGHT).sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontFeatureSettings = TABULAR_FIGURES,
+                            lineHeightStyle = ExactLines,
+                        ),
+                        minSp = CAPTION_LEAST_SP,
+                        color = content.copy(alpha = content.alpha * CAPTION_ALPHA),
+                        keep = lines.keep,
+                    )
+                }
+            }
+        } else if (withCaption) {
             // the words and the caption under them start at one edge, beside the icon, as one block in the middle of the button
             Column(horizontalAlignment = Alignment.Start) {
                 Text(text, style = words.copy(lineHeight = look.fontSize * CAPTION_LINE_HEIGHT), maxLines = TEXT_LINES)

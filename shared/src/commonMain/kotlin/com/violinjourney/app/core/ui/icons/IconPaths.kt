@@ -135,6 +135,8 @@ internal object IconPaths {
     val HOUSE = listOf("M4 11l8-6 8 6", "M6 10v9h12v-9")
     val THEATRE = listOf("M4 19h16", "M6 19V9l6-4 6 4v10", "M9.5 19v-5h5v5")
     val TRAVEL = listOf("M6 7.5h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z", "M8.5 7.5V5.8a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v1.7", "M4 13h13", "M17.5 6.5l3-3M20.5 6.5v-3h-3")
+    /** «Поставить штамп» of the arrival (spec 3.36.7, 3.16; redesign journey-home.html, `i-stamp`): the handle of a stamp over its pad and the line it leaves. */
+    val STAMP = listOf("M9 3h6v5l-1 4h-4L9 8z", "M4 14h16v4H4z", "M6 21h12")
     /** Third handoff of the home (`home3/project/home-catalog.js` → `ICONS`, spec 3.29), carried by hand: a stall under a striped awning with scallops — «Лавка»; an armchair — «Обставить». */
     val SHOP = listOf("M3.5 9.5 5.2 4.5h13.6l1.7 5", "M3.5 9.5a2.125 2.125 0 0 0 4.25 0 2.125 2.125 0 0 0 4.25 0 2.125 2.125 0 0 0 4.25 0 2.125 2.125 0 0 0 4.25 0", "M8.6 4.5 7.75 9.5M15.4 4.5l.85 5", "M5.5 12.5V20h13v-7.5", "M9.5 20v-3.3a1.2 1.2 0 0 1 1.2-1.2h2.6a1.2 1.2 0 0 1 1.2 1.2V20")
     val ARRANGE = listOf("M6.5 11V7.2A2.2 2.2 0 0 1 8.7 5h6.6a2.2 2.2 0 0 1 2.2 2.2V11", "M4 12.2a1.9 1.9 0 0 1 3.8 0V15h8.4v-2.8a1.9 1.9 0 0 1 3.8 0v6.3H4z", "M6 18.5v2M18 18.5v2")

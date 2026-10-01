@@ -388,7 +388,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                     onOpenStop = { stopId -> navController.navigate(Routes.stop(stopId)) { launchSingleTop = true } },
                     onOpenLive = navController::navigateToLiveLeavingTheGame,
                     onClose = navController::popBackStack,
-                    viewModel = viewModel { JourneyViewModel(graph.journey, graph.clock, graph.venues) },
+                    viewModel = viewModel { JourneyViewModel(graph.journey, graph.journeyConfig, graph.clock, graph.venues) },
                     homeLookViewModel = viewModel { HomeLookViewModel(graph.home) },
                 )
             }

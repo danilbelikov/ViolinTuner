@@ -11,10 +11,18 @@ package com.violinjourney.app.core.ui.components
 internal object ButtonFit {
     const val STEP_SP = 0.5f
 
-    fun size(room: Float, maxSp: Float, minSp: Float, widthAt: (sizeSp: Float) -> Float): Float {
+    fun size(room: Float, maxSp: Float, minSp: Float, widthAt: (sizeSp: Float) -> Float): Float =
+        largest(maxSp, minSp) { sizeSp -> widthAt(sizeSp) <= room }
+
+    /**
+     * The largest size from [maxSp] down, 0.5 sp at a time, at which [fits] says yes — [minSp] where none above it does ([minSp]
+     * itself is not asked: the caller stands there whatever it says, cut with an ellipsis or on two lines). The lines of one line
+     * of R7 ([OneLineText]) ask it of their own layout.
+     */
+    fun largest(maxSp: Float, minSp: Float, fits: (sizeSp: Float) -> Boolean): Float {
         var sizeSp = maxSp
         while (sizeSp > minSp) {
-            if (widthAt(sizeSp) <= room) return sizeSp
+            if (fits(sizeSp)) return sizeSp
             sizeSp -= STEP_SP
         }
         return minSp

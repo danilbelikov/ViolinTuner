@@ -1,5 +1,6 @@
 package com.violinjourney.app.feature.journey
 
+import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.journey.JourneyRepository
 import com.violinjourney.app.core.domain.venue.Venues
 import com.violinjourney.app.core.time.WallClock
@@ -10,6 +11,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HiltJourneyViewModel @Inject constructor(
     journey: JourneyRepository,
+    config: JourneyConfig,
     clock: WallClock,
     venues: Venues,
-) : JourneyViewModel(journey, clock, venues)
+) : JourneyViewModel(journey, config, clock, venues)

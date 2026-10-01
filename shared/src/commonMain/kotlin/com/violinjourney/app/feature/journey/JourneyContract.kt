@@ -38,6 +38,11 @@ data class JourneyState(
     val visited: List<VisitedStop>,
     /** Stops after home: «остановка 4 из 16». */
     val totalStops: Int,
+    /**
+     * «примерно 4 занятия» under «не хватает 1 128» (spec 3.36.7, 5.18): the practices the [missing] takts are, about
+     * ([com.violinjourney.app.core.domain.journey.JourneyRules.sessionsLeft]); 0 when nothing is missing.
+     */
+    val sessionsLeft: Int = 0,
 )
 
 sealed interface JourneyIntent {

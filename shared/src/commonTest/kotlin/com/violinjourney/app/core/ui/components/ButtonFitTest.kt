@@ -25,6 +25,18 @@ class ButtonFitTest {
         assertEquals(17f, ButtonFit.size(131f, maxSp = 17f, minSp = 15f, widthAt = widths(114.7f)))
     }
 
+    /** The lines of one line of R7 ask their own layout at each size ([OneLineText]): the first size down that it takes, else the least. */
+    @Test
+    fun `the largest size a line takes is found stepping down - the least size is not asked`() {
+        val asked = mutableListOf<Float>()
+        assertEquals(15.5f, ButtonFit.largest(17f, 15f) { sizeSp -> asked += sizeSp; sizeSp <= 15.5f })
+        assertEquals(listOf(17f, 16.5f, 16f, 15.5f), asked)
+        asked.clear()
+        assertEquals(12f, ButtonFit.largest(13f, 12f) { sizeSp -> asked += sizeSp; false })
+        assertEquals(listOf(13f, 12.5f), asked, "12 is where it stands, cut, whatever it says")
+        assertEquals(15f, ButtonFit.largest(15f, 15f) { false }, "the words of a button of 48 are at their least already")
+    }
+
     @Test
     fun `below the least size they do not go`() {
         assertEquals(15f, ButtonFit.size(131f, maxSp = 17f, minSp = 15f, widthAt = widths(178.2f)))

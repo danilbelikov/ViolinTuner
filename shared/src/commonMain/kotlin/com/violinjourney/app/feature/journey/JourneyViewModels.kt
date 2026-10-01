@@ -35,9 +35,10 @@ object JourneyReducer {
         }
         .sortedBy { it.index }
 
-    fun stateOf(progress: JourneyProgress, phase: JourneyPhase?): JourneyState {
+    fun stateOf(progress: JourneyProgress, phase: JourneyPhase?, config: JourneyConfig): JourneyState {
         val index = JourneyRules.currentIndex(progress)
         val current = JourneyRoute.stops[index]
+        val missing = JourneyRules.missing(progress)
         return JourneyState(
             loading = false,
             phase = phase ?: if (progress.started) JourneyPhase.Idle else JourneyPhase.Intro,
@@ -46,10 +47,11 @@ object JourneyReducer {
             arrivedAtEpochMs = progress.arrivals.firstOrNull { it.stopId == current.id }?.arrivedAtEpochMs,
             next = JourneyRules.next(progress),
             balance = progress.balance,
-            missing = JourneyRules.missing(progress),
+            missing = missing,
             canDepart = JourneyRules.canDepart(progress),
             visited = visitedOf(progress),
             totalStops = totalStops,
+            sessionsLeft = JourneyRules.sessionsLeft(missing, config),
         )
     }
 
@@ -71,9 +73,13 @@ object JourneyReducer {
     )
 }
 
-/** The journey's own screen: where the player is, the next leg, and the road when it is taken (spec 3.23). */
+/**
+ * The journey's own screen: where the player is, the next leg, and the road when it is taken (spec 3.23). [config] — the numbers of
+ * the journey: the hint «примерно N занятий» under the plate of what is missing (3.36.7). The same order as [StopViewModel].
+ */
 open class JourneyViewModel(
     private val journey: JourneyRepository,
+    private val config: JourneyConfig,
     private val clock: WallClock,
     private val venues: Venues,
 ) : ViewModel() {
@@ -85,7 +91,7 @@ open class JourneyViewModel(
 
     val state: StateFlow<JourneyState> = combine(journey.progress, phase) { progress, phase ->
         latest = progress
-        JourneyReducer.stateOf(progress, phase)
+        JourneyReducer.stateOf(progress, phase, config)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), JourneyReducer.loading)
 
     private val effectChannel = Channel<JourneyEffect>(Channel.BUFFERED)

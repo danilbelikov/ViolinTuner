@@ -17,6 +17,11 @@ data class JourneyConfig(
     val secondTimePrice: Int = 200,
     val secondViewPrice: Int = 400,
     val souvenirPrice: Int = 150,
+    /**
+     * 5.18: the hint «примерно N занятий» — how many takts one practice is taken to bring (the middle of the guide of 5.17). Said
+     * under «В путь», in the card of a thing and in the sheet of a house ([JourneyRules.sessionsLeft]).
+     */
+    val taktsPerSessionHint: Int = 300,
 )
 
 enum class Transport { NONE, TRAIN, SHIP, PLANE }
@@ -153,6 +158,17 @@ object JourneyRules {
     fun enough(progress: JourneyProgress): Boolean = next(progress) != null && missing(progress) == 0L
 
     fun canDepart(progress: JourneyProgress): Boolean = progress.started && enough(progress)
+
+    /**
+     * «примерно N занятий» (spec 5.18, 5.29 R7): how many practices, about, the [missing] takts are — a practice taken as
+     * [JourneyConfig.taktsPerSessionHint] takts, rounded up, at least one while anything is missing; none when nothing is. One rule
+     * for «В путь», the card of a thing and the sheet of a house.
+     */
+    fun sessionsLeft(missing: Long, config: JourneyConfig): Int {
+        if (missing <= 0) return 0
+        val perSession = config.taktsPerSessionHint.coerceAtLeast(1).toLong()
+        return ((missing + perSession - 1) / perSession).toInt().coerceAtLeast(1)
+    }
 
     fun priceOf(extra: JourneyExtra, config: JourneyConfig): Int = when (extra) {
         JourneyExtra.SECOND_TIME -> config.secondTimePrice

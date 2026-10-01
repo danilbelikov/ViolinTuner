@@ -1,9 +1,15 @@
 package com.violinjourney.app.feature.journey
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -11,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -21,7 +28,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.PathParser
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -31,7 +40,11 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.violinjourney.app.core.ui.components.glass
 import com.violinjourney.app.core.ui.format.Formats
+import com.violinjourney.app.core.ui.icons.AppIcon
+import com.violinjourney.app.core.ui.theme.AppShapes
+import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.journey.art.JourneySilhouettes
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.journey_cities
@@ -115,6 +128,98 @@ fun TaktAmount(
     ) {
         TaktIcon(size = icon, tint = iconColor, modifier = Modifier.semantics { contentDescription = label })
         Text(text, color = color, maxLines = 1, style = style.copy(fontFeatureSettings = "tnum"))
+    }
+}
+
+/**
+ * How high a picture of the journey and of the home stands upright (spec 3.36.7, 5.29 R7, «Маленький экран и крупный шрифт»): the
+ * pictures give way first — what is [available] under the bar, less the bottom zone ([dock]) and the words under the picture
+ * ([WordsUnder]: the name and its line), within [min]…[max]; the zone itself never shrinks. Postcards of the journey and the stop —
+ * [PostcardMin]…[PostcardMax], the room of the home — [RoomMin]…[RoomMax]: on 360 × 640 a postcard stays 240, the room is about 260
+ * to 285 (gestures or three buttons). Pure, with a test.
+ */
+object PictureFit {
+    val PostcardMin = 180.dp
+    val PostcardMax = 240.dp
+    val RoomMin = 200.dp
+    val RoomMax = 290.dp
+
+    /** The words under a picture that should stand in the first screen with it: the name and the line under it. */
+    val WordsUnder = 120.dp
+
+    /** The postcard of the intro and of the arrival lying, beside their words: 240 wide, [PostcardMin] high at most, [LyingMin] at least. */
+    val LyingWidth = 240.dp
+    val LyingMin = 120.dp
+
+    fun height(available: Dp, dock: Dp, min: Dp, max: Dp): Dp = (available - dock - WordsUnder).coerceIn(min, max)
+
+    /**
+     * How high the postcard of the intro and of the arrival stands lying (5.29 R7): beside its words, so nothing of theirs waits under
+     * it — [PostcardMin], or the [room] over the fade of the zone where that is less, down to [LyingMin]: on the emulator's 640 × 360
+     * the intro has 164 under its bar, the arrival 200.
+     */
+    fun lying(room: Dp): Dp = room.coerceIn(LyingMin, PostcardMin)
+}
+
+/**
+ * How large the frame of the stamp stands on its page (spec 3.36.7, 5.29 R7): [FrameMax] — 220 — where there is room, else the
+ * [room] left to it over the fade of the zone, down to [FrameMin]; the stamp keeps its share of the frame, 168 of 220
+ * ([STAMP_SHARE]). The frame is the picture of the page and gives way first, as the postcards and the room do ([PictureFit]):
+ * upright the room is what the words over and under it leave, lying — beside the words — what the zone leaves. Pure, with a test.
+ */
+object StampFit {
+    val FrameMax = 220.dp
+    val FrameMin = 140.dp
+    const val STAMP_SHARE = 168f / 220f
+
+    fun frame(room: Dp): Dp = room.coerceIn(FrameMin, FrameMax)
+}
+
+// A square of glass over a picture and the purse in a pill (spec 5.29 R7, «Стекло на картинах», «Общее»).
+private val GlassSquareSize = 48.dp
+private val GlassSquareIcon = 24.dp
+private val BalanceHeight = 34.dp
+private val BalanceSide = 12.dp
+private val BalanceSign = 15.dp
+
+/**
+ * A square of smoked glass over a picture (spec 5.29 R7): 48, rounded 12, glass 0.72, the [icon] of 24 in the colour of the words —
+ * «на весь экран» of the stop and of the home, the way out of their whole screens. Pressed when [onClick] is given, and said by
+ * [contentDescription]; the same square as the corner of a video (R5).
+ */
+@Composable
+fun GlassSquare(icon: ImageVector, contentDescription: String?, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(GlassSquareSize)
+            .clip(AppShapes.S)
+            .glass(AppShapes.S)
+            .then(if (onClick != null) Modifier.clickable(onClickLabel = contentDescription, role = Role.Button, onClick = onClick) else Modifier),
+        contentAlignment = Alignment.Center,
+    ) { AppIcon(icon, contentDescription = contentDescription, size = GlassSquareIcon, tint = MaterialTheme.colorScheme.onSurface) }
+}
+
+/**
+ * The purse in a pill (spec 5.29 R7, «Общее»): 34, a capsule of the soft accent, fields of 12, the sign of 15 and the number of 14 sp /
+ * 800 in the accent, tabular (7.4 : 1) — in the bars of the home, the shop, the stop and «Дома», where prices are compared with it.
+ */
+@Composable
+fun BalancePill(balance: Long, modifier: Modifier = Modifier) {
+    val accent = MaterialTheme.colorScheme.primary
+    Box(
+        modifier = modifier
+            .heightIn(min = BalanceHeight)
+            .clip(CircleShape)
+            .background(ViolinTheme.accentSoft)
+            .padding(horizontal = BalanceSide),
+        contentAlignment = Alignment.Center,
+    ) {
+        TaktAmount(
+            text = Formats.takts(balance),
+            color = accent,
+            icon = BalanceSign,
+            style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, lineHeight = 18.sp, fontWeight = FontWeight.ExtraBold),
+        )
     }
 }
 

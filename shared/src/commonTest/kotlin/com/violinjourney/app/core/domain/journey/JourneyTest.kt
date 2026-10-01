@@ -108,6 +108,19 @@ class JourneyTest {
         assertFalse(JourneyRules.enough(everywhere), "nothing is enough at the end of what is drawn")
     }
 
+    /** «примерно N занятий» (spec 5.18, 5.29 R7): 300 takts a practice, rounded up, at least one while anything is missing. */
+    @Test
+    fun `the practices left are the missing takts in practices of 300 - up and at least one - and none when nothing is missing`() {
+        assertEquals(4, JourneyRules.sessionsLeft(1_128, config), "«не хватает 1 128 · примерно 4 занятия»")
+        assertEquals(1, JourneyRules.sessionsLeft(1, config), "one takt missing is a practice still")
+        assertEquals(1, JourneyRules.sessionsLeft(300, config))
+        assertEquals(2, JourneyRules.sessionsLeft(301, config))
+        assertEquals(0, JourneyRules.sessionsLeft(0, config), "enough says nothing")
+        assertEquals(0, JourneyRules.sessionsLeft(-5, config))
+        assertEquals(5, JourneyRules.sessionsLeft(1_128, JourneyConfig(taktsPerSessionHint = 250)), "the number is the config's")
+        assertEquals(300, config.taktsPerSessionHint, "5.18: the middle of the guide of 5.17")
+    }
+
     @Test
     fun `beyond the last drawn stop there is no next - the takts wait`() {
         val everywhere = JourneyProgress(earned = 99_999, spent = 0, arrivals = JourneyRoute.stops.filter { it.available }.map { Arrival(it.id, 1) }, extras = emptySet())
