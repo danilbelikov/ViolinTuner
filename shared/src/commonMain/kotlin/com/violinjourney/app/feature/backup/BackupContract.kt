@@ -18,6 +18,11 @@ data class BackupState(
     val stopDialog: Boolean = false,
     /** Up to this a copy may go through the ordinary «Поделиться». */
     val shareUpToBytes: Long = 0,
+    /**
+     * «Готово», «Закрыть» or «назад» was pressed: the screen is on its way out. It keeps the face it was closed on while it fades —
+     * the outcome is read and gone, and the choice the live state would show stands under the finger — and takes no more presses.
+     */
+    val closing: Boolean = false,
 ) {
     val totalBytes: Long get() = contents?.bytesOf(parts) ?: 0
     val canShare: Boolean get() = contents != null && totalBytes <= shareUpToBytes
@@ -93,6 +98,12 @@ data class RestoreState(
     val dialog: RestoreDialog? = null,
     /** «Открываем ваши данные…»: the process is about to start anew under this screen. */
     val opening: Boolean = false,
+    /**
+     * The screen is on its way out («Закрыть», «Понятно», «назад», or nothing left to watch): it keeps the face it was closed on while
+     * it fades — a failure read and gone would otherwise turn back into the passport, «Восстановить» under the finger — and takes no
+     * more presses.
+     */
+    val closing: Boolean = false,
 ) {
     /** A copy is being saved: one job at a time (spec 5.14), and the restore waits for it, saying why. */
     val savingCopy: Boolean get() = job is BackupJob.Saving
@@ -111,7 +122,11 @@ sealed interface RestoreIntent {
 
     data class FilePicked(val uri: String?) : RestoreIntent
 
+    /** «Сначала сохранить текущие данные»: the screen of a copy over this one — once until this one is shown again ([ScreenShown]). */
     data object SaveFirstClicked : RestoreIntent
+
+    /** The screen has come to the front again (every start of its lifecycle): what it opened over itself has gone. */
+    data object ScreenShown : RestoreIntent
 
     data object CancelClicked : RestoreIntent
 

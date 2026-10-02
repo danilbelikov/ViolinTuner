@@ -241,6 +241,98 @@ class BackupManagerTest {
         assertEquals(401_000L + 50L * 1024 * 1024 - 10_000_000, failed.missingBytes)
     }
 
+    /** Documents that write down the job as it stands when the copy opens its stream — its files listed, its writing not begun. */
+    private class WatchedDocuments(private val inner: FakeBackupDocuments) : BackupDocuments by inner {
+        lateinit var manager: BackupManager
+        val seen = mutableListOf<BackupJob>()
+
+        override fun openOutput(uri: String): OutputStream? {
+            seen += manager.job.value
+            return inner.openOutput(uri)
+        }
+    }
+
+    @Test
+    fun `the job knows the parts of its copy and those with files`() = runTest {
+        // spec 3.36.8: a screen opened anew on a copy shows its choice from the job, and its line of phases names the parts with files
+        val watched = WatchedDocuments(documents)
+        val manager = manager(watched).also { watched.manager = it }
+        manager.saveTo("content://downloads/1", setOf(BackupPart.DATA, BackupPart.AUDIO), "копия.zip")
+        assertEquals(setOf(BackupPart.DATA, BackupPart.AUDIO), (manager.job.value as BackupJob.Saving).parts)
+        assertTrue("nothing is listed yet", (manager.job.value as BackupJob.Saving).filled.isEmpty())
+        advanceUntilIdle()
+        // the fake app has files of the data and of the video only: the sound switched on has none
+        val listed = watched.seen.single() as BackupJob.Saving
+        assertEquals(setOf(BackupPart.DATA, BackupPart.AUDIO), listed.parts)
+        assertEquals(setOf(BackupPart.DATA), listed.filled)
+        manager.dismiss()
+
+        // the data always go, even when the choice leaves them out
+        manager.saveTo("content://downloads/2", setOf(BackupPart.VIDEO), "копия.zip")
+        assertEquals(setOf(BackupPart.DATA, BackupPart.VIDEO), (manager.job.value as BackupJob.Saving).parts)
+        advanceUntilIdle()
+        assertEquals(setOf(BackupPart.DATA, BackupPart.VIDEO), (watched.seen.last() as BackupJob.Saving).filled)
+    }
+
+    @Test
+    fun `a failed copy keeps the parts it was made of`() = runTest {
+        // a full card (as above): «Ещё раз» on a screen opened anew takes the same copy, and «Без видео…» knows the video was in it.
+        // Not all of them: the parts of every copy were all of them once, so a failure that forgot its own would look the same
+        // (review of stage 122); the video is in it, for the fake card fills up past its first 100 000 bytes.
+        val manager = manager()
+        documents.failWith = IOException("write failed: ENOSPC (No space left on device)")
+        val withVideo = setOf(BackupPart.DATA, BackupPart.VIDEO)
+        manager.saveTo("content://usb/1", withVideo, "копия.zip")
+        advanceUntilIdle()
+        assertEquals(BackupJob.SaveFailed(SaveFailure.NO_SPACE, parts = withVideo), manager.job.value)
+        manager.dismiss()
+
+        // «Отправить…» without the room in the phone for its archive
+        documents.failWith = null
+        store.free = 10_000_000
+        val sent = setOf(BackupPart.DATA, BackupPart.VIDEO)
+        manager.share(sent, "копия.zip")
+        advanceUntilIdle()
+        val failed = manager.job.value as BackupJob.SaveFailed
+        assertEquals(SaveFailure.NO_SPACE, failed.reason)
+        assertTrue(failed.missingBytes > 0)
+        assertEquals(sent, failed.parts)
+        manager.dismiss()
+
+        // a snapshot the phone has no room for, and a place that cannot be opened: the parts go with every failure
+        store.free = Long.MAX_VALUE
+        store.prepareFails = RuntimeException("database or disk is full (code 13 SQLITE_FULL)")
+        manager.saveTo("content://downloads/3", setOf(BackupPart.SHEETS), "копия.zip")
+        advanceUntilIdle()
+        assertEquals(BackupJob.SaveFailed(SaveFailure.PHONE_FULL, parts = setOf(BackupPart.DATA, BackupPart.SHEETS)), manager.job.value)
+        store.prepareFails = null
+        val closed = object : BackupDocuments by documents {
+            override fun openOutput(uri: String): OutputStream? = null
+        }
+        val gone = manager(closed)
+        gone.saveTo("content://gone/1", setOf(BackupPart.AUDIO), "копия.zip")
+        advanceUntilIdle()
+        assertEquals(BackupJob.SaveFailed(SaveFailure.UNAVAILABLE, parts = setOf(BackupPart.DATA, BackupPart.AUDIO)), gone.job.value)
+    }
+
+    /** Documents that hand back only the first half of what was written: a provider that cut the file short behind the copy's back. */
+    private class HalfReadDocuments(private val inner: FakeBackupDocuments) : BackupDocuments by inner {
+        override fun openInput(uri: String): InputStream? = inner.written[uri]?.toByteArray()?.let { ByteArrayInputStream(it, 0, it.size / 2) }
+    }
+
+    @Test
+    fun `a copy found damaged on reading back keeps the parts it was made of`() = runTest {
+        // the archive went out whole, and «Проверяем файл» reads back half of it: the copy failed, and «Ещё раз» takes the same one —
+        // the sheets without the video, not everything (spec 3.36.8; the one failure the tests above never reach, review of stage 122)
+        val manager = manager(HalfReadDocuments(documents))
+        val chosen = setOf(BackupPart.DATA, BackupPart.SHEETS)
+        manager.saveTo("content://cloud/1", chosen, "копия.zip")
+        advanceUntilIdle()
+        assertEquals(BackupJob.SaveFailed(SaveFailure.FAILED, parts = chosen), manager.job.value)
+        assertEquals("the damaged file goes", listOf("content://cloud/1"), documents.deleted)
+        assertNull("a copy that failed is not the last copy", prefs.lastBackupAtEpochMs.value)
+    }
+
     @Test
     fun `one job at a time`() = runTest {
         val manager = manager()
@@ -469,8 +561,8 @@ class BackupManagerTest {
 
     @Test
     fun `what can still be stopped is one rule`() {
-        assertTrue(BackupJob.Saving("a", visible = true).stoppable)
-        assertFalse(BackupJob.Saving("a", visible = true, verifying = true).stoppable)
+        assertTrue(BackupJob.Saving("a", visible = true, parts = all).stoppable)
+        assertFalse(BackupJob.Saving("a", visible = true, verifying = true, parts = all).stoppable)
         assertTrue(BackupJob.Restoring(RestorePhase.VERIFYING, checked = true).stoppable)
         assertFalse(BackupJob.Restoring(RestorePhase.EXTRACTING, checked = true).stoppable)
         assertTrue(BackupJob.Restoring(RestorePhase.EXTRACTING, checked = false).stoppable)
@@ -478,7 +570,7 @@ class BackupManagerTest {
         assertFalse(BackupJob.Restoring(RestorePhase.FINISHING, checked = true).stoppable)
         val manifest = store.manifest(all)
         listOf(
-            BackupJob.Idle, BackupJob.Saved("a", 1, null, manifest), BackupJob.SaveFailed(SaveFailure.FAILED),
+            BackupJob.Idle, BackupJob.Saved("a", 1, null, manifest), BackupJob.SaveFailed(SaveFailure.FAILED, parts = all),
             BackupJob.Restored(manifest), BackupJob.RestoreFailed(true, "u", manifest, checked = false),
         ).forEach { assertFalse("$it", it.stoppable) }
     }

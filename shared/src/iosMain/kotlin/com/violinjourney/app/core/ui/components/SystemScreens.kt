@@ -59,25 +59,37 @@ internal object SystemScreens {
         }
     }
 
+    /** Screens [present] has been asked for and has not put up yet: it waits a moment before each. */
+    private var waiting = 0
+
     /**
      * Puts [controller] in front of the app's own window, never of a menu's (see [host]). It waits for a screen of the
      * app's window that is on its way out: UIKit would not present on top of it.
      */
     fun present(controller: UIViewController) {
+        waiting++
         presentWhenSettled(controller, attemptsLeft = SETTLE_ATTEMPTS)
     }
 
     private fun presentWhenSettled(controller: UIViewController, attemptsLeft: Int) {
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, SETTLE_STEP_NANOS), dispatch_get_main_queue()) {
-            val top = topController() ?: return@dispatch_after
-            val closing = top.presentedViewController?.isBeingDismissed() == true
-            if (closing && attemptsLeft > 0) {
+            val top = topController()
+            val closing = top?.presentedViewController?.isBeingDismissed() == true
+            if (top != null && closing && attemptsLeft > 0) {
                 presentWhenSettled(controller, attemptsLeft - 1)
             } else {
-                top.presentViewController(controller, animated = true, completion = null)
+                // up now — or never, with no window to put it in front of: it waits no more either way
+                waiting--
+                top?.presentViewController(controller, animated = true, completion = null)
             }
         }
     }
+
+    /**
+     * Nothing the app has put in front of its own window is there, nor on its way ([present] waits before it puts one up): a
+     * picker that went without a word from its delegate — or that UIKit would not present — has gone (`SystemWindowGate`).
+     */
+    fun nothingUp(): Boolean = waiting == 0 && topController()?.presentingViewController == null
 
     /** The photo library: pictures or videos, up to [limit] (0 — any number); each lent file is copied into `tmp/picked/` ([PickedCopies]). */
     fun mediaPicker(videos: Boolean, limit: Long, delegate: MediaPickerDelegate): PHPickerViewController {

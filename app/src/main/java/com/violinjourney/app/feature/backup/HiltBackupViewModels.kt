@@ -19,7 +19,8 @@ class HiltBackupViewModel @Inject constructor(
     config: BackupConfig,
     watch: RecordingWatch,
     importer: VideoTakeImporter,
-) : BackupViewModel(manager, store, config, watch, importer)
+    savedState: SavedStateHandle,
+) : BackupViewModel(manager, store, config, watch, importer, savedState)
 
 @HiltViewModel
 class HiltRestoreViewModel @Inject constructor(

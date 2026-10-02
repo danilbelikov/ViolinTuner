@@ -112,6 +112,11 @@ enum class AppButtonStyle { Main, Outline, Soft, Text, Quiet, Danger, DangerFill
  *
  * [outline] — the colour of the frame of an [AppButtonStyle.Outline] where it stands on a picture, not on the screen: «Убрать» of the
  * try-on, white at 35 % on the veil over the room (spec 3.36.7, 5.29 R7); unspecified — the colour of the borders.
+ *
+ * [allLines] — the words keep their size and take every line they need, the button growing for them, instead of two lines and the rest
+ * dropped: the bottom zones of a copy and a restore, where «Удалить текущие данные и восстановить» and «Сначала сохранить текущие
+ * данные» need three at 320 × 544 at the font 1.5 (spec 3.36.8: «ничего не сжимается… нижняя зона видны всегда»; 5.29 R8). Without
+ * it — up to two lines, as before.
  */
 @Composable
 fun AppButton(
@@ -131,8 +136,9 @@ fun AppButton(
     oneLine: Boolean = false,
     keep: String? = null,
     outline: Color = Color.Unspecified,
+    allLines: Boolean = false,
 ) {
-    val lines = ButtonLines(oneLine, keep)
+    val lines = ButtonLines(oneLine, keep, allLines)
     if (reason == null && reasonReserve == null) {
         StyledButton(text, onClick, modifier, style, icon, caption, enabled, compact, trailingIcon, leading, fontSize, lines, outline)
         return
@@ -149,9 +155,9 @@ fun AppButton(
     }
 }
 
-/** How the words of a button stand: on up to two lines, or [oneLine] with the [keep] of its caption (see [AppButton]). */
+/** How the words of a button stand: on up to two lines, [all] the lines they need, or [oneLine] with the [keep] of its caption (see [AppButton]). */
 @Immutable
-private data class ButtonLines(val oneLine: Boolean, val keep: String?)
+private data class ButtonLines(val oneLine: Boolean, val keep: String?, val all: Boolean)
 
 /**
  * The size of the words of an [AppButton] of [style] [width] wide that keeps [text] on one line: the size of the style where it
@@ -410,7 +416,7 @@ private fun StyledButton(
                 modifier = if (trailingIcon != null) Modifier.weight(1f, fill = false) else Modifier,
                 style = words,
                 textAlign = TextAlign.Center,
-                maxLines = TEXT_LINES,
+                maxLines = if (lines.all) Int.MAX_VALUE else TEXT_LINES,
             )
         }
         if (trailingIcon != null) {

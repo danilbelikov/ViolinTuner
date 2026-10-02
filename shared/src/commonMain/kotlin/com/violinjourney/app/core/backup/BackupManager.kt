@@ -55,6 +55,17 @@ sealed interface BackupJob {
         val progress: BackupProgress? = null,
         /** Null until the speed has been measured. */
         val remainingSec: Int? = null,
+        /**
+         * What this copy is made of, [BackupPart.DATA] always among them (spec 3.36.8, 5.29 R8): a screen of the copy opened anew — by
+         * «Копия сохраняется», by the notification — knows the choice from the job, not from a screen that is gone. No default: a job
+         * that does not say what it is made of does not compile.
+         */
+        val parts: Set<BackupPart>,
+        /**
+         * The parts of [parts] that have files in this copy, known once its files are listed ([BackupStore.prepare]); empty until then —
+         * read as all of [parts]. The line of phases names only these: a part without a file is not a phase.
+         */
+        val filled: Set<BackupPart> = emptySet(),
     ) : BackupJob
 
     data class Saved(
@@ -67,7 +78,16 @@ sealed interface BackupJob {
         val shareFile: PlatformFile? = null,
     ) : BackupJob
 
-    data class SaveFailed(val reason: SaveFailure, val missingBytes: Long = 0) : BackupJob
+    data class SaveFailed(
+        val reason: SaveFailure,
+        /** Above zero for «Отправить…» only: the room the phone lacks to build its archive. */
+        val missingBytes: Long = 0,
+        /**
+         * The parts of the copy that failed ([Saving.parts]): «Ещё раз» takes the same, and «Без видео…» knows whether video was in it.
+         * No default, as there: a failure that forgot them would retry everything, the video switched off included (review of stage 122).
+         */
+        val parts: Set<BackupPart>,
+    ) : BackupJob
 
     data class Restoring(
         val phase: RestorePhase,
@@ -198,7 +218,7 @@ class BackupManager(
     }
 
     private fun save(parts: Set<BackupPart>, fileName: String, uri: String?) {
-        launchJob(BackupJob.Saving(fileName, visible = false)) { self ->
+        launchJob(BackupJob.Saving(fileName, visible = false, parts = parts + BackupPart.DATA)) { self ->
             val started = elapsed.nowMs()
             // a screen shown while this copy waited for a stopped one is shown already: it is not taken away at once either
             var shownAt: Long? = if ((mutableJob.value as? BackupJob.Saving)?.visible == true && work === self) started else null
@@ -211,11 +231,14 @@ class BackupManager(
                 currentCoroutineContext().ensureActive()
                 if (uri == null) shareFile = store.shareFile(fileName)
                 val prepared = store.prepare(parts)
+                // the parts that have files: the line of phases of its screen names these, and no part it will never reach
+                val filled = prepared.entries.mapTo(HashSet()) { it.part }
+                self.moveOn { if (it is BackupJob.Saving) it.copy(filled = filled) else null }
                 val total = prepared.entries.sumOf { it.size }
                 if (shareFile != null) {
                     val missing = total + config.freeSpaceMarginBytes - store.freeBytes()
                     if (missing > 0) {
-                        self.moveOn { if (it is BackupJob.Saving) BackupJob.SaveFailed(SaveFailure.NO_SPACE, missing) else null }
+                        self.moveOn { if (it is BackupJob.Saving) BackupJob.SaveFailed(SaveFailure.NO_SPACE, missing, it.parts) else null }
                         return@launchJob
                     }
                 }
@@ -232,7 +255,7 @@ class BackupManager(
                 val out = if (shareFile != null) shareFile.openOutput() else documents.openOutput(checkNotNull(uri))
                 if (out == null) {
                     late.cancel()
-                    self.moveOn { if (it is BackupJob.Saving) BackupJob.SaveFailed(SaveFailure.UNAVAILABLE) else null }
+                    self.moveOn { if (it is BackupJob.Saving) BackupJob.SaveFailed(SaveFailure.UNAVAILABLE, parts = it.parts) else null }
                     return@launchJob
                 }
                 val throttle = Throttle(started)
@@ -276,14 +299,14 @@ class BackupManager(
                 // a copy cancelled while its write broke stays cancelled: «Отмена» has been said already
                 currentCoroutineContext().ensureActive()
                 analytics.error(ErrorGroup.BACKUP, "the copy could not be written", e)
-                self.moveOn { if (it is BackupJob.Saving) BackupJob.SaveFailed(SaveFailure.FAILED) else null }
+                self.moveOn { if (it is BackupJob.Saving) BackupJob.SaveFailed(SaveFailure.FAILED, parts = it.parts) else null }
             } catch (e: Exception) {
                 // The stream's IOException, and whatever else the platform throws on the way — SQLite refusing a snapshot
                 // on a full disk, a provider's own exception: a copy that failed is said on its screen, not a fall of the app.
                 currentCoroutineContext().ensureActive()
                 analytics.error(ErrorGroup.BACKUP, "the copy failed", e)
                 val reason = failureOf(e, inPhone)
-                self.moveOn { if (it is BackupJob.Saving) BackupJob.SaveFailed(reason) else null }
+                self.moveOn { if (it is BackupJob.Saving) BackupJob.SaveFailed(reason, parts = it.parts) else null }
             } finally {
                 store.cleanUp()
                 // an unfinished file is ours to remove — cancelled, failed, or cut short

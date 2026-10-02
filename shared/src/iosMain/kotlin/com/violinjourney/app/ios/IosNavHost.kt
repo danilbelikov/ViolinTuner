@@ -356,7 +356,9 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
         composable(Routes.BACKUP) {
             BackupRoute(
                 onClose = navController::popBackStack,
-                viewModel = viewModel { BackupViewModel(graph.backupManager, graph.backupStore, graph.backupConfig, graph.recordingWatch, graph.videoImporter) },
+                viewModel = viewModel {
+                    BackupViewModel(graph.backupManager, graph.backupStore, graph.backupConfig, graph.recordingWatch, graph.videoImporter, createSavedStateHandle())
+                },
             )
         }
         composable(

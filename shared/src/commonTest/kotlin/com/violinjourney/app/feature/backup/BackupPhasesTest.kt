@@ -29,7 +29,7 @@ import kotlin.test.assertTrue
  */
 class BackupPhasesTest {
     private fun saving(progress: BackupProgress? = null, verifying: Boolean = false) =
-        BackupJob.Saving("копия.zip", visible = true, verifying = verifying, progress = progress)
+        BackupJob.Saving("копия.zip", visible = true, verifying = verifying, progress = progress, parts = BackupPart.entries.toSet())
 
     /** The passport of a copy, for the jobs that carry one. */
     private val manifest = BackupManifest(1, "1.0", 13, 0L, "Pixel 10a", setOf(BackupPart.DATA), BackupCounts(), mapOf(BackupPart.DATA to 100L))
@@ -82,7 +82,7 @@ class BackupPhasesTest {
     @Test
     fun `nothing is running when no job is on its way`() {
         assertNull(BackupPhases.runningOf(BackupJob.Idle))
-        assertNull(BackupPhases.runningOf(BackupJob.SaveFailed(SaveFailure.NO_SPACE)))
+        assertNull(BackupPhases.runningOf(BackupJob.SaveFailed(SaveFailure.NO_SPACE, parts = BackupPart.entries.toSet())))
         assertNull(BackupPhases.runningOf(BackupJob.RestoreFailed(dataIntact = true, uri = "u", manifest = manifest, checked = false)))
     }
 
@@ -93,7 +93,7 @@ class BackupPhasesTest {
             BackupJob.Idle,
             saving(),
             BackupJob.Saved("копия.zip", bytes = 100, place = null, manifest = manifest),
-            BackupJob.SaveFailed(SaveFailure.FAILED),
+            BackupJob.SaveFailed(SaveFailure.FAILED, parts = BackupPart.entries.toSet()),
             BackupJob.Restoring(RestorePhase.VERIFYING, checked = true),
             BackupJob.Restored(manifest),
             BackupJob.RestoreFailed(dataIntact = false, uri = "u", manifest = manifest, checked = true),

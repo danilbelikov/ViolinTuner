@@ -4,6 +4,8 @@ import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.SystemClock
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -28,7 +30,7 @@ private const val ZIP_TYPE = "application/zip"
 private const val FILES_AUTHORITY_SUFFIX = ".files"
 
 /** What the system's «Открыть» is asked for: a copy is a zip, but file managers and clouds call a zip all sorts of things. */
-val BACKUP_FILE_TYPES = arrayOf(ZIP_TYPE, "application/x-zip-compressed", "application/octet-stream", "*/*")
+private val BACKUP_FILE_TYPES = arrayOf(ZIP_TYPE, "application/x-zip-compressed", "application/octet-stream", "*/*")
 
 @Composable
 actual fun rememberBackupSystem(onPlacePicked: (uri: String?) -> Unit, onCopyPicked: (uri: String?) -> Unit): BackupSystem {
@@ -37,15 +39,17 @@ actual fun rememberBackupSystem(onPlacePicked: (uri: String?) -> Unit, onCopyPic
     val scope = rememberCoroutineScope()
     val placePicked by rememberUpdatedState(onPlacePicked)
     val copyPicked by rememberUpdatedState(onCopyPicked)
-    val place = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(ZIP_TYPE)) { uri -> placePicked(uri?.toString()) }
-    val copy = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> copyPicked(uri?.toString()) }
+    // One window per press: the activity of a picker answers a cancel too, with null. The chooser and the browser do not answer.
+    val gate = remember { SystemWindowGate(now = SystemClock::elapsedRealtime) }
+    val place = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(ZIP_TYPE), gate.answering<Uri> { uri -> placePicked(uri?.toString()) })
+    val copy = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument(), gate.answering<Uri> { uri -> copyPicked(uri?.toString()) })
     return remember(context) {
         BackupSystem(
-            pickPlace = { fileName -> place.launch(fileName) },
-            pickCopy = { copy.launch(BACKUP_FILE_TYPES) },
-            shareFile = { path -> scope.launch { context.shareBackup(File(path)) { messages.show(it) } } },
+            pickPlace = { fileName -> gate.picker { place.launch(fileName) } },
+            pickCopy = { gate.picker { copy.launch(BACKUP_FILE_TYPES) } },
+            shareFile = { path -> gate.sheet { scope.launch { context.shareBackup(File(path)) { messages.show(it) } } } },
             restart = context::restartApp,
-            openPrivacyPolicy = { scope.launch { context.openPrivacyPolicy { messages.show(it) } } },
+            openPrivacyPolicy = { gate.sheet { scope.launch { context.openPrivacyPolicy { messages.show(it) } } } },
         )
     }
 }

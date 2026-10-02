@@ -9,6 +9,7 @@ import com.violinjourney.app.core.backup.BackupCounts
 import com.violinjourney.app.core.backup.BackupJob
 import com.violinjourney.app.core.backup.BackupManager
 import com.violinjourney.app.core.backup.BackupPart
+import com.violinjourney.app.core.backup.BackupReader
 import com.violinjourney.app.core.backup.FakeBackupDocuments
 import com.violinjourney.app.core.backup.FakeBackupPrefs
 import com.violinjourney.app.core.backup.FakeBackupStore
@@ -84,7 +85,8 @@ class BackupViewModelsTest {
         analytics = NoOpAnalytics(),
     )
 
-    private fun TestScope.backupScreen(manager: BackupManager) = BackupViewModel(manager, store, BackupConfig(), watch, importer())
+    private fun TestScope.backupScreen(manager: BackupManager, savedState: SavedStateHandle = SavedStateHandle()) =
+        BackupViewModel(manager, store, BackupConfig(), watch, importer(), savedState)
 
     /** The block «Данные» over the same manager and the same date of the last copy; it reads while something watches it. */
     private fun TestScope.dataBlock(manager: BackupManager) =
@@ -163,6 +165,179 @@ class BackupViewModelsTest {
         gate.complete(Unit)
         advanceUntilIdle()
         assertFalse(restore.state.value.savingCopy)
+    }
+
+    // A screen of a copy opened anew — by «Копия сохраняется», by the notification, after a failure in the background — takes the choice
+    // from the job itself (spec 3.36.8): the screen that made it is gone, and with it the switches it had.
+
+    @Test
+    fun `a screen opened again on a failed copy retries the same parts`() = runTest {
+        val manager = manager()
+        val first = backupScreen(manager)
+        advanceUntilIdle()
+        first.onIntent(BackupIntent.PartToggled(BackupPart.VIDEO))
+        // the snapshot of the database finds the phone full
+        store.prepareFails = RuntimeException("database or disk is full (code 13 SQLITE_FULL)")
+        first.onIntent(BackupIntent.PlacePicked("content://downloads/1", "копия.zip"))
+        advanceUntilIdle()
+        assertTrue(manager.job.value is BackupJob.SaveFailed)
+        store.prepareFails = null
+
+        val again = backupScreen(manager)
+        val effects = collected(again.effects)
+        advanceUntilIdle()
+        val withoutVideo = BackupPart.entries.toSet() - BackupPart.VIDEO
+        assertEquals("the switches are those of the copy that failed", withoutVideo, again.state.value.parts)
+        again.onIntent(BackupIntent.RetryClicked)
+        assertEquals(listOf<BackupEffect>(BackupEffect.PickPlace), effects)
+        again.onIntent(BackupIntent.PlacePicked("content://downloads/2", "копия.zip"))
+        advanceUntilIdle()
+        assertTrue(manager.job.value is BackupJob.Saved)
+        // «Ещё раз» repeated that copy: without the video, as it was chosen
+        val retried = BackupReader.manifest(documents.openInput("content://downloads/2")!!, knownDatabase = 6)
+        assertEquals(withoutVideo, retried.parts)
+        assertTrue("no video in the archive", documents.written.getValue("content://downloads/2").size() < 5_000)
+    }
+
+    @Test
+    fun `a screen opened again on a running copy shows its choice`() = runTest {
+        val manager = manager()
+        val gate = CompletableDeferred<Unit>()
+        store.prepareGate = gate
+        manager.saveTo("content://downloads/1", setOf(BackupPart.DATA, BackupPart.SHEETS), "копия.zip")
+        val again = backupScreen(manager)
+        advanceUntilIdle()
+        assertTrue(manager.job.value is BackupJob.Saving)
+        assertEquals(setOf(BackupPart.DATA, BackupPart.SHEETS), again.state.value.parts)
+        // the switches are shut while it goes: what the job made stays what the screen says
+        again.onIntent(BackupIntent.PartToggled(BackupPart.VIDEO))
+        assertEquals(setOf(BackupPart.DATA, BackupPart.SHEETS), again.state.value.parts)
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertTrue(manager.job.value is BackupJob.Saved)
+    }
+
+    // A press belongs to the face it was made on (the lessons of stages 119 and 120; review of stage 122): a screen on its way out takes
+    // no more presses, and «Ещё раз» acts once, on the failure it was pressed on.
+
+    @Test
+    fun `the screen of a copy takes no press once it is closing`() = runTest {
+        val manager = manager()
+        val screen = backupScreen(manager)
+        val effects = collected(screen.effects)
+        advanceUntilIdle()
+        screen.onIntent(BackupIntent.PlacePicked("content://downloads/1", "копия.zip"))
+        advanceUntilIdle()
+        assertTrue(manager.job.value is BackupJob.Saved)
+        // two taps of «Готово» before the next frame; then what the fading screen would have under the finger, were it to show the live
+        // state — «Отправить…» of the choice under «Готово», «Сохранить в…» under «Ещё раз»
+        screen.onIntent(BackupIntent.DoneClicked)
+        screen.onIntent(BackupIntent.DoneClicked)
+        screen.onIntent(BackupIntent.ShareClicked("копия.zip"))
+        screen.onIntent(BackupIntent.SaveClicked)
+        advanceUntilIdle()
+        assertEquals("one close: the screen under it stays", listOf<BackupEffect>(BackupEffect.Close), effects)
+        assertTrue("the face is held while the screen fades", screen.state.value.closing)
+        assertEquals("no copy behind a screen that is going", BackupJob.Idle, manager.job.value)
+    }
+
+    @Test
+    fun `again acts once on the failure it was pressed on`() = runTest {
+        val manager = manager()
+        val screen = backupScreen(manager)
+        val effects = collected(screen.effects)
+        advanceUntilIdle()
+        store.prepareFails = RuntimeException("database or disk is full (code 13 SQLITE_FULL)")
+        screen.onIntent(BackupIntent.PlacePicked("content://downloads/1", "копия.zip"))
+        advanceUntilIdle()
+        assertTrue(manager.job.value is BackupJob.SaveFailed)
+        // the second tap comes before the next frame: the failure is read already, and one «Сохранить как…» is enough
+        screen.onIntent(BackupIntent.RetryClicked)
+        screen.onIntent(BackupIntent.RetryClicked)
+        assertEquals(listOf<BackupEffect>(BackupEffect.PickPlace), effects)
+        assertEquals(BackupJob.Idle, manager.job.value)
+    }
+
+    // The answer of «Сохранить как…» comes to a screen made anew under the picker — the activity or the process gone while the place was
+    // picked — as soon as it is composed, before what is in the app is counted (review of stage 122): it waits for the counting, and the
+    // copy is the one that was chosen. Dropped, it left the empty file the system had made and no copy.
+
+    @Test
+    fun `a place picked for a screen made anew under the picker saves the copy chosen once the parts are counted`() = runTest {
+        val manager = manager()
+        val saved = SavedStateHandle()
+        val first = backupScreen(manager, saved)
+        advanceUntilIdle()
+        first.onIntent(BackupIntent.PartToggled(BackupPart.VIDEO))
+        // «Сохранить в…»; while the place is picked the screen goes, and a new one is made from what the old one saved
+        val counting = CompletableDeferred<Unit>()
+        store.contentsGate = counting
+        val again = backupScreen(manager, SavedStateHandle(saved.keys().associateWith { saved.get<Any>(it) }))
+        val withoutVideo = BackupPart.entries.toSet() - BackupPart.VIDEO
+        assertEquals("the choice outlives the screen", withoutVideo, again.state.value.parts)
+        again.onIntent(BackupIntent.PlacePicked("content://downloads/1", "копия.zip"))
+        advanceUntilIdle()
+        assertNull("the parts are still being counted", again.state.value.contents)
+        assertEquals("nothing starts before they are", BackupJob.Idle, manager.job.value)
+        counting.complete(Unit)
+        advanceUntilIdle()
+        assertTrue("the place picked is written once they are", manager.job.value is BackupJob.Saved)
+        val written = BackupReader.manifest(documents.openInput("content://downloads/1")!!, knownDatabase = 6)
+        assertEquals("without the video, as it was chosen", withoutVideo, written.parts)
+        assertTrue("no video in the archive", documents.written.getValue("content://downloads/1").size() < 5_000)
+    }
+
+    // «Сначала сохранить текущие данные» opens the copy once (the lead's fix of stage 122, verified): a second tap that reaches it before
+    // the copy is on screen finds this screen stopped by the navigation already — an effect sent then would wait for it, and open the
+    // copy again after «назад».
+
+    @Test
+    fun `the safety net opens the copy once until the passport is shown again`() = runTest {
+        val manager = manager()
+        savedCopy(manager)
+        val screen = restoreScreen(manager, "content://downloads/1")
+        val effects = collected(screen.effects)
+        advanceUntilIdle()
+        assertTrue(screen.state.value.stage is RestoreStage.Ready)
+        screen.onIntent(RestoreIntent.SaveFirstClicked)
+        screen.onIntent(RestoreIntent.SaveFirstClicked)
+        assertEquals("one copy for a double tap", listOf<RestoreEffect>(RestoreEffect.OpenBackup), effects)
+        // back from the copy: the passport is in front again, and the safety net answers
+        screen.onIntent(RestoreIntent.ScreenShown)
+        screen.onIntent(RestoreIntent.SaveFirstClicked)
+        assertEquals(listOf<RestoreEffect>(RestoreEffect.OpenBackup, RestoreEffect.OpenBackup), effects)
+    }
+
+    @Test
+    fun `the screen of a restore takes no press once it is closing`() = runTest {
+        // An empty app — the main way in, from «У меня есть копия данных»: «Восстановить» there asks nothing
+        val empty = FakeBackupStore(folder.newFolder(), now, BackupCounts())
+        val manager = BackupManager(
+            empty, documents, prefs, {}, BackupConfig(), clock, { testScheduler.currentTime }, StandardTestDispatcher(testScheduler),
+            analytics = NoOpAnalytics(),
+        )
+        manager.saveTo("content://downloads/1", BackupPart.entries.toSet(), "копия.zip")
+        advanceUntilIdle()
+        manager.dismiss()
+        val screen = RestoreViewModel(manager, empty, watch, importer(), SavedStateHandle(mapOf(RestoreViewModel.ARG_URI to "content://downloads/1")))
+        val effects = collected(screen.effects)
+        advanceUntilIdle()
+        assertTrue((screen.state.value.stage as RestoreStage.Ready).current.counts.isEmpty)
+        // the file is cut short after its passport was read: the restore fails with the data in place
+        val whole = documents.written.getValue("content://downloads/1").toByteArray()
+        documents.written["content://downloads/1"] = ByteArrayOutputStream().also { it.write(whole, 0, whole.size / 2) }
+        screen.onIntent(RestoreIntent.RestoreClicked)
+        advanceUntilIdle()
+        assertTrue((manager.job.value as BackupJob.RestoreFailed).dataIntact)
+        documents.written["content://downloads/1"] = ByteArrayOutputStream().also { it.write(whole) }
+        // «Закрыть», and a second tap where the passport of the live state would put «Восстановить»
+        screen.onIntent(RestoreIntent.CloseClicked)
+        screen.onIntent(RestoreIntent.RestoreClicked)
+        screen.onIntent(RestoreIntent.CloseClicked)
+        advanceUntilIdle()
+        assertEquals("no restore behind a screen that is going", BackupJob.Idle, manager.job.value)
+        assertEquals(listOf<RestoreEffect>(RestoreEffect.Close), effects)
+        assertTrue("the face is held while the screen fades", screen.state.value.closing)
     }
 
     @Test

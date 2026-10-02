@@ -48,6 +48,9 @@ internal class FakeBackupStore(private val root: File, private val now: Instant,
     /** The next settle waits for this deaf to cancellation, as opening a big database does. */
     var settleGate: CompletableDeferred<Unit>? = null
 
+    /** The next counting of what is in the app waits for this, as walking the folders of gigabytes of media does. */
+    var contentsGate: CompletableDeferred<Unit>? = null
+
     /** The weight of the media now in the app: what the way without a net can free. */
     var mediaBytes = 400_000L
 
@@ -63,7 +66,13 @@ internal class FakeBackupStore(private val root: File, private val now: Instant,
         mapOf(BackupPart.DATA to 1_000L, BackupPart.VIDEO to video.size.toLong()),
     )
 
-    override suspend fun contents() = BackupContents(counts, mapOf(BackupPart.DATA to 1_000L, BackupPart.VIDEO to mediaBytes))
+    override suspend fun contents(): BackupContents {
+        contentsGate?.let { gate ->
+            contentsGate = null
+            gate.await()
+        }
+        return BackupContents(counts, mapOf(BackupPart.DATA to 1_000L, BackupPart.VIDEO to mediaBytes))
+    }
 
     override suspend fun prepare(parts: Set<BackupPart>): PreparedBackup {
         prepareCalls++

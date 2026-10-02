@@ -6,7 +6,9 @@ import androidx.compose.runtime.staticCompositionLocalOf
 /**
  * What a copy of the data asks of the system (spec 3.20): the place to write it, the file to bring back, the sheet to
  * send it with, and a start of the app anew after a copy has been brought back. A picked place or file comes back as
- * the uri of the platform — a content uri on Android, a `file:` uri on iOS; null when nothing was picked.
+ * the uri of the platform — a content uri on Android, a `file:` uri on iOS; null when nothing was picked. Its windows —
+ * the two pickers, the sheet and the browser — go up one at a time and once for a press: a second tap of the button
+ * before the window is up puts up nothing ([SystemWindowGate], one for each screen that remembers the system).
  */
 class BackupSystem(
     val pickPlace: (fileName: String) -> Unit,

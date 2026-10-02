@@ -7,8 +7,6 @@ import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.LocalActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -23,7 +21,6 @@ import com.violinjourney.app.BuildConfig
 import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.core.ui.analytics.HiltAnalyticsViewModel
-import com.violinjourney.app.feature.backup.BACKUP_FILE_TYPES
 import com.violinjourney.app.feature.backup.BackupRoute
 import com.violinjourney.app.feature.backup.DataBlock
 import com.violinjourney.app.feature.backup.HiltBackupViewModel
@@ -31,6 +28,7 @@ import com.violinjourney.app.feature.backup.HiltDataBlockViewModel
 import com.violinjourney.app.feature.backup.HiltRestoreViewModel
 import com.violinjourney.app.feature.backup.RestoreRoute
 import com.violinjourney.app.feature.backup.RestoreViewModel
+import com.violinjourney.app.feature.backup.rememberBackupSystem
 import com.violinjourney.app.feature.camera.CaptureRoute
 import com.violinjourney.app.feature.camera.HiltCaptureViewModel
 import com.violinjourney.app.feature.camera.CaptureViewModel
@@ -96,11 +94,12 @@ fun AppNavHost(
         modifier = modifier,
     ) {
         composable(ONBOARDING_ROUTE) {
-            // On a new phone a copy is the first thing a person with one needs (spec 3.20): the system's «Открыть», then the restore screen.
-            val copy = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { navController.navigateToRestore(it.toString()) } }
+            // On a new phone a copy is the first thing a person with one needs (spec 3.20): the system's «Открыть», then the restore screen —
+            // through the system of a copy, as on iOS: one «Открыть» for a press
+            val copy = rememberBackupSystem(onCopyPicked = { uri -> uri?.let(navController::navigateToRestore) })
             OnboardingRoute(
                 onFinished = navController::navigateFromOnboarding,
-                onHaveBackup = { copy.launch(BACKUP_FILE_TYPES) },
+                onHaveBackup = copy.pickCopy,
                 viewModel = hiltViewModel<HiltOnboardingViewModel>(),
                 tracking = hiltViewModel<HiltAnalyticsViewModel>(),
             )

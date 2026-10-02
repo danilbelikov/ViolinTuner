@@ -97,7 +97,6 @@ internal val BackupData = Color(0xFFE9DDFF)
 internal val BackupSheets = Color(0xFFB7ACD9)
 internal val BackupAudio = Color(0xFF8A78C9)
 internal val BackupVideo = Color(0xFF5B43B8)
-internal val BackupOff = Color(0xFF3A3846)
 
 // Sections of the repertoire and the notation of scales (handoff `Упражнения`, `tokens`)
 internal val LearnReading = Color(0xFF4A3F6E)

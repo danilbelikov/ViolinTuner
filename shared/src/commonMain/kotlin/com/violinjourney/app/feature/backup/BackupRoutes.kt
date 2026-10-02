@@ -91,6 +91,8 @@ fun RestoreRoute(onClose: () -> Unit, onOpenBackup: () -> Unit, viewModel: Resto
     val currentOnClose by rememberUpdatedState(onClose)
     val currentOnOpenBackup by rememberUpdatedState(onOpenBackup)
     val system = rememberBackupSystem(onCopyPicked = { uri -> viewModel.onIntent(RestoreIntent.FilePicked(uri)) })
+    // back in front — from the copy «Сначала сохранить…» opened over it, too: the safety net answers again
+    LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.onIntent(RestoreIntent.ScreenShown) }
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.effects.collect { effect ->

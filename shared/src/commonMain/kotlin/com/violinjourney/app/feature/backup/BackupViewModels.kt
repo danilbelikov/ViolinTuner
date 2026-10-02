@@ -38,27 +38,58 @@ import kotlinx.coroutines.launch
 private fun busyFlow(watch: RecordingWatch, importer: VideoTakeImporter): Flow<Boolean> =
     combine(watch.recording, importer.state) { recording, import -> recording || import != VideoImport.Idle }
 
+/**
+ * «Копия данных» (spec 3.20, 3.36.8). [savedState] keeps the parts chosen: a screen made anew under the system's «Сохранить как…» — the
+ * activity or the process gone while the person picked the place — saves the copy that was chosen, not all of it.
+ */
 open class BackupViewModel(
     private val manager: BackupManager,
     private val store: BackupStore,
     private val config: BackupConfig,
     watch: RecordingWatch,
     importer: VideoTakeImporter,
+    private val savedState: SavedStateHandle,
 ) : ViewModel() {
-    private val mutableState = MutableStateFlow(BackupState(shareUpToBytes = config.shareUpToBytes))
+    private val mutableState = MutableStateFlow(BackupState(parts = partsKept(savedState), shareUpToBytes = config.shareUpToBytes))
     val state: StateFlow<BackupState> = mutableState.asStateFlow()
 
     private val effectChannel = Channel<BackupEffect>(Channel.BUFFERED)
     val effects: Flow<BackupEffect> = effectChannel.receiveAsFlow()
 
+    /**
+     * The answer of «Сохранить как…» that came before what is in the app was counted (review of stage 122). A screen made anew under
+     * the picker gets it as soon as it is composed, while the counting has only begun; dropped, it left the empty file the system had
+     * made in the place picked, and no copy. It is acted on once the parts are counted.
+     */
+    private var pickedEarly: BackupIntent.PlacePicked? = null
+
+    /** The parts last written to [savedState]. */
+    private var keptParts: Set<BackupPart>? = null
+
     init {
-        viewModelScope.launch { mutableState.update { it.copy(contents = store.contents()) } }
+        viewModelScope.launch {
+            val contents = store.contents()
+            mutableState.update { it.copy(contents = contents) }
+            pickedEarly?.let { picked ->
+                pickedEarly = null
+                onIntent(picked)
+            }
+        }
         viewModelScope.launch { busyFlow(watch, importer).collect { busy -> mutableState.update { it.copy(busy = busy) } } }
         viewModelScope.launch {
             var shared: PlatformFile? = null
             manager.job.collect { job ->
-                // «Остановить?» goes by itself as soon as there is nothing left to stop
-                mutableState.update { it.copy(job = job, stopDialog = it.stopDialog && job.stoppable) }
+                // «Остановить?» goes by itself as soon as there is nothing left to stop. A copy on its way or failed brings its own choice
+                // (spec 3.36.8): a screen opened anew on it shows what it is made of, and «Ещё раз» repeats the same copy — the switches
+                // are shut meanwhile (PartToggled waits for Idle), so nothing the person chose here is overwritten
+                mutableState.update {
+                    it.copy(
+                        job = job,
+                        stopDialog = it.stopDialog && job.stoppable,
+                        parts = (job as? BackupJob.Saving)?.parts ?: (job as? BackupJob.SaveFailed)?.parts ?: it.parts,
+                    )
+                }
+                keepParts()
                 // «Отправить…»: the archive is built, the system sheet takes it from here — once, and only while it is there:
                 // a screen opened anew over an old outcome does not hand the sheet a file swept from `cache/share/` since
                 val file = (job as? BackupJob.Saved)?.shareFile
@@ -72,12 +103,22 @@ open class BackupViewModel(
 
     fun onIntent(intent: BackupIntent) {
         val now = mutableState.value
+        // A press belongs to the face it was made on (the lesson of stage 120). A screen on its way out takes nothing more: a second
+        // tap of «Готово» before the next frame would close the screen under it too, and one after it would reach what the live state
+        // shows there — «Отправить…» under «Готово» and «Закрыть» — and start a copy behind a screen that is going.
+        if (now.closing) return
         when (intent) {
             is BackupIntent.PartToggled -> if (intent.part != BackupPart.DATA && now.job == BackupJob.Idle) {
                 mutableState.update { it.copy(parts = if (intent.part in it.parts) it.parts - intent.part else it.parts + intent.part) }
+                keepParts()
             }
             BackupIntent.SaveClicked -> if (now.mayStart) effectChannel.trySend(BackupEffect.PickPlace)
-            is BackupIntent.PlacePicked -> if (intent.uri != null && now.mayStart) manager.saveTo(intent.uri, now.parts, intent.fileName)
+            is BackupIntent.PlacePicked -> when {
+                intent.uri == null -> Unit
+                // a screen made anew under the picker: the place waits for the counting (pickedEarly)
+                now.contents == null -> pickedEarly = intent
+                now.mayStart -> manager.saveTo(intent.uri, now.parts, intent.fileName)
+            }
             is BackupIntent.ShareClicked -> if (now.mayStart && now.canShare) manager.share(now.parts, intent.fileName)
             BackupIntent.CancelClicked -> if (manager.cancellable) mutableState.update { it.copy(stopDialog = true) }
             BackupIntent.StopDismissed -> mutableState.update { it.copy(stopDialog = false) }
@@ -85,24 +126,46 @@ open class BackupViewModel(
                 mutableState.update { it.copy(stopDialog = false) }
                 manager.cancel()
             }
-            BackupIntent.DoneClicked -> {
-                manager.dismiss()
-                effectChannel.trySend(BackupEffect.Close)
-            }
-            BackupIntent.RetryClicked -> {
+            BackupIntent.DoneClicked -> close()
+            // only on the failure it was pressed on — asked of the manager, which the first tap has moved on already: a second tap
+            // before the next frame finds the outcome read and asks for no second «Сохранить как…»
+            BackupIntent.RetryClicked -> if (manager.job.value is BackupJob.SaveFailed) {
                 manager.dismiss()
                 effectChannel.trySend(BackupEffect.PickPlace)
             }
             // A copy on its way goes on without its screen, and dismiss does not touch it; an outcome shown on the screen
             // has been read and goes with it — a restore started next must not find it in the way.
-            BackupIntent.BackClicked -> {
-                manager.dismiss()
-                effectChannel.trySend(BackupEffect.Close)
-            }
+            BackupIntent.BackClicked -> close()
         }
     }
 
+    /** «Готово», «Закрыть», «назад»: once. The face stays as it was while the screen fades ([BackupState.closing]). */
+    private fun close() {
+        mutableState.update { it.copy(closing = true) }
+        manager.dismiss()
+        effectChannel.trySend(BackupEffect.Close)
+    }
+
     private val BackupState.mayStart: Boolean get() = !job.underWay && !busy && contents != null && !nothingToSave
+
+    /** The parts now chosen, into the saved state of the screen ([partsKept] reads them back) — when they change, not on every step of a job. */
+    private fun keepParts() {
+        val parts = mutableState.value.parts
+        if (parts == keptParts) return
+        keptParts = parts
+        savedState[KEPT_PARTS] = parts.joinToString(PART_SEPARATOR) { it.name }
+    }
+
+    private companion object {
+        const val KEPT_PARTS = "parts"
+        const val PART_SEPARATOR = ","
+
+        /** The parts a screen made anew had chosen — the data always among them; all of them for a screen opened anew. */
+        fun partsKept(savedState: SavedStateHandle): Set<BackupPart> {
+            val kept = savedState.get<String>(KEPT_PARTS)?.split(PART_SEPARATOR) ?: return BackupPart.entries.toSet()
+            return BackupPart.entries.filter { it.name in kept }.toSet() + BackupPart.DATA
+        }
+    }
 }
 
 open class RestoreViewModel(
@@ -122,6 +185,14 @@ open class RestoreViewModel(
     private val watching = savedState.get<String>(ARG_URI) == null
     private var closed = false
 
+    /**
+     * «Сначала сохранить текущие данные» has opened the copy, and this screen has not been shown since (the lead's fix of stage 122,
+     * verified). A second tap that reaches the button before the copy is on screen asks for nothing: its effect would wait in the channel
+     * while this screen is stopped (its collector runs only while it is started — navigation stops a screen at once) and open the copy
+     * again after «назад».
+     */
+    private var backupOpened = false
+
     init {
         savedState.get<String>(ARG_URI)?.let(::inspect)
         viewModelScope.launch { busyFlow(watch, importer).collect { busy -> mutableState.update { it.copy(busy = busy) } } }
@@ -136,9 +207,11 @@ open class RestoreViewModel(
         }
     }
 
+    /** Once; the face stays as it was while the screen fades ([RestoreState.closing]). */
     private fun close() {
         if (closed) return
         closed = true
+        mutableState.update { it.copy(closing = true) }
         effectChannel.trySend(RestoreEffect.Close)
     }
 
@@ -162,6 +235,10 @@ open class RestoreViewModel(
     }
 
     fun onIntent(intent: RestoreIntent) {
+        // A screen on its way out takes nothing more (the lesson of stage 120): after «Закрыть» on a failure the outcome is read and
+        // gone, and a second tap would reach «Восстановить» of the passport the live state shows there — into an empty app, a restore
+        // behind a screen that is going, with no question and no screen to restart the app.
+        if (closed) return
         val now = mutableState.value
         val ready = now.stage as? RestoreStage.Ready
         when (intent) {
@@ -186,15 +263,20 @@ open class RestoreViewModel(
             RestoreIntent.DialogDismissed -> mutableState.update { it.copy(dialog = null) }
             RestoreIntent.PickAnotherClicked -> effectChannel.trySend(RestoreEffect.PickFile)
             is RestoreIntent.FilePicked -> intent.uri?.let(::inspect)
-            RestoreIntent.SaveFirstClicked -> effectChannel.trySend(RestoreEffect.OpenBackup)
+            RestoreIntent.SaveFirstClicked -> if (!backupOpened) {
+                backupOpened = true
+                effectChannel.trySend(RestoreEffect.OpenBackup)
+            }
+            RestoreIntent.ScreenShown -> backupOpened = false
             RestoreIntent.CancelClicked -> if (manager.cancellable) mutableState.update { it.copy(dialog = RestoreDialog.STOP) }
             // the failure knows its file and its way: a screen opened from the notification has no passport of its own
             RestoreIntent.RetryClicked -> manager.retry()
             // a mark that could not be left would restart into the same app: the screen stays, the button can be pressed again
             RestoreIntent.StartCleanClicked -> if (manager.startClean()) effectChannel.trySend(RestoreEffect.Restart)
+            // the face is held first: the failure read and gone, the screen fades as it was pressed
             RestoreIntent.CloseClicked -> {
-                manager.dismiss()
                 close()
+                manager.dismiss()
             }
         }
     }

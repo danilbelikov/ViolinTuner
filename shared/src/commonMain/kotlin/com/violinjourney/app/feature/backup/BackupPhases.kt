@@ -15,8 +15,8 @@ import org.jetbrains.compose.resources.StringResource
 
 /**
  * What a copy or a restore is doing, from the job itself (spec 3.36.8; 3.20 «Вход» promised the phase in the row of «Данные», which
- * said only the percent until stage 121): the row of «Данные» reads it now, the line of phases of the screen of a copy (stage 122)
- * after it. Pure.
+ * said only the percent until stage 121): the row of «Данные» reads it, and the line of phases of the screens of a copy and a restore
+ * ([BackupFacts.copySteps], stage 122) marks its step of now by it. Pure.
  */
 object BackupPhases {
     private const val PERCENT = 100

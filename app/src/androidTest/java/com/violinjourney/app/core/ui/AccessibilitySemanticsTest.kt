@@ -178,6 +178,36 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.hasText
 import com.violinjourney.app.core.backup.BackupPart
+import com.violinjourney.app.core.backup.BackupCandidate
+import com.violinjourney.app.core.backup.BackupContents
+import com.violinjourney.app.core.backup.BackupCounts
+import com.violinjourney.app.core.backup.BackupJob
+import com.violinjourney.app.core.backup.BackupManifest
+import com.violinjourney.app.core.backup.BackupProgress
+import com.violinjourney.app.feature.backup.BackupScreen
+import com.violinjourney.app.feature.backup.BackupState
+import com.violinjourney.app.feature.backup.RestoreScreen
+import com.violinjourney.app.feature.backup.RestoreStage
+import com.violinjourney.app.feature.backup.RestoreState
+import com.violinjourney.app.shared.resources.backup_chip_no_video
+import com.violinjourney.app.shared.resources.backup_count_days_few
+import com.violinjourney.app.shared.resources.backup_count_days_many
+import com.violinjourney.app.shared.resources.backup_count_days_one
+import com.violinjourney.app.shared.resources.backup_count_level
+import com.violinjourney.app.shared.resources.backup_count_pieces_few
+import com.violinjourney.app.shared.resources.backup_count_pieces_many
+import com.violinjourney.app.shared.resources.backup_count_pieces_one
+import com.violinjourney.app.shared.resources.backup_count_sessions_few
+import com.violinjourney.app.shared.resources.backup_count_sessions_many
+import com.violinjourney.app.shared.resources.backup_count_sessions_one
+import com.violinjourney.app.shared.resources.backup_phase_now
+import com.violinjourney.app.shared.resources.backup_saved_title
+import com.violinjourney.app.shared.resources.backup_title
+import com.violinjourney.app.shared.resources.restore_copy_from
+import com.violinjourney.app.shared.resources.restore_copy_version
+import com.violinjourney.app.shared.resources.restore_title
+import kotlinx.datetime.atStartOfDayIn
+import kotlin.math.abs
 import com.violinjourney.app.core.domain.UserSettings
 import com.violinjourney.app.feature.backup.DataBlockState
 import com.violinjourney.app.feature.backup.DataGroup
@@ -219,7 +249,9 @@ import org.junit.runner.RunWith
  * activation, a slider that resets only from its actions, the calendar's month, days and arrows, the path row, the week, the
  * chip of the streak and the window of the home of «Занятия», the faded «Пропустить», the four tabs and the titles of «Репертуар»
  * and «Записи», the stepper, «Что играли» and the title of «Занятие не закончено» (spec 3.36.3); the recap and the gift as one
- * paragraph each on their title, their buttons still buttons, «Трофеи, 2 из 10» and the nearest one «следующий», the field «Имя».
+ * paragraph each on their title, their buttons still buttons, «Трофеи, 2 из 10» and the nearest one «следующий», the field «Имя»;
+ * the strip of the introduction, the cards of the tolerance, «Настройки» and their «Данные» (R8); the passport of a copy as one phrase,
+ * the headers of a copy and a restore and the titles of their outcomes as headings, the line of phases as the step of now (stage 122).
  */
 @RunWith(AndroidJUnit4::class)
 class AccessibilitySemanticsTest {
@@ -997,6 +1029,107 @@ class AccessibilitySemanticsTest {
         compose.onNodeWithText(analytics).assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch)).assertIsOff()
     }
 
+    // «Копия данных» and «Восстановить из копии» of R8 (spec 3.36.8, TalkBack): the headers of the screens and the titles of their
+    // outcomes are headings; the passport of a copy is one phrase and its words are not read apart; the line of phases is one phrase of
+    // its step of now, and the percent is the value of the bar, the number itself only drawn.
+
+    /** The passport of a copy of the mockups made on 12 September, without its video; what is in the app now, smaller. */
+    private fun passportState(): RestoreState {
+        val counts = BackupCounts(sessions = 64, takes = 6, pieces = 12, pages = 48, practiceDays = 41, trophies = 3, level = 9, withSound = 50, videos = 6)
+        val madeAt = LocalDate(2026, 9, 12).atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds() + NOON_MS
+        val manifest = BackupManifest(1, "1.4", 13, madeAt, "Pixel 10a", BackupPart.entries.toSet() - BackupPart.VIDEO, counts, mapOf(BackupPart.DATA to 12_000_000L))
+        val now = BackupContents(BackupCounts(sessions = 5, pieces = 5, practiceDays = 38, level = 5), mapOf(BackupPart.DATA to 4_000_000L))
+        return RestoreState(stage = RestoreStage.Ready(BackupCandidate.Copy("content://downloads/1", "копия.zip", PASSPORT_BYTES, manifest, missingBytes = 0), now))
+    }
+
+    @Test
+    fun thePassportOfACopyIsOnePhraseAndItsWordsAreNotReadApart() {
+        var said = ""
+        var title = ""
+        compose.setContent {
+            title = stringResource(Res.string.restore_copy_from, Formats.recordDate(LocalDate(2026, 9, 12), withYear = false))
+            val inside = listOf(
+                stringResource(Formats.plural(41, Res.string.backup_count_days_one, Res.string.backup_count_days_few, Res.string.backup_count_days_many), 41),
+                stringResource(Res.string.backup_count_level, 9),
+                stringResource(Formats.plural(64, Res.string.backup_count_sessions_one, Res.string.backup_count_sessions_few, Res.string.backup_count_sessions_many), 64),
+                stringResource(Formats.plural(12, Res.string.backup_count_pieces_one, Res.string.backup_count_pieces_few, Res.string.backup_count_pieces_many), 12),
+                stringResource(Res.string.backup_chip_no_video),
+            )
+            said = listOf(title, Formats.fileSize(PASSPORT_BYTES), "Pixel 10a", stringResource(Res.string.restore_copy_version, "1.4")).joinToString(", ") +
+                ": " + inside.joinToString(", ")
+            ViolinTheme { RestoreScreen(state = passportState(), onIntent = {}, today = LocalDate(2026, 10, 2)) }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription(said).assertExists()
+        // the title and the chips of the card are in its phrase, not apart (the merged tree: what TalkBack gets) — the title as it is
+        // drawn, its day kept to its month by a no-break space (review of stage 122), and as it is said
+        compose.onAllNodes(hasWords(title)).assertCountEquals(0)
+        compose.onAllNodesWithText("Pixel 10a", substring = true).assertCountEquals(0)
+    }
+
+    @Test
+    fun theHeadersOfACopyAndARestoreAndTheTitlesOfTheirOutcomesAreHeadings() {
+        var copyTitle = ""
+        var saved = ""
+        var restoreTitle = ""
+        var job by mutableStateOf<BackupJob>(BackupJob.Idle)
+        var restore by mutableStateOf(false)
+        val counts = BackupCounts(sessions = 5, pieces = 2, practiceDays = 7)
+        val contents = BackupContents(counts, mapOf(BackupPart.DATA to 300_000L))
+        compose.setContent {
+            copyTitle = stringResource(Res.string.backup_title)
+            saved = stringResource(Res.string.backup_saved_title)
+            restoreTitle = stringResource(Res.string.restore_title)
+            ViolinTheme {
+                if (restore) {
+                    RestoreScreen(state = passportState(), onIntent = {}, today = LocalDate(2026, 10, 2))
+                } else {
+                    BackupScreen(BackupState(contents = contents, job = job, shareUpToBytes = SHARE_UP_TO), fileName = "копия.zip", onIntent = {})
+                }
+            }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithText(copyTitle).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+        val manifest = BackupManifest(1, "1.4", 13, 0L, "Pixel 10a", BackupPart.entries.toSet(), counts, contents.bytes)
+        job = BackupJob.Saved("копия.zip", bytes = 300_000L, place = null, manifest = manifest)
+        compose.waitForIdle()
+        compose.onNodeWithText(saved).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+        // the saved copy has ✕ and no title in its header
+        compose.onAllNodesWithText(copyTitle).assertCountEquals(0)
+        restore = true
+        compose.waitForIdle()
+        compose.onNodeWithText(restoreTitle).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+    }
+
+    @Test
+    fun theLineOfPhasesIsOnePhraseOfItsStepAndThePercentIsTheBar() {
+        var now = ""
+        var percent = ""
+        val all = BackupPart.entries.toSet()
+        val job = BackupJob.Saving("копия.zip", visible = true, progress = BackupProgress(BackupPart.VIDEO, 7, 12, doneBytes = 56, totalBytes = 100), parts = all, filled = all)
+        compose.setContent {
+            now = stringResource(Res.string.backup_phase_now, stringResource(Res.string.backup_phase_part, stringResource(Res.string.backup_part_video), 7, 12))
+            percent = stringResource(Res.string.backup_percent, 56)
+            ViolinTheme {
+                BackupScreen(BackupState(contents = BackupContents(BackupCounts(sessions = 5), mapOf(BackupPart.DATA to 100L)), job = job, shareUpToBytes = SHARE_UP_TO), fileName = "копия.zip", onIntent = {})
+            }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription(now).assertExists()
+        compose.onAllNodesWithText(percent).assertCountEquals(0)
+        // its value, not only a bar: a bar that went on its own would be «выполняется» to TalkBack, not «56 %» (review of stage 122)
+        compose.onNode(
+            SemanticsMatcher("a bar at 56 %") { node ->
+                node.config.getOrNull(SemanticsProperties.ProgressBarRangeInfo)?.let { abs(it.current - PERCENT_56) < BAR_SLACK && it.range == 0f..1f } == true
+            },
+        ).assertExists()
+    }
+
+    /** A text whose words are [words], whether its numbers are kept to their words by a no-break space or not. */
+    private fun hasWords(words: String) = SemanticsMatcher("the words «$words»") { node ->
+        node.config.getOrNull(SemanticsProperties.Text)?.any { it.text.replace('\u00A0', ' ') == words.replace('\u00A0', ' ') } == true
+    }
+
     /** The introduction on [step]; gives back the word of «Пропустить» in the language of the test. */
     private fun showIntroduction(step: OnboardingStep): String {
         var skip = ""
@@ -1023,5 +1156,16 @@ class AccessibilitySemanticsTest {
 
         /** The purse of the mockups: enough for Cremona and far beyond. */
         const val PURSE = 47_884L
+
+        /** The weight of the passport of a copy: 3,4 ГБ. */
+        const val PASSPORT_BYTES = 3_650_722_202L
+        const val NOON_MS = 12 * 60 * 60 * 1_000L
+
+        /** «Отправить…» up to 200 МБ (spec 5.14). */
+        const val SHARE_UP_TO = 200L * 1024 * 1024
+
+        /** 56 of 100 bytes moved, and how near a bar's value may be to it. */
+        const val PERCENT_56 = 0.56f
+        const val BAR_SLACK = 0.001f
     }
 }
