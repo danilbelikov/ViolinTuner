@@ -55,5 +55,6 @@ class FakeSessionRepository : SessionRepository {
         audioPath = session.audioPath,
         pieceId = session.pieceId,
         videoPath = session.videoPath,
+        eventId = session.eventId,
     )
 }

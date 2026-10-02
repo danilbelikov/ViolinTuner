@@ -77,7 +77,7 @@ internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null)
         AppStartViewModel(
             repository = graph.settings, runningPractice = graph.runningPractice, finisher = graph.finisher, config = graph.practiceConfig,
             clock = graph.clock, practice = graph.practice, awarder = graph.awarder, repertoire = graph.repertoire,
-            housekeeping = graph.housekeeping, blocks = graph.blockStore,
+            housekeeping = graph.housekeeping, blocks = graph.blockStore, events = graph.events,
         )
     }
     val startRoute by start.startRoute.collectAsStateWithLifecycle()

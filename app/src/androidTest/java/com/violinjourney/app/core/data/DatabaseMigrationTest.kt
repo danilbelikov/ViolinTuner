@@ -5,10 +5,15 @@ import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.violinjourney.app.core.domain.events.EventPlan
+import com.violinjourney.app.core.domain.events.EventStep
+import com.violinjourney.app.core.domain.events.EventsConfig
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.LocalDate
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -149,6 +154,30 @@ class DatabaseMigrationTest {
                 )
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_piece_blocks_pieceId` ON `piece_blocks` (`pieceId`)")
                 db.execSQL("ALTER TABLE `journey_earnings` ADD COLUMN `piecesPaid` INTEGER NOT NULL DEFAULT 0")
+            }
+            // version 13: the backings, laid out as its migration leaves them, with one under the piece of version 4
+            if (version >= 13) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `backings` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `fileName` TEXT NOT NULL, " +
+                        "`title` TEXT NOT NULL, `durationMs` INTEGER NOT NULL, `sampleRate` INTEGER NOT NULL, `channels` INTEGER NOT NULL, " +
+                        "`sizeBytes` INTEGER NOT NULL, `addedAtEpochMs` INTEGER NOT NULL)",
+                )
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `piece_backings` (`pieceId` INTEGER NOT NULL, `backingId` INTEGER NOT NULL, `enabled` INTEGER NOT NULL, " +
+                        "PRIMARY KEY(`pieceId`), FOREIGN KEY(`pieceId`) REFERENCES `pieces`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_piece_backings_backingId` ON `piece_backings` (`backingId`)")
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `take_backings` (`sessionId` INTEGER NOT NULL, `backingId` INTEGER NOT NULL, `offsetMs` INTEGER NOT NULL, " +
+                        "`recordedOffsetMs` INTEGER NOT NULL, `gainDb` REAL NOT NULL, `playedMs` INTEGER NOT NULL, `output` TEXT NOT NULL, `deviceName` TEXT, `latencyMs` INTEGER NOT NULL, " +
+                        "PRIMARY KEY(`sessionId`), FOREIGN KEY(`sessionId`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_take_backings_backingId` ON `take_backings` (`backingId`)")
+                db.execSQL(
+                    "INSERT INTO backings (id, fileName, title, durationMs, sampleRate, channels, sizeBytes, addedAtEpochMs) " +
+                        "VALUES (1, 'piano.m4a', 'Piano', 220000, 44100, 2, 5000000, 1)",
+                )
+                db.execSQL("INSERT INTO piece_backings (pieceId, backingId, enabled) VALUES (1, 1, 1)")
             }
             db.execSQL("PRAGMA user_version = $version")
         }
@@ -399,4 +428,74 @@ class DatabaseMigrationTest {
         assertEquals(listOf("a.m4a"), dao.deleteUnused())
         assertEquals(emptyList<Any>(), dao.backings().first())
     }
+
+    @Test
+    fun eventsStartEmpty_andRecordsBelongToNoEvent() = runBlocking {
+        createOldFile(version = 13)
+        val db = openMigrated()
+        val dao = db.eventDao()
+
+        assertEquals(emptyList<Any>(), dao.observeEvents().first())
+        assertEquals(emptyList<Any>(), dao.observeKinds().first())
+        assertEquals(emptyList<Any>(), dao.observeSeries().first())
+        assertEquals(emptyList<Any>(), dao.observePrograms().first())
+        assertEquals(emptyList<Any>(), dao.observeRecordEvents().first())
+        // everything of before is there, and the recording of version 1 belongs to no event
+        val old = db.sessionDao().observeAll().first().single()
+        assertEquals("Гаммы", old.title)
+        assertEquals(1L, old.pieceId)
+        assertEquals(null, old.eventId)
+        assertEquals(2_700_000L, db.practiceDao().observeAll().first().single().durationMs)
+        assertEquals(listOf("piano.m4a"), db.backingDao().backings().first().map { it.fileName })
+        assertEquals(1, db.journeyDao().observeEarnings().first().size)
+
+        // an event with the piece of version 4 in its program; two recordings of it — one with the default name, one with its own
+        val eventId = dao.insert(concert(), series = null, pieceIds = listOf(1))
+        assertEquals(listOf(1L), dao.observePrograms().first().map { it.pieceId })
+        val byDefault = db.sessionDao().insert(old.copy(id = 0, title = null, eventId = eventId), bucketMs = 50, samples = ByteArray(3))
+        val named = db.sessionDao().insert(old.copy(id = 0, title = "Мой концерт", eventId = eventId), bucketMs = 50, samples = ByteArray(3))
+        assertEquals(listOf(eventId), dao.observeRecordEvents().first().map { it.eventId })
+
+        // the event goes: its program with it, its recordings stay — without it, with the name the default one wore
+        dao.apply(
+            EventPlan(EventStep.DeleteOne(eventId)), mapOf(eventId to "Осенний концерт · 24 октября"),
+            today = LocalDate(2026, 10, 24), horizonWeeks = EventsConfig().seriesHorizonWeeks,
+        )
+        assertEquals(emptyList<Any>(), dao.observeEvents().first())
+        assertEquals(emptyList<Any>(), dao.observePrograms().first())
+        val records = db.sessionDao().observeAll().first().associateBy { it.id }
+        assertEquals(null, records.getValue(byDefault).eventId)
+        assertEquals("Осенний концерт · 24 октября", records.getValue(byDefault).title)
+        assertEquals(null, records.getValue(named).eventId)
+        assertEquals("Мой концерт", records.getValue(named).title)
+        assertEquals("Гаммы", records.getValue(old.id).title)
+
+        // an element of the repertoire that goes takes its rows of programs with it
+        val second = dao.insert(concert(), series = null, pieceIds = listOf(1))
+        db.repertoireDao().deletePiece(1)
+        assertEquals(emptyList<Any>(), dao.observePrograms().first())
+        assertEquals(listOf(second), dao.observeEvents().first().map { it.id })
+
+        // a kind of one's own goes: its events and the template of its repeat become «Другое»
+        val kindId = dao.insertOwnKind(
+            com.violinjourney.app.core.data.events.EventKindEntity(builtIn = null, name = "Сольфеджио", color = 3, sign = "book", createdAtEpochMs = 2),
+            max = 20,
+        )!!
+        val series = com.violinjourney.app.core.data.events.EventSeriesEntity(
+            kind = "OTHER", kindId = kindId, stepDays = 7, firstDate = "2026-10-06", untilDate = null, laidUntil = "2026-10-06",
+            startMinutes = 600, durationMinutes = 45, title = "", place = "",
+        )
+        dao.insert(concert().copy(kind = "OTHER", kindId = kindId, date = "2026-10-06"), series = series, pieceIds = emptyList())
+        dao.deleteOwnKind(kindId)
+        assertEquals(emptyList<Any>(), dao.observeKinds().first())
+        assertTrue(dao.observeEvents().first().all { it.kindId == null })
+        assertEquals("OTHER", dao.observeEvents().first().single { it.date == "2026-10-06" }.kind)
+        assertEquals(null, dao.observeSeries().first().single().kindId)
+        assertEquals("OTHER", dao.observeSeries().first().single().kind)
+    }
+
+    private fun concert() = com.violinjourney.app.core.data.events.CalendarEventEntity(
+        kind = "PERFORMANCE", kindId = null, date = "2026-10-24", startMinutes = 1110, durationMinutes = 90, title = "Осенний концерт",
+        place = "", notes = "", seriesId = null, detached = false, createdAtEpochMs = 1,
+    )
 }

@@ -6,6 +6,7 @@ import androidx.room.RoomDatabase
 import com.violinjourney.app.core.data.AppDatabase
 import com.violinjourney.app.core.data.DatabaseMigrations
 import com.violinjourney.app.core.data.backing.BackingDao
+import com.violinjourney.app.core.data.events.EventDao
 import com.violinjourney.app.core.data.practice.PieceBlockDao
 import com.violinjourney.app.core.data.practice.PracticeDao
 import com.violinjourney.app.core.data.progress.TrophyDao
@@ -46,6 +47,9 @@ object DatabaseModule {
 
     @Provides
     fun provideSoundDao(database: AppDatabase): SoundDao = database.soundDao()
+
+    @Provides
+    fun provideEventDao(database: AppDatabase): EventDao = database.eventDao()
 }
 
 /**

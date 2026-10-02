@@ -1,6 +1,7 @@
 package com.violinjourney.app.core.di
 
 import com.violinjourney.app.core.domain.IntonationConfig
+import com.violinjourney.app.core.domain.events.EventsConfig
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
@@ -43,6 +44,10 @@ object CoreModule {
     @Provides
     @Singleton
     fun provideRepertoireConfig(): RepertoireConfig = RepertoireConfig()
+
+    @Provides
+    @Singleton
+    fun provideEventsConfig(): EventsConfig = EventsConfig()
 
     /** Wall clock for session start times and "today" in the history; tests pass a fixed one. */
     @Provides

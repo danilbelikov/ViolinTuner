@@ -4,6 +4,7 @@ import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.data.profile.AvatarFiles
 import com.violinjourney.app.core.data.profile.FakeAvatarFiles
 import com.violinjourney.app.core.domain.backing.NoBackings
+import com.violinjourney.app.core.domain.events.FakeEventRepository
 import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.practice.testPracticeFinisher
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
@@ -70,6 +71,7 @@ class PracticeViewModelTest {
     private val trophies = FakeTrophyRepository()
     private val profiles = FakeProfileRepository()
     private val avatarFiles = FakeAvatarFiles()
+    private val events = FakeEventRepository()
     private val zone: TimeZone = TimeZone.of("Europe/Moscow")
 
     // 2026-09-17 18:00 Moscow
@@ -99,7 +101,7 @@ class PracticeViewModelTest {
         val viewModel = PracticeViewModel(
             repository, store, finisher, sessions, config, repertoire, clock,
             trophies, profiles, avatarFiles, ProgressConfig(), journey, blocks = blocks, finishAsk = finishAsk, venues = Venues(FollowTheRoad, journey),
-            journeyConfig = JourneyConfig(), analytics = NoOpAnalytics(), backings = NoBackings,
+            journeyConfig = JourneyConfig(), analytics = NoOpAnalytics(), backings = NoBackings, events = events,
         )
         val effects = mutableListOf<PracticeEffect>()
         if (watchState) backgroundScope.launch { viewModel.state.collect {} }
@@ -612,6 +614,21 @@ class PracticeViewModelTest {
         runCurrent()
         assertEquals(PracticeSheet.Path, viewModel.state.value.sheet)
         assertFalse(viewModel.state.value.sheetsAway)
+    }
+
+    @Test
+    fun `every time the screen opens the repeats of events are laid ahead from today`() = runTest {
+        val (viewModel, _) = viewModel()
+        assertEquals("nothing is laid before the screen is resumed", emptyList<LocalDate>(), events.laidAhead)
+        viewModel.onIntent(PracticeIntent.Resumed)
+        runCurrent()
+        assertEquals("spec 5.28: when «Занятия» open", listOf(today), events.laidAhead)
+
+        // the next morning: the screen opened again lays from the new day
+        clock.nowMs += 24 * MS_PER_HOUR
+        viewModel.onIntent(PracticeIntent.Resumed)
+        runCurrent()
+        assertEquals(listOf(today, LocalDate(2026, 9, 18)), events.laidAhead)
     }
 
     @Test

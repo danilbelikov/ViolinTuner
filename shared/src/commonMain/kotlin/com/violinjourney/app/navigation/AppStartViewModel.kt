@@ -3,6 +3,7 @@ package com.violinjourney.app.navigation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.violinjourney.app.core.data.Housekeeping
+import com.violinjourney.app.core.domain.events.EventRepository
 import com.violinjourney.app.core.domain.practice.BlockStore
 import com.violinjourney.app.core.domain.practice.ForgottenEndings
 import com.violinjourney.app.core.domain.practice.ForgottenPractice
@@ -17,6 +18,7 @@ import com.violinjourney.app.core.domain.progress.TrophyAwarder
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.settings.SettingsRepository
 import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.core.time.today
 import com.violinjourney.app.feature.practice.PracticePrompt
 import com.violinjourney.app.feature.practice.PracticePromptEffect
 import com.violinjourney.app.feature.practice.PracticePromptIntent
@@ -46,8 +48,9 @@ import kotlinx.coroutines.launch
  * changed under a live NavHost would rebuild the graph, so later moves between onboarding and
  * the tabs are explicit navigation. Also owns what concerns every tab: the mark of a running
  * practice and the forgotten-practice prompt (spec 3.12). It lives as long as the app is open, so it
- * also says when two things are done that belong to no screen: the sweeping of files no one will read
- * again ([Housekeeping] knows what goes) and the giving of trophies ([TrophyAwarder.follow], spec 5.7).
+ * also says when three things are done that belong to no screen: the sweeping of files no one will read
+ * again ([Housekeeping] knows what goes), the giving of trophies ([TrophyAwarder.follow], spec 5.7) and the laying of the
+ * repeats of events ahead to their horizon ([EventRepository.layAhead], spec 5.28 — «Занятия» lay them again when they open).
  */
 open class AppStartViewModel(
     repository: SettingsRepository,
@@ -60,11 +63,13 @@ open class AppStartViewModel(
     private val repertoire: RepertoireRepository,
     private val housekeeping: Housekeeping,
     private val blocks: BlockStore,
+    events: EventRepository,
 ) : ViewModel() {
     init {
         viewModelScope.launch { housekeeping.atStart() }
         viewModelScope.launch { housekeeping.sweepTemporaries() }
         viewModelScope.launch { awarder.follow(practice.entries) }
+        viewModelScope.launch { events.layAhead(clock.today()) }
     }
 
     /** Null while the settings are being read: show nothing rather than the wrong screen. */

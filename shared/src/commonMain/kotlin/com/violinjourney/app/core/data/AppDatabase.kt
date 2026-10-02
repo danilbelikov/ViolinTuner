@@ -8,6 +8,11 @@ import com.violinjourney.app.core.data.backing.BackingDao
 import com.violinjourney.app.core.data.backing.BackingEntity
 import com.violinjourney.app.core.data.backing.PieceBackingEntity
 import com.violinjourney.app.core.data.backing.TakeBackingEntity
+import com.violinjourney.app.core.data.events.CalendarEventEntity
+import com.violinjourney.app.core.data.events.EventDao
+import com.violinjourney.app.core.data.events.EventKindEntity
+import com.violinjourney.app.core.data.events.EventPieceEntity
+import com.violinjourney.app.core.data.events.EventSeriesEntity
 import com.violinjourney.app.core.data.practice.PieceBlockDao
 import com.violinjourney.app.core.data.practice.PieceBlockEntity
 import com.violinjourney.app.core.data.practice.PracticeDao
@@ -35,7 +40,8 @@ import com.violinjourney.app.core.data.sound.SoundSettingsEntity
  * The one database of the app: sessions (recordings with analysis), practice entries (time),
  * the trophies given for that time, the repertoire (pieces with their sheet pages), and how
  * recordings are made to sound (settings of sound processing and the user's presets); the journey
- * and the home; the blocks of practices — time given to elements of the repertoire; the backings of pieces and takes.
+ * and the home; the blocks of practices — time given to elements of the repertoire; the backings of pieces and takes; the
+ * events of the calendar — lessons, performances and kinds of one's own — with their repeats and programs.
  * Every version's schema is exported to `shared/schemas` and committed; a new version needs a step in [DatabaseMigrations] —
  * Android and iOS both open older files, and older copies, through it — and a test that the old rows survive it.
  */
@@ -48,6 +54,7 @@ import com.violinjourney.app.core.data.sound.SoundSettingsEntity
         HomeChoiceEntity::class,
         PieceBlockEntity::class,
         BackingEntity::class, PieceBackingEntity::class, TakeBackingEntity::class,
+        EventKindEntity::class, EventSeriesEntity::class, CalendarEventEntity::class, EventPieceEntity::class,
     ],
     version = AppDatabase.VERSION,
     exportSchema = true,
@@ -62,12 +69,13 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun journeyDao(): JourneyDao
     abstract fun pieceBlockDao(): PieceBlockDao
     abstract fun backingDao(): BackingDao
+    abstract fun eventDao(): EventDao
 
     companion object {
         const val FILE_NAME = "violin.db"
 
         /** The schema version. Raising it needs a migration from the previous one in DatabaseMigrations.ALL — `DatabaseMigrationChainTest` fails the build without it. */
-        const val VERSION = 13
+        const val VERSION = 14
     }
 }
 

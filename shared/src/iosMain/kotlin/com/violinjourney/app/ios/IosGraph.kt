@@ -31,6 +31,7 @@ import com.violinjourney.app.core.backup.IosBackupDocuments
 import com.violinjourney.app.core.backup.IosBackupStore
 import com.violinjourney.app.core.data.Housekeeping
 import com.violinjourney.app.core.data.backing.RoomBackingRepository
+import com.violinjourney.app.core.data.events.RoomEventRepository
 import com.violinjourney.app.core.data.journey.RoomHomeRepository
 import com.violinjourney.app.core.data.journey.RoomJourneyRepository
 import com.violinjourney.app.core.data.practice.RoomPieceBlockRepository
@@ -42,6 +43,7 @@ import com.violinjourney.app.core.data.sound.RoomSoundRepository
 import com.violinjourney.app.core.di.ElapsedClock
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.backing.BackingConfig
+import com.violinjourney.app.core.domain.events.EventsConfig
 import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.practice.FinishPracticeAsk
 import com.violinjourney.app.core.domain.practice.PracticeConfig
@@ -96,6 +98,7 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val journeyConfig = JourneyConfig()
     val soundConfig = SoundConfig()
     val backingConfig = BackingConfig()
+    val eventsConfig = EventsConfig()
 
     /** AppMetrica where the build has a key and may send (spec 5.27); silence otherwise. */
     val analytics: Analytics = statistics ?: NoOpAnalytics()
@@ -123,6 +126,7 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val sheetFiles = IosSheetFiles(io, repertoireConfig)
 
     val sessions = RoomSessionRepository(database.sessionDao(), intonationConfig, audioFiles, clock, analytics, io)
+    val events = RoomEventRepository(database.eventDao(), eventsConfig, clock, analytics, io)
     val practice = RoomPracticeRepository(database.practiceDao())
     val blockHistory = RoomPieceBlockRepository(database.pieceBlockDao())
     val trophies = RoomTrophyRepository(database.trophyDao())

@@ -31,6 +31,11 @@ data class SessionSummary(
     val pieceId: Long? = null,
     /** Set for a video take (spec 3.19): the name of the video file — its sound track is what [audioPath] plays. */
     val videoPath: String? = null,
+    /**
+     * The event this recording belongs to (spec 3.35); null for every other one. Its name, date and kind are not here:
+     * `EventRepository.recordEvents` gives them (plan D11) — an edit of the events re-reads that short query, not the list.
+     */
+    val eventId: Long? = null,
 )
 
 data class SessionDetails(
@@ -52,6 +57,8 @@ data class NewSession(
     val pieceId: Long? = null,
     /** Set for a video take (spec 3.19): the name of the video file — its sound track is what [audioPath] plays. */
     val videoPath: String? = null,
+    /** Set for a recording made on the screen of an event (spec 3.35). */
+    val eventId: Long? = null,
 )
 
 interface SessionRepository {

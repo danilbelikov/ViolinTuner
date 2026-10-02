@@ -1,6 +1,8 @@
 package com.violinjourney.app.core.analytics
 
 import com.violinjourney.app.core.audio.MicUnavailableReason
+import com.violinjourney.app.core.domain.events.KindRef
+import com.violinjourney.app.core.domain.events.Repeat
 import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.ui.permission.MicPermissionAnswer
 
@@ -82,6 +84,27 @@ class PieceAdded(section: PieceSection, ownSection: Boolean, scale: Boolean) :
     ) {
     private companion object {
         const val CUSTOM_SECTION = "custom"
+    }
+}
+
+/**
+ * Are events used, and which (spec 3.35, 3.34): the kind — a built-in one by its key (lesson / rehearsal / performance /
+ * other), one of the player's own as «custom», its name is the player's — and the repeat it was created with. Never a
+ * title, a place or notes. Only a person creating an event sends it — not the horizon laying a repeat ahead.
+ */
+class EventAdded(kind: KindRef, repeat: Repeat) :
+    AnalyticsEvent(
+        "event_added",
+        mapOf(
+            "kind" to when (kind) {
+                is KindRef.BuiltIn -> kind.kind.name.lowercase()
+                is KindRef.Custom -> CUSTOM_KIND
+            },
+            "repeat" to repeat.name.lowercase(),
+        ),
+    ) {
+    private companion object {
+        const val CUSTOM_KIND = "custom"
     }
 }
 

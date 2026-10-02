@@ -6,7 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /** Summary row of a session: everything the history list shows, stored computed (spec 6). */
-@Entity(tableName = "sessions", indices = [Index("startedAtEpochMs"), Index("pieceId")])
+@Entity(tableName = "sessions", indices = [Index("startedAtEpochMs"), Index("pieceId"), Index("eventId")])
 data class SessionEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val title: String?,
@@ -27,6 +27,8 @@ data class SessionEntity(
     val pieceId: Long? = null,
     /** A video take (v6): the file that holds both the picture and the sound. A name, not a path. */
     val videoPath: String? = null,
+    /** The event this recording belongs to (v14, spec 3.35); no foreign key, see `MIGRATION_13_14`. */
+    val eventId: Long? = null,
 )
 
 /** The files a session row points at: what is left to remove once the row is gone. */

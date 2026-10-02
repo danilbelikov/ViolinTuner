@@ -26,6 +26,7 @@ internal object SessionMapper {
         audioPath = session.audioPath,
         pieceId = session.pieceId,
         videoPath = session.videoPath,
+        eventId = session.eventId,
     )
 
     /**
@@ -49,6 +50,7 @@ internal object SessionMapper {
         audioPath = entity.audioPath?.takeIf(soundFound),
         pieceId = entity.pieceId,
         videoPath = entity.videoPath,
+        eventId = entity.eventId,
     )
 
     fun encodeZones(zones: List<Zone>): String = zones.joinToString(separator = "") {

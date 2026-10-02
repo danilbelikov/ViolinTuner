@@ -5,6 +5,7 @@ import com.violinjourney.app.core.audio.share.FakeShareFiles
 import com.violinjourney.app.core.data.Housekeeping
 import com.violinjourney.app.core.data.profile.FakeAvatarFiles
 import com.violinjourney.app.core.domain.backing.NoBackings
+import com.violinjourney.app.core.domain.events.FakeEventRepository
 import com.violinjourney.app.core.domain.practice.BlockRules
 import com.violinjourney.app.core.domain.practice.FakeBlockStore
 import com.violinjourney.app.core.domain.practice.FakePracticeRepository
@@ -79,6 +80,7 @@ class AppStartViewModelTest {
     private val avatarFiles = FakeAvatarFiles()
     private val repertoire = FakeRepertoireRepository()
     private val blocks = FakeBlockStore()
+    private val events = FakeEventRepository()
     private val shareFiles = FakeShareFiles()
     private val keptPcm = mutableListOf<Set<String>>()
     private val backingPcm = object : com.violinjourney.app.core.audio.backing.BackingPcm {
@@ -99,6 +101,7 @@ class AppStartViewModelTest {
             io = Dispatchers.Main,
         ),
         blocks,
+        events,
     )
 
     private suspend fun running(elapsedMs: Long, lastSoundAgoMs: Long?) {
@@ -122,6 +125,19 @@ class AppStartViewModelTest {
         runCurrent()
         assertEquals(2, shareFiles.sweeps)
         assertEquals(now, shareFiles.sweptAtMs)
+    }
+
+    @Test
+    fun `the repeats of events are laid ahead once at the start, from the day of the clock`() = runTest {
+        val viewModel = viewModel()
+        runCurrent()
+        assertEquals("spec 5.28: the horizon is laid when the app starts", listOf(LocalDate(2026, 9, 17)), events.laidAhead)
+
+        // coming back from the background is no start: «Занятия» lay it again when they open, the app does not
+        viewModel.onAppStopped()
+        viewModel.onAppOpened()
+        runCurrent()
+        assertEquals(1, events.laidAhead.size)
     }
 
     @Test

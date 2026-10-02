@@ -132,7 +132,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                         clock = graph.clock, trophies = graph.trophies, profiles = graph.profiles,
                         avatarFiles = graph.avatarFiles, progressConfig = graph.progressConfig, journey = graph.journey,
                         venues = graph.venues, blocks = graph.blockStore, journeyConfig = graph.journeyConfig,
-                        finishAsk = graph.finishAsk, analytics = graph.analytics, backings = graph.backings,
+                        finishAsk = graph.finishAsk, analytics = graph.analytics, backings = graph.backings, events = graph.events,
                     )
                 },
                 homeLookViewModel = viewModel { HomeLookViewModel(graph.home) },

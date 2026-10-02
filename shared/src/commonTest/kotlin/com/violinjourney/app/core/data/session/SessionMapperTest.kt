@@ -47,6 +47,15 @@ class SessionMapperTest {
     }
 
     @Test
+    fun `a recording of an event keeps its event and every other one has none`() {
+        val ofEvent = SessionMapper.toEntity(newSession.copy(eventId = 12)).copy(id = 4)
+        assertEquals(12L, ofEvent.eventId)
+        assertEquals(12L, SessionMapper.toSummary(ofEvent).eventId)
+        assertNull(SessionMapper.toSummary(SessionMapper.toEntity(newSession).copy(id = 5)).eventId)
+        assertNull(SessionMapper.toEntity(newSession.copy(pieceId = 3)).eventId, "a take of a piece belongs to no event")
+    }
+
+    @Test
     fun `zones are stored as letters and unknown letters are skipped`() {
         assertEquals("INO", SessionMapper.encodeZones(listOf(Zone.IN_TUNE, Zone.NEAR, Zone.OFF)))
         assertEquals(listOf(Zone.OFF, Zone.IN_TUNE), SessionMapper.decodeZones("O?I"))

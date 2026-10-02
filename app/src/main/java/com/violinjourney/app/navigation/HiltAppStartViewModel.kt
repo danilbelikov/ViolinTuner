@@ -1,6 +1,7 @@
 package com.violinjourney.app.navigation
 
 import com.violinjourney.app.core.data.Housekeeping
+import com.violinjourney.app.core.domain.events.EventRepository
 import com.violinjourney.app.core.domain.practice.BlockStore
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.PracticeFinisher
@@ -25,4 +26,5 @@ class HiltAppStartViewModel @Inject constructor(
     repertoire: RepertoireRepository,
     housekeeping: Housekeeping,
     blocks: BlockStore,
-) : AppStartViewModel(repository, runningPractice, finisher, config, clock, practice, awarder, repertoire, housekeeping, blocks)
+    events: EventRepository,
+) : AppStartViewModel(repository, runningPractice, finisher, config, clock, practice, awarder, repertoire, housekeeping, blocks, events)

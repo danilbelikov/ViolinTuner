@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.violinjourney.app.core.data.profile.AvatarFiles
 import com.violinjourney.app.core.domain.backing.BackingRepository
 import com.violinjourney.app.core.domain.backing.takesUnderBacking
+import com.violinjourney.app.core.domain.events.EventRepository
 import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.journey.JourneyRepository
 import com.violinjourney.app.core.domain.practice.BlockRules
@@ -85,6 +86,7 @@ open class PracticeViewModel(
     private val finishAsk: FinishPracticeAsk,
     private val analytics: Analytics,
     backings: BackingRepository,
+    private val events: EventRepository,
 ) : ViewModel() {
 
     /** Takts of the practice saved a moment ago, as the pill on the card; null the rest of the time. */
@@ -248,7 +250,12 @@ open class PracticeViewModel(
             is PracticeIntent.DaySelected -> selectDay(intent.date)
             // hidden is only hidden, and only the sheet of the day itself: a late swipe must not close what took its place
             PracticeIntent.DayHidden -> ui.update { if (it.sheet is PracticeSheet.Day) it.closed() else it }
-            PracticeIntent.Resumed -> ui.update { if (it.away) it.copy(away = false) else it }
+            PracticeIntent.Resumed -> {
+                ui.update { if (it.away) it.copy(away = false) else it }
+                // «Занятия» opened: the repeats of events are laid ahead to their horizon (spec 5.28) — a second time, the
+                // same day, lays nothing
+                viewModelScope.launch { events.layAhead(today()) }
+            }
             PracticeIntent.MonthBack -> ui.update { it.copy(month = (it.month ?: today().yearMonth).minus(1, DateTimeUnit.MONTH)) }
             PracticeIntent.MonthForward -> ui.update {
                 val current = today().yearMonth

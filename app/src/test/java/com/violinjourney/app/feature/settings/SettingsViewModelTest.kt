@@ -8,6 +8,7 @@ import com.violinjourney.app.core.data.profile.FakeAvatarFiles
 import com.violinjourney.app.core.domain.TolerancePreset
 import com.violinjourney.app.core.domain.UserSettings
 import com.violinjourney.app.core.domain.backing.NoBackings
+import com.violinjourney.app.core.domain.events.FakeEventRepository
 import com.violinjourney.app.core.domain.practice.FakePracticeRepository
 import com.violinjourney.app.core.domain.practice.FakeRunningPracticeStore
 import com.violinjourney.app.core.domain.practice.NoBlocks
@@ -139,7 +140,7 @@ class SettingsViewModelTest {
             Housekeeping(
                 sessions, FakeSessionWaveforms(), FakeAvatarFiles(), FakeProfileRepository(), FakeShareFiles(), repertoire, NoBackings, NoBackingPcm,
                 clock, Dispatchers.Main,
-            ), blocks = NoBlocks,
+            ), blocks = NoBlocks, events = FakeEventRepository(),
         )
     }
 

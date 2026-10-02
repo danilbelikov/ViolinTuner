@@ -199,6 +199,45 @@ object DatabaseMigrations {
     }
 
     /**
+     * Events of the calendar (spec 3.35, 6 of `events.md`): kinds of one's own and the colours of the built-in ones, repeats,
+     * events, programs — four new tables, empty — and a recording may belong to an event. That link is a nullable column
+     * with an index and no foreign key, as `pieceId` (`MIGRATION_3_4`): a foreign key would rebuild the recordings of the
+     * user; `EventDao` clears it in the transaction that deletes the event. Programs keep foreign keys with a cascade to the
+     * event and to the element of the repertoire (plan D2). The statements are Room's own (`createSql` of `14.json`).
+     */
+    val MIGRATION_13_14 = object : Migration(13, 14) {
+        override fun migrate(connection: SQLiteConnection) {
+            connection.execSQL(
+                "CREATE TABLE IF NOT EXISTS `event_kinds` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `builtIn` TEXT, `name` TEXT NOT NULL, " +
+                    "`color` INTEGER NOT NULL, `sign` TEXT, `createdAtEpochMs` INTEGER NOT NULL)",
+            )
+            connection.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_event_kinds_builtIn` ON `event_kinds` (`builtIn`)")
+            connection.execSQL(
+                "CREATE TABLE IF NOT EXISTS `event_series` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `kind` TEXT NOT NULL, `kindId` INTEGER, " +
+                    "`stepDays` INTEGER NOT NULL, `firstDate` TEXT NOT NULL, `untilDate` TEXT, `laidUntil` TEXT NOT NULL, `startMinutes` INTEGER, " +
+                    "`durationMinutes` INTEGER, `title` TEXT NOT NULL, `place` TEXT NOT NULL)",
+            )
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_event_series_kindId` ON `event_series` (`kindId`)")
+            connection.execSQL(
+                "CREATE TABLE IF NOT EXISTS `calendar_events` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `kind` TEXT NOT NULL, `kindId` INTEGER, " +
+                    "`date` TEXT NOT NULL, `startMinutes` INTEGER, `durationMinutes` INTEGER, `title` TEXT NOT NULL, `place` TEXT NOT NULL, " +
+                    "`notes` TEXT NOT NULL, `seriesId` INTEGER, `detached` INTEGER NOT NULL, `createdAtEpochMs` INTEGER NOT NULL)",
+            )
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_calendar_events_date` ON `calendar_events` (`date`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_calendar_events_seriesId` ON `calendar_events` (`seriesId`)")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_calendar_events_kindId` ON `calendar_events` (`kindId`)")
+            connection.execSQL(
+                "CREATE TABLE IF NOT EXISTS `event_pieces` (`eventId` INTEGER NOT NULL, `pieceId` INTEGER NOT NULL, `position` INTEGER NOT NULL, " +
+                    "PRIMARY KEY(`eventId`, `pieceId`), FOREIGN KEY(`eventId`) REFERENCES `calendar_events`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , " +
+                    "FOREIGN KEY(`pieceId`) REFERENCES `pieces`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+            )
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_event_pieces_pieceId` ON `event_pieces` (`pieceId`)")
+            connection.execSQL("ALTER TABLE `sessions` ADD COLUMN `eventId` INTEGER")
+            connection.execSQL("CREATE INDEX IF NOT EXISTS `index_sessions_eventId` ON `sessions` (`eventId`)")
+        }
+    }
+
+    /**
      * The columns of `SoundColumns`, as Room declares them: both sound tables embed the same set. Public for the app's
      * `DatabaseMigrationTest`, which lays out a version 5 file by hand — the app does not see what is internal to this module.
      */
@@ -212,5 +251,5 @@ object DatabaseMigrations {
             "`reverbPreDelayMs` REAL NOT NULL, `reverbBrightness` REAL NOT NULL, `reverbMix` REAL NOT NULL, " +
             "`outputEnabled` INTEGER NOT NULL, `outputGainDb` REAL NOT NULL"
 
-    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
+    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14)
 }
