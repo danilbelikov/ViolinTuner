@@ -665,12 +665,12 @@ data class DataBlockState(
 | backup_phase_part | %1$s %2$d из %3$d | %1$s %2$d of %3$d | %1$s %2$d von %3$d | %1$s %2$d de %3$d | %1$s %2$d sur %3$d | %1$s %2$d di %3$d | %1$s %2$d/%3$d | %1$s %2$d/%3$d | %1$s %2$d de %3$d | %1$s %2$d/%3$d |
 | backup_phase_check | Проверка | Check | Prüfung | Comprobación | Vérification | Verifica | 確認 | 확인 | Verificação | 检查 |
 
-**Этап 122**
+**Этап 122** (ko и zh `backup_failed_without_video` — правка ревью этапа 122: в них встаёт и «меньше 1 МБ» — ko «1MB 미만», после которого «예요» неверно, zh «不到 1 MB»)
 
 | ключ | ru | en | de | es | fr | it | ja | ko | pt | zh |
 |---|---|---|---|---|---|---|---|---|---|---|
 | backup_cancel_action | Отменить | Cancel | Abbrechen | Cancelar | Annuler | Annulla | キャンセル | 취소 | Cancelar | 取消 |
-| backup_failed_without_video | Без видео копия займёт %1$s. | Without video, the copy takes %1$s. | Ohne Video braucht die Kopie %1$s. | Sin vídeo, la copia ocupa %1$s. | Sans vidéo, la copie prend %1$s. | Senza video la copia occupa %1$s. | 動画なしならコピーは %1$s です。 | 영상 없이 저장하면 사본은 %1$s예요. | Sem vídeo, a cópia ocupa %1$s. | 不含视频，副本为 %1$s。 |
+| backup_failed_without_video | Без видео копия займёт %1$s. | Without video, the copy takes %1$s. | Ohne Video braucht die Kopie %1$s. | Sin vídeo, la copia ocupa %1$s. | Sans vidéo, la copie prend %1$s. | Senza video la copia occupa %1$s. | 動画なしならコピーは %1$s です。 | 영상을 빼면 사본 크기는 %1$s입니다. | Sem vídeo, a cópia ocupa %1$s. | 不含视频，副本大小：%1$s。 |
 | backup_phase_now | сейчас: %1$s | now: %1$s | jetzt: %1$s | ahora: %1$s | en cours : %1$s | ora: %1$s | 現在: %1$s | 지금: %1$s | agora: %1$s | 当前：%1$s |
 | backup_chip_no_video | без видео | no video | ohne Video | sin vídeo | sans vidéo | senza video | 動画なし | 영상 없음 | sem vídeo | 不含视频 |
 | backup_chip_no_audio | без звука | no sound | ohne Ton | sin sonido | sans son | senza audio | 音なし | 소리 없음 | sem som | 不含声音 |
