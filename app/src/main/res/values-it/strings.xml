@@ -404,6 +404,7 @@
     <string name="record_tile_record">registrazione</string>
     <string name="record_tile_only_video">video</string>
     <string name="record_tile_no_sound">senza audio</string>
+    <string name="record_tile_sound">audio</string>
     <string name="history_empty_title">Qui compariranno le tue registrazioni</string>
     <string name="history_empty_text">Registra con il pulsante di Live o un take nella schermata di un brano\u00A0— poi arriva l\'analisi: cosa tiene e cosa sfugge.</string>
     <string name="history_open_live">Apri Live</string>
@@ -503,6 +504,83 @@
     <string name="event_reminder_more_description_one">%1$d altro evento: %2$s</string>
     <string name="event_reminder_more_description_few">Altri %1$d eventi: %2$s</string>
     <string name="event_reminder_more_description_many">Altri %1$d eventi: %2$s</string>
+    <string name="event_program">Programma</string>
+    <string name="event_program_done">Fatto · %1$d</string>
+    <string name="event_program_empty_title">Il repertorio è ancora vuoto</string>
+    <string name="event_program_empty_text_program">Aggiungi brani, scale e studi\u00A0— poi segna qui cosa suonerai al concerto.</string>
+    <string name="event_program_empty_text_played">Aggiungi brani, scale e studi\u00A0— poi segna qui cosa hai suonato.</string>
+    <string name="event_notes_ask_lesson">Cosa ti hanno assegnato?</string>
+    <string name="event_notes_ask_before">A che ora il ritrovo, chi accompagna?</string>
+    <string name="event_notes_ask_after">Com\'è andata?</string>
+    <string name="event_program_empty">Cosa suonerai?</string>
+    <string name="event_add_to_program">Aggiungi al programma</string>
+    <string name="event_records_from">Registrazioni dal %1$s</string>
+    <string name="event_can_add">Puoi aggiungere</string>
+    <string name="event_can_add_note">Un appunto</string>
+    <string name="event_can_add_note_caption">cosa è successo, cosa ricordare</string>
+    <string name="event_can_add_program">Un programma</string>
+    <string name="event_can_add_from_repertoire">dal repertorio</string>
+    <string name="event_can_add_record">Una registrazione</string>
+    <string name="event_can_add_record_caption">audio o video</string>
+    <string name="event_not_found">Evento non trovato</string>
+    <string name="event_program_remove">Togli «%1$s»</string>
+    <string name="event_repeat_until_end">%1$s, fino al %2$s</string>
+    <string name="event_add_record">Aggiungi una registrazione</string>
+    <string name="event_add_file">Audio da file</string>
+    <string name="event_add_file_caption">mp3, m4a, wav…</string>
+    <string name="event_add_mic">Registra l\'audio</string>
+    <string name="event_add_mic_caption">alla cieca, l\'analisi dopo</string>
+    <string name="event_add_camera_caption">fotocamera di sistema</string>
+    <string name="event_mic_reason">Per registrare l\'audio serve l\'accesso al microfono.</string>
+    <string name="event_recording_description">Registrazione in corso, %1$s</string>
+    <string name="file_copying">Aggiunta del file…</string>
+    <string name="file_error_too_long">Il file supera i 60 minuti\u00A0— non si può analizzare</string>
+    <string name="file_error_cannot_open">Impossibile aprire il file</string>
+    <string name="file_error_no_sound">Il file non ha audio</string>
+    <string name="file_error_no_notes">Nel file non ci sono note\u00A0— la registrazione non è stata aggiunta</string>
+    <string name="event_video_error_no_notes">Nel video non ci sono note\u00A0— la registrazione non è stata aggiunta</string>
+    <string name="event_series_delete_q_lesson">Eliminare la lezione del %1$s?</string>
+    <string name="event_series_delete_q_rehearsal">Eliminare la prova del %1$s?</string>
+    <string name="event_series_delete_q_event">Eliminare l\'evento del %1$s?</string>
+    <string name="event_series_this_lesson">Solo questa lezione</string>
+    <string name="event_series_this_rehearsal">Solo questa prova</string>
+    <string name="event_series_this_event">Solo questo evento</string>
+    <string name="event_series_following_lesson">Questa e le successive</string>
+    <string name="event_series_following_rehearsal">Questa e le successive</string>
+    <string name="event_series_following_event">Questo e i successivi</string>
+    <string name="event_series_from_date">dal %1$s in poi</string>
+    <string name="event_series_past_short_lesson">Le lezioni passate non cambieranno.</string>
+    <string name="event_series_past_short_rehearsal">Le prove passate non cambieranno.</string>
+    <string name="event_series_past_short_event">Gli eventi passati non cambieranno.</string>
+    <string name="event_delete_text_program">Appunti e programma verranno eliminati. Le registrazioni restano in «Registrazioni».</string>
+    <string name="event_delete_text_played">Appunti e «Cosa hai suonato» verranno eliminati. Le registrazioni restano in «Registrazioni».</string>
+    <string-array name="event_repeat_weekly_on">
+        <item>Ogni settimana, il lunedì</item>
+        <item>Ogni settimana, il martedì</item>
+        <item>Ogni settimana, il mercoledì</item>
+        <item>Ogni settimana, il giovedì</item>
+        <item>Ogni settimana, il venerdì</item>
+        <item>Ogni settimana, il sabato</item>
+        <item>Ogni settimana, la domenica</item>
+    </string-array>
+    <string-array name="event_repeat_biweekly_on">
+        <item>Ogni due settimane, il lunedì</item>
+        <item>Ogni due settimane, il martedì</item>
+        <item>Ogni due settimane, il mercoledì</item>
+        <item>Ogni due settimane, il giovedì</item>
+        <item>Ogni due settimane, il venerdì</item>
+        <item>Ogni due settimane, il sabato</item>
+        <item>Ogni due settimane, la domenica</item>
+    </string-array>
+    <string-array name="event_rest_on_weekdays">
+        <item>il resto\u00A0— il lunedì</item>
+        <item>il resto\u00A0— il martedì</item>
+        <item>il resto\u00A0— il mercoledì</item>
+        <item>il resto\u00A0— il giovedì</item>
+        <item>il resto\u00A0— il venerdì</item>
+        <item>il resto\u00A0— il sabato</item>
+        <item>il resto\u00A0— la domenica</item>
+    </string-array>
     <string name="practice_step_down">Meno %1$d minuti</string>
     <string name="practice_step_up">Più %1$d minuti</string>
     <string name="practice_save">Salva</string>

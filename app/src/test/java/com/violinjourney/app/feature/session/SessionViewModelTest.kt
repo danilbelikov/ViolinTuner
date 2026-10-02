@@ -16,6 +16,10 @@ import com.violinjourney.app.core.domain.Zone
 import com.violinjourney.app.core.domain.backing.BackingOutput
 import com.violinjourney.app.core.domain.backing.FakeBackingRepository
 import com.violinjourney.app.core.domain.backing.TakeBacking
+import com.violinjourney.app.core.domain.events.BuiltInKind
+import com.violinjourney.app.core.domain.events.FakeEventRepository
+import com.violinjourney.app.core.domain.events.KindRef
+import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
@@ -44,6 +48,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.LocalDate
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -65,7 +70,7 @@ class SessionViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     /** F#5 flat by 18, A4 in tune, C#5 flat by 9: the handoff example in miniature. */
-    private suspend fun saveSession(tolerance: Double = 8.0, audio: String? = null, pieceId: Long? = null): Long {
+    private suspend fun saveSession(tolerance: Double = 8.0, audio: String? = null, pieceId: Long? = null, eventId: Long? = null): Long {
         val sessionConfig = config.copy(toleranceCents = tolerance)
         val samples = List(20) { SessionSample(78, -18.0) } + listOf(null) +
             List(40) { SessionSample(69, 1.0) } + listOf(null) + List(20) { SessionSample(73, -9.0) }
@@ -75,7 +80,7 @@ class SessionViewModelTest {
                 startedAtEpochMs = 1_789_000_000_000, durationMs = samples.size * 50L, config = sessionConfig,
                 samples = samples, metrics = analysis.metrics!!,
                 previewZones = SessionAnalyzer.previewZones(analysis.segments, sessionConfig), audioPath = audio,
-                pieceId = pieceId,
+                pieceId = pieceId, eventId = eventId,
             ),
         )
     }
@@ -139,6 +144,7 @@ class SessionViewModelTest {
     private val sound = FakeSoundRepository()
     private val backings = FakeBackingRepository()
     private val waves = FakeSessionWaveforms()
+    private val events = FakeEventRepository()
     private var audioFiles: SessionAudioFiles = FakeAudioFiles(present = setOf("take.m4a"))
 
     private fun TestScope.viewModel(id: Long): SessionViewModel {
@@ -151,10 +157,32 @@ class SessionViewModelTest {
     private fun TestScope.newViewModel(id: Long): SessionViewModel = SessionViewModel(
         repository, config, audioFiles, { player }, repertoire, sound, SoundConfig(), { file -> FakePicture(file).also { pictures += it } },
         SavedStateHandle(mapOf(SessionViewModel.ARG_SESSION_ID to id)),
-        compute = StandardTestDispatcher(testScheduler), backings = backings, backingPcm = null, waveforms = waves,
+        compute = StandardTestDispatcher(testScheduler), backings = backings, backingPcm = null, waveforms = waves, events = events,
     )
 
     private fun SessionViewModel.loaded() = state.value as SessionState.Loaded
+
+    @Test
+    fun `a recording of an event is named by it, follows its renaming, and keeps the name it wore when the event goes`() = runTest {
+        val event = SessionEvent(3, "Осенний концерт", LocalDate(2026, 10, 24), KindRef.BuiltIn(BuiltInKind.PERFORMANCE), null)
+        events.recordEvents.value = mapOf(3L to event)
+        val id = saveSession(eventId = 3)
+        val viewModel = viewModel(id)
+        assertEquals(event, viewModel.loaded().content.event)
+        assertNull(viewModel.loaded().content.title)
+
+        val renamed = event.copy(title = "Концерт в ДК")
+        events.recordEvents.value = mapOf(3L to renamed)
+        runCurrent()
+        assertEquals("renamed, the event renames the head", renamed, viewModel.loaded().content.event)
+
+        // deleted: the name it wore is written into the recording and the link goes, in one transaction (spec 3.35)
+        repository.sessions.update { list -> list.map { if (it.id == id) it.copy(title = "Концерт в ДК · 24 октября", eventId = null) else it } }
+        events.recordEvents.value = emptyMap()
+        runCurrent()
+        assertNull(viewModel.loaded().content.event)
+        assertEquals("Концерт в ДК · 24 октября", viewModel.loaded().content.title)
+    }
 
     @Test
     fun `loads the session into screen content`() = runTest {

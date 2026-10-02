@@ -33,6 +33,7 @@ import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.icons.IconSizes
+import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.events.EventsDimens
 import com.violinjourney.app.feature.events.KindSignPlate
 import com.violinjourney.app.feature.events.eventNameOf
@@ -58,11 +59,11 @@ private val Capsule = RoundedCornerShape(percent = 50)
  * A row of «События» of the sheet of the day (spec 3.36.9, 5.29 R9 «Лист дня»): the sign of the kind on its plate, the first line —
  * «17:00–17:45 · Урок», only the start without a length («19:00 · Филармония»), only the name for «весь день» — and under it, quietly,
  * the teacher or the place and the repeat: «Анна Сергеевна · каждую неделю», «весь день · Москва, Малый зал консерватории»; no empty
- * part. Both lines are one line each with an ellipsis: the whole of it is on the screen of the event. A reader hears the parts in the
- * order they are seen. It opens nothing until the screen of the event is there (stage 98).
+ * part; the chevron at its end. Both lines are one line each with an ellipsis: the whole of it is on the screen of the event, which the
+ * row opens ([onClick]). A reader hears the parts in the order they are seen.
  */
 @Composable
-fun DayEventRow(event: DayEvent, modifier: Modifier = Modifier) {
+fun DayEventRow(event: DayEvent, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val name = eventNameOf(event.name)
     val time = event.startMinutes?.let { start ->
@@ -77,11 +78,14 @@ fun DayEventRow(event: DayEvent, modifier: Modifier = Modifier) {
     var said: String? = null
     for (part in first + second) said = said?.let { stringResource(Res.string.practice_pair_description, it, part) } ?: part
     val description = said.orEmpty()
+    val shape = RoundedCornerShape(EventsDimens.DayEventCorner)
     Row(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = EventsDimens.DayEventMin)
-            .background(colors.surface, RoundedCornerShape(EventsDimens.DayEventCorner))
+            .clip(shape)
+            .background(colors.surface, shape)
+            .clickable(role = Role.Button, onClick = onClick)
             // the description is the whole row, its fields too: set inside them it would be a node of the words alone, 44 of 64
             .clearAndSetSemantics { contentDescription = description }
             .padding(horizontal = EventsDimens.DayEventPaddingH, vertical = EventsDimens.DayEventPaddingV),
@@ -113,6 +117,8 @@ fun DayEventRow(event: DayEvent, modifier: Modifier = Modifier) {
                 )
             }
         }
+        Spacer(Modifier.width(EventsDimens.DayEventGap))
+        AppIcon(AppIcons.ChevronRight, contentDescription = null, size = EventsDimens.EventChevron, tint = ViolinTheme.textTertiary)
     }
 }
 

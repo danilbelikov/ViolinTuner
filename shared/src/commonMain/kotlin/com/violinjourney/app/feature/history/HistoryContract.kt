@@ -1,12 +1,14 @@
 package com.violinjourney.app.feature.history
 
+import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.domain.session.DayCount
 import kotlinx.datetime.LocalDate
 
 /**
- * What the list of «Записи» shows (spec 3.36.5): everything; the takes — recordings bound to a piece, video takes too; everything
- * with a video, its file lost or not; and what came from Live — bound to no piece and without a video. Where a recording was made
- * is not stored: a sound take of a deleted piece is unbound and stands under [LIVE] like any recording of Live (spec 3.15).
+ * What the list of «Записи» shows (spec 3.36.5, 3.36.9): everything; the takes — recordings bound to a piece, video takes too; everything
+ * with a video, its file lost or not — the videos of events too; and what came from Live — bound to no piece and no event, and without a
+ * video: the sound of an event is only under [ALL]. Where a recording was made is not stored: a sound take of a deleted piece is unbound
+ * and stands under [LIVE] like any recording of Live (spec 3.15).
  */
 enum class HistoryFilter { ALL, TAKES, VIDEO, LIVE }
 
@@ -37,6 +39,11 @@ data class HistoryCard(
     val videoBytes: Long = 0,
     /** Made under the backing of its piece (spec 3.32): the sign of the backing and «под минусовку» by its time, in every list. */
     val underBacking: Boolean = false,
+    /**
+     * The event it is a recording of (spec 3.35): until it is given a name of its own it is named by the event and its date — «Осенний
+     * концерт · 24 октября» — and follows the event when the event is renamed.
+     */
+    val event: SessionEvent? = null,
 ) {
     val take: Boolean get() = pieceId != null
 }

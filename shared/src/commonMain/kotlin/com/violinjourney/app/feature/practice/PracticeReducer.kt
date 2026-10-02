@@ -10,6 +10,7 @@ import com.violinjourney.app.core.domain.events.EventSeries
 import com.violinjourney.app.core.domain.events.EventsConfig
 import com.violinjourney.app.core.domain.events.KindRules
 import com.violinjourney.app.core.domain.events.Repeat
+import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.domain.repertoire.Piece
 import com.violinjourney.app.core.domain.practice.BlockRules
 import com.violinjourney.app.core.domain.practice.PracticeBlocks
@@ -57,6 +58,8 @@ object PracticeReducer {
         progressConfig: ProgressConfig,
         /** The takes made under a backing (spec 3.32): their cards carry its sign, as in «Записи». */
         underBackingIds: Set<Long> = emptySet(),
+        /** The events of the recordings by the id of the event (spec 3.35): a recording of one is named by it, as in «Записи». */
+        recordEvents: Map<Long, SessionEvent> = emptyMap(),
         /** A practice is being saved and its recap has not opened: the gift waits for it (spec 3.31). */
         recapPending: Boolean = false,
         /** A record opened from the sheet of the day is on the screen: the sheets step aside until it is back. */
@@ -127,6 +130,7 @@ object PracticeReducer {
                             .map {
                                 HistoryReducer.cardOf(
                                     it, today, zone, pieceTitle = it.pieceId?.let(pieceTitles::get), best = it.id in bestTakeIds, underBacking = it.id in underBackingIds,
+                                    event = it.eventId?.let(recordEvents::get),
                                 )
                             }
                     },

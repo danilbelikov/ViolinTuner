@@ -404,6 +404,7 @@
     <string name="record_tile_record">녹음</string>
     <string name="record_tile_only_video">영상</string>
     <string name="record_tile_no_sound">소리 없음</string>
+    <string name="record_tile_sound">소리</string>
     <string name="history_empty_title">여기에 녹음이 나타납니다</string>
     <string name="history_empty_text">Live의 녹음 버튼이나 곡 화면의 테이크로 녹음해 보세요. 녹음이 끝나면 분석이 나옵니다: 안정적인 음과 벗어나는 음.</string>
     <string name="history_open_live">Live 열기</string>
@@ -503,6 +504,83 @@
     <string name="event_reminder_more_description_one">일정 %1$d개 더: %2$s</string>
     <string name="event_reminder_more_description_few">일정 %1$d개 더: %2$s</string>
     <string name="event_reminder_more_description_many">일정 %1$d개 더: %2$s</string>
+    <string name="event_program">프로그램</string>
+    <string name="event_program_done">완료 · %1$d</string>
+    <string name="event_program_empty_title">레퍼토리가 아직 비어 있어요</string>
+    <string name="event_program_empty_text_program">곡, 음계, 연습곡을 추가하고 여기서 연주회에서 연주할 곡을 표시하세요.</string>
+    <string name="event_program_empty_text_played">곡, 음계, 연습곡을 추가하고 여기서 연주한 곡을 표시하세요.</string>
+    <string name="event_notes_ask_lesson">무슨 과제를 받았나요?</string>
+    <string name="event_notes_ask_before">몇 시에 모이고, 반주는 누가 하나요?</string>
+    <string name="event_notes_ask_after">어땠나요?</string>
+    <string name="event_program_empty">무엇을 연주하나요?</string>
+    <string name="event_add_to_program">프로그램에 추가</string>
+    <string name="event_records_from">%1$s부터 녹음을 추가할 수 있어요</string>
+    <string name="event_can_add">추가할 수 있어요</string>
+    <string name="event_can_add_note">메모</string>
+    <string name="event_can_add_note_caption">무슨 일이 있었는지, 기억할 것</string>
+    <string name="event_can_add_program">프로그램</string>
+    <string name="event_can_add_from_repertoire">레퍼토리에서</string>
+    <string name="event_can_add_record">녹음</string>
+    <string name="event_can_add_record_caption">소리 또는 영상</string>
+    <string name="event_not_found">일정을 찾을 수 없어요</string>
+    <string name="event_program_remove">“%1$s” 빼기</string>
+    <string name="event_repeat_until_end">%1$s, %2$s까지</string>
+    <string name="event_add_record">녹음 추가</string>
+    <string name="event_add_file">파일의 소리</string>
+    <string name="event_add_file_caption">mp3, m4a, wav…</string>
+    <string name="event_add_mic">소리 녹음</string>
+    <string name="event_add_mic_caption">화면 없이 녹음, 분석은 나중에</string>
+    <string name="event_add_camera_caption">기본 카메라</string>
+    <string name="event_mic_reason">소리를 녹음하려면 마이크 접근 권한이 필요해요.</string>
+    <string name="event_recording_description">녹음 중, %1$s</string>
+    <string name="file_copying">파일을 추가하는 중…</string>
+    <string name="file_error_too_long">파일이 60분보다 길어 분석할 수 없어요</string>
+    <string name="file_error_cannot_open">파일을 열지 못했어요</string>
+    <string name="file_error_no_sound">파일에 소리가 없어요</string>
+    <string name="file_error_no_notes">파일에서 음을 찾지 못해 녹음을 추가하지 않았어요</string>
+    <string name="event_video_error_no_notes">영상에서 음을 찾지 못해 녹음을 추가하지 않았어요</string>
+    <string name="event_series_delete_q_lesson">%1$s 레슨을 삭제할까요?</string>
+    <string name="event_series_delete_q_rehearsal">%1$s 리허설을 삭제할까요?</string>
+    <string name="event_series_delete_q_event">%1$s 일정을 삭제할까요?</string>
+    <string name="event_series_this_lesson">이 레슨만</string>
+    <string name="event_series_this_rehearsal">이 리허설만</string>
+    <string name="event_series_this_event">이 일정만</string>
+    <string name="event_series_following_lesson">이 레슨과 이후 레슨</string>
+    <string name="event_series_following_rehearsal">이 리허설과 이후 리허설</string>
+    <string name="event_series_following_event">이 일정과 이후 일정</string>
+    <string name="event_series_from_date">%1$s부터 계속</string>
+    <string name="event_series_past_short_lesson">지난 레슨은 바뀌지 않아요.</string>
+    <string name="event_series_past_short_rehearsal">지난 리허설은 바뀌지 않아요.</string>
+    <string name="event_series_past_short_event">지난 일정은 바뀌지 않아요.</string>
+    <string name="event_delete_text_program">메모와 프로그램이 삭제돼요. 녹음은 “녹음”에 남아요.</string>
+    <string name="event_delete_text_played">메모와 “연주한 곡”이 삭제돼요. 녹음은 “녹음”에 남아요.</string>
+    <string-array name="event_repeat_weekly_on">
+        <item>매주 월요일</item>
+        <item>매주 화요일</item>
+        <item>매주 수요일</item>
+        <item>매주 목요일</item>
+        <item>매주 금요일</item>
+        <item>매주 토요일</item>
+        <item>매주 일요일</item>
+    </string-array>
+    <string-array name="event_repeat_biweekly_on">
+        <item>격주 월요일</item>
+        <item>격주 화요일</item>
+        <item>격주 수요일</item>
+        <item>격주 목요일</item>
+        <item>격주 금요일</item>
+        <item>격주 토요일</item>
+        <item>격주 일요일</item>
+    </string-array>
+    <string-array name="event_rest_on_weekdays">
+        <item>나머지는 월요일</item>
+        <item>나머지는 화요일</item>
+        <item>나머지는 수요일</item>
+        <item>나머지는 목요일</item>
+        <item>나머지는 금요일</item>
+        <item>나머지는 토요일</item>
+        <item>나머지는 일요일</item>
+    </string-array>
     <string name="practice_step_down">%1$d분 빼기</string>
     <string name="practice_step_up">%1$d분 더하기</string>
     <string name="practice_save">저장</string>

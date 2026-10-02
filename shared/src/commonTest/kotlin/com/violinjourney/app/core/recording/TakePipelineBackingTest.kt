@@ -145,7 +145,7 @@ class TakePipelineBackingTest {
         val takes = takes(tap)
         val asked = mutableListOf<Int>()
         takes.backingPlan = plan(mapOf(48_000 to platformFile("/violin-test/pcm-48000")), asked)
-        val chain = launch { takes.run(IntonationConfig(), pieceId = 1, targetMode = { TargetMode.Chromatic }, unavailable = Unit) { _, _ -> }.collect {} }
+        val chain = launch { takes.run(IntonationConfig(), owner = TakeOwner.Piece(1), targetMode = { TargetMode.Chromatic }, unavailable = Unit) { _, _ -> }.collect {} }
         advance(500)
 
         takes.recordingRequested.value = true
@@ -166,7 +166,7 @@ class TakePipelineBackingTest {
         val asked = mutableListOf<Int>()
         val pcm = platformFile("/violin-test/pcm-44100")
         takes.backingPlan = plan(mapOf(44_100 to pcm), asked)
-        val chain = launch { takes.run(IntonationConfig(), pieceId = 1, targetMode = { TargetMode.Chromatic }, unavailable = Unit) { _, _ -> }.collect {} }
+        val chain = launch { takes.run(IntonationConfig(), owner = TakeOwner.Piece(1), targetMode = { TargetMode.Chromatic }, unavailable = Unit) { _, _ -> }.collect {} }
         advance(500)
 
         takes.recordingRequested.value = true
@@ -187,7 +187,7 @@ class TakePipelineBackingTest {
         playback.includedLatencyMs = held
         val pcm = platformFile("/violin-test/pcm-48000")
         takes.backingPlan = plan(mapOf(48_000 to pcm), mutableListOf(), AudioRoute(BackingOutput.BLUETOOTH, "AirPods"), latencyMs = 200)
-        val chain = launch { takes.run(IntonationConfig(), pieceId = 1, targetMode = { TargetMode.Chromatic }, unavailable = Unit) { _, _ -> }.collect {} }
+        val chain = launch { takes.run(IntonationConfig(), owner = TakeOwner.Piece(1), targetMode = { TargetMode.Chromatic }, unavailable = Unit) { _, _ -> }.collect {} }
         advance(500)
         takes.recordingRequested.value = true
         advance(3_000)

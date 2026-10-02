@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -27,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.theme.ViolinTheme
@@ -37,6 +39,12 @@ import com.violinjourney.app.shared.resources.backup_row_restore
 import com.violinjourney.app.shared.resources.backup_row_save
 import com.violinjourney.app.shared.resources.backup_row_saving
 import com.violinjourney.app.shared.resources.backup_title
+import com.violinjourney.app.shared.resources.event_add_mic
+import com.violinjourney.app.shared.resources.event_mic_reason
+import com.violinjourney.app.shared.resources.event_rest_on_weekdays
+import com.violinjourney.app.shared.resources.event_series_following_lesson
+import com.violinjourney.app.shared.resources.event_series_from_date
+import com.violinjourney.app.shared.resources.event_series_this_lesson
 import com.violinjourney.app.shared.resources.form_section
 import com.violinjourney.app.shared.resources.history_filter_all
 import com.violinjourney.app.shared.resources.home_slot_deskTop
@@ -69,7 +77,10 @@ import com.violinjourney.app.shared.resources.shop_all
 import com.violinjourney.app.shared.resources.shop_group_instrument
 import com.violinjourney.app.shared.resources.shop_group_music
 import com.violinjourney.app.shared.resources.shop_place_clear
+import com.violinjourney.app.shared.resources.take_grant_permission
 import com.violinjourney.app.shared.resources.tuning_string_hz
+import kotlinx.datetime.LocalDate
+import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 
 // The buttons, the chips and the rows of stage 102 (spec 3.36.1, 5.29; components.html, «Кнопки, чипы, строки»).
@@ -125,6 +136,29 @@ private fun ButtonsDePreview() = Kit { AllButtons() }
 @Preview(name = "Buttons · fr, 360, font 1.3: two lines, the button grows", widthDp = 360, heightDp = 760, locale = "fr", fontScale = 1.3f)
 @Composable
 private fun ButtonsFrPreview() = Kit { AllButtons() }
+
+/** The answers of a deletion of a repeat (spec 3.36.9, 5.29 R9): outlines with coral words, neither filled, the dates under them. */
+@Composable
+private fun ColumnScope.DangerOutlines() {
+    val date = Formats.dayAndMonth(LocalDate(2026, 10, 19))
+    AppButton(
+        stringResource(Res.string.event_series_this_lesson), onClick = {}, Modifier.fillMaxWidth().heightIn(min = 60.dp), style = AppButtonStyle.OutlineDanger,
+        caption = stringArrayResource(Res.array.event_rest_on_weekdays).first(),
+    )
+    AppButton(
+        stringResource(Res.string.event_series_following_lesson), onClick = {}, Modifier.fillMaxWidth().heightIn(min = 60.dp), style = AppButtonStyle.OutlineDanger,
+        caption = stringResource(Res.string.event_series_from_date, date),
+    )
+    AppButton(stringResource(Res.string.piece_delete_confirm), onClick = {}, Modifier.fillMaxWidth(), style = AppButtonStyle.OutlineDanger)
+}
+
+@Preview(name = "Buttons · outline danger: the answers of a deletion of a repeat, with their dates; alone without a caption", widthDp = 412, heightDp = 300, locale = "ru")
+@Composable
+private fun OutlineDangerPreview() = Kit { DangerOutlines() }
+
+@Preview(name = "Buttons · outline danger, de, 360, font 1.3: the words and the dates grow the button", widthDp = 360, heightDp = 360, locale = "de", fontScale = 1.3f)
+@Composable
+private fun OutlineDangerGermanPreview() = Kit { DangerOutlines() }
 
 @Composable
 private fun FilterRow() {
@@ -331,6 +365,30 @@ private fun NarrowLargeFontRowsPreview() = Kit {
 @Preview(name = "Rows · font 1.3", widthDp = 360, heightDp = 760, locale = "ru", fontScale = 1.3f)
 @Composable
 private fun RowsLargeFontPreview() = Kit { SettingsGroups() }
+
+/**
+ * A word at the end of a row (spec 3.36.9: «Записать звук» without the microphone): the reason in the place of the caption, whole, and
+ * «Разрешить доступ» a text button of 48 — beside the words where they keep their lines, under them on a phone.
+ */
+@Composable
+private fun ColumnScope.TextActionRows() {
+    ListRow(
+        stringResource(Res.string.event_add_mic), onClick = {}, icon = AppIcons.Mic, caption = stringResource(Res.string.event_mic_reason),
+        end = ListRowEnd.TextAction(stringResource(Res.string.take_grant_permission)) {}, strong = true,
+    )
+}
+
+@Preview(name = "Rows · a word at the end: «Разрешить доступ» under the reason on a phone", widthDp = 360, heightDp = 160, locale = "ru")
+@Composable
+private fun TextActionPreview() = Kit { TextActionRows() }
+
+@Preview(name = "Rows · a word at the end, 640 lying: beside the reason", widthDp = 640, heightDp = 120, locale = "ru")
+@Composable
+private fun TextActionWidePreview() = Kit { TextActionRows() }
+
+@Preview(name = "Rows · a word at the end, de 360 at 1.3", widthDp = 360, heightDp = 220, locale = "de", fontScale = 1.3f)
+@Composable
+private fun TextActionGermanPreview() = Kit { TextActionRows() }
 
 // The header of a screen over the tabs (spec 3.36.8, 5.29 R8; start.html, `.navbar`): made with R8, «Настройки» and the screens of a
 // copy stand under it from stages 121–122.

@@ -5,6 +5,7 @@ import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.Note
 import com.violinjourney.app.core.domain.ViolinString
 import com.violinjourney.app.core.domain.Zone
+import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.domain.session.StringFinger
 import com.violinjourney.app.feature.share.ShareInfo
 import com.violinjourney.app.feature.sound.SoundCaption
@@ -69,6 +70,8 @@ data class SessionContent(
     val underBacking: Boolean = false,
     /** The border of «рядом» the recording was made with (5.2): «Размах больше 20 ц» of a note that wanders (spec 3.36.5). */
     val nearCents: Int = DefaultNearCents,
+    /** The event it is a recording of (spec 3.35): «Осенний концерт · 24 октября» is its name until it is given one of its own. */
+    val event: SessionEvent? = null,
 )
 
 private val DefaultNearCents = IntonationConfig().nearCents.roundToInt()

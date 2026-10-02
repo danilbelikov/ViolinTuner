@@ -8,7 +8,6 @@ import com.violinjourney.app.core.domain.practice.ForgottenPractice
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.RunningPracticeStore
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
-import com.violinjourney.app.core.domain.session.RecordingRibbon
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.deleteFile
@@ -18,6 +17,12 @@ import com.violinjourney.app.core.io.platformFile
 import com.violinjourney.app.core.io.sizeBytes
 import com.violinjourney.app.core.recording.FileAnalysisResult
 import com.violinjourney.app.core.recording.FileTakeAnalyzer
+import com.violinjourney.app.core.recording.ImportFailure
+import com.violinjourney.app.core.recording.ImportPacing
+import com.violinjourney.app.core.recording.MediaImport
+import com.violinjourney.app.core.recording.TakeOwner
+import com.violinjourney.app.core.recording.eventId
+import com.violinjourney.app.core.recording.pieceId
 import com.violinjourney.app.core.settings.IntonationConfigSource
 import com.violinjourney.app.core.time.WallClock
 import kotlin.concurrent.Volatile
@@ -38,43 +43,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-enum class VideoImportFailure {
-    NO_SOUND, TOO_LONG, CANNOT_OPEN, NO_NOTES, NO_SPACE,
-
-    /** Not a failure of the video: the player stopped the analysis of a shot and has to say what becomes of it. */
-    STOPPED,
-}
-
-/** What the sheet of a video take on its way in shows (spec 3.19). */
-sealed interface VideoImport {
-    data object Idle : VideoImport
-
-    data class Working(
-        val pieceId: Long,
-        /** Shot a moment ago: it exists nowhere else, so stopping it is a question, not a button. */
-        val shot: Boolean,
-        val copying: Boolean,
-        /** False while a short analysis is given the chance to end before anything is shown: nothing blinks. */
-        val visible: Boolean,
-        val thumbPath: String? = null,
-        val percent: Int = 0,
-        /** The notes found so far, measured against the whole file: the strip fills up like a progress bar. */
-        val bars: RecordingRibbon = RecordingRibbon.EMPTY,
-        /** Null until the speed has been measured. */
-        val remainingSec: Int? = null,
-        /** «Остановить разбор?» is up; the analysis goes on underneath. */
-        val asking: Boolean = false,
-    ) : VideoImport
-
-    data class Failed(
-        val pieceId: Long,
-        val reason: VideoImportFailure,
-        /** The shot that can still be sent somewhere before it is deleted; null for a picked video — its original is in the gallery. */
-        val rescuePath: String? = null,
-        val missingMb: Int? = null,
-    ) : VideoImport
-}
-
 /** How long an analysis takes against the length of the sound — measured on this device by the analyses themselves (spec 5.13). */
 class AnalysisSpeed() {
     @Volatile var factor: Double = START_FACTOR
@@ -91,8 +59,8 @@ class AnalysisSpeed() {
 }
 
 /**
- * Turns a video into a take of a piece (spec 3.19): moves or copies it in, listens to its sound
- * track, saves the session. A singleton with a scope of its own — leaving the screen, or the app
+ * Turns a video into a take of a piece (spec 3.19) or a recording of an event (spec 3.35) — its [TakeOwner]: moves or copies it in,
+ * listens to its sound track, saves the session. A singleton with a scope of its own — leaving the screen, or the app
  * going to the background, must not tear an analysis that may take a minute; the screen only
  * watches [state]. One video at a time. Whatever the platform throws on the way besides the answers
  * of [VideoFiles] and the analyzer — a codec giving up halfway, a database on a full disk — is a
@@ -113,23 +81,23 @@ class VideoTakeImporter(
     dispatcher: CoroutineDispatcher,
     private val analytics: Analytics,
 ) {
-    data class Saved(val pieceId: Long, val sessionId: Long)
+    data class Saved(val owner: TakeOwner, val sessionId: Long)
 
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private var job: Job? = null
     private var current: PlatformFile? = null
 
-    private val mutableState = MutableStateFlow<VideoImport>(VideoImport.Idle)
-    val state: StateFlow<VideoImport> = mutableState.asStateFlow()
+    private val mutableState = MutableStateFlow<MediaImport>(MediaImport.Idle)
+    val state: StateFlow<MediaImport> = mutableState.asStateFlow()
 
     private val mutableSaved = MutableSharedFlow<Saved>(extraBufferCapacity = 4)
     val saved: Flow<Saved> = mutableSaved
 
-    /** The system camera came back with [cameraFile] written. */
-    fun shot(pieceId: Long, cameraFile: PlatformFile) {
-        if (mutableState.value != VideoImport.Idle) return
+    /** The system camera came back with [cameraFile] written, for a recording of [owner]. */
+    fun shot(owner: TakeOwner, cameraFile: PlatformFile) {
+        if (mutableState.value != MediaImport.Idle) return
         val returnedAt = clock.millis()
-        mutableState.value = VideoImport.Working(pieceId, shot = true, copying = false, visible = false)
+        mutableState.value = MediaImport.Working(owner, shot = true, copying = false, visible = false)
         job = scope.launch {
             val file = try {
                 files.adopt(cameraFile)
@@ -145,33 +113,33 @@ class VideoTakeImporter(
                 // by the player (spec 3.19); an empty one is nothing to keep.
                 val rescue = cameraFile.filePath.takeIf { cameraFile.sizeBytes() > 0 }
                 if (rescue == null) cameraFile.deleteFile()
-                mutableState.value = VideoImport.Failed(pieceId, VideoImportFailure.CANNOT_OPEN, rescuePath = rescue)
+                mutableState.value = MediaImport.Failed(owner, ImportFailure.CANNOT_OPEN, rescuePath = rescue)
             } else {
-                take(pieceId, file, shot = true, returnedAtEpochMs = returnedAt)
+                take(owner, file, shot = true, returnedAtEpochMs = returnedAt)
             }
         }
     }
 
-    /** The system picker returned [uri]. */
-    fun picked(pieceId: Long, uri: String) {
-        if (mutableState.value != VideoImport.Idle) {
+    /** The system picker returned [uri], for a recording of [owner]. */
+    fun picked(owner: TakeOwner, uri: String) {
+        if (mutableState.value != MediaImport.Idle) {
             release(uri)
             return
         }
         // Nothing is shown while the room is measured, and it is measured off the caller's thread — the main one: a
         // provider answers when it will, and iOS counts in the room what it would free, which takes a while on a full phone.
-        val measuring = VideoImport.Working(pieceId, shot = false, copying = true, visible = false)
+        val measuring = MediaImport.Working(owner, shot = false, copying = true, visible = false)
         mutableState.value = measuring
         job = scope.launch {
             var file: PlatformFile? = null
             try {
-                file = copyIn(pieceId, uri, measuring)
+                file = copyIn(owner, uri, measuring)
             } finally {
                 // Refused for room, failed, or stopped while measured or copied: what the platform holds of the pick goes
                 // (on iOS a copy in tmp — maybe the very gigabytes the room was short of).
                 if (file == null) files.release(uri)
             }
-            file?.let { take(pieceId, it, shot = false, returnedAtEpochMs = clock.millis()) }
+            file?.let { take(owner, it, shot = false, returnedAtEpochMs = clock.millis()) }
         }
     }
 
@@ -179,12 +147,12 @@ class VideoTakeImporter(
     fun release(uri: String) = files.release(uri)
 
     /** The picked video copied in; null when it does not come in, the state saying why. */
-    private suspend fun copyIn(pieceId: Long, uri: String, measuring: VideoImport.Working): PlatformFile? {
+    private suspend fun copyIn(owner: TakeOwner, uri: String, measuring: MediaImport.Working): PlatformFile? {
         val missing = missingBytes(uri)
         // stopped meanwhile: that answer stands
         currentCoroutineContext().ensureActive()
         if (missing > 0) {
-            mutableState.compareAndSet(measuring, VideoImport.Failed(pieceId, VideoImportFailure.NO_SPACE, missingMb = ((missing + BYTES_PER_MB - 1) / BYTES_PER_MB).toInt()))
+            mutableState.compareAndSet(measuring, MediaImport.Failed(owner, ImportFailure.NO_SPACE, missingMb = ImportPacing.missingMb(missing)))
             return null
         }
         // Copying is shown at once and without a number: it is seconds as a rule, and no estimate of it is worth the name.
@@ -198,7 +166,7 @@ class VideoTakeImporter(
             analytics.error(ErrorGroup.MEDIA, "a picked video could not be copied in", e)
             null
         }
-        if (file == null) mutableState.value = VideoImport.Failed(pieceId, VideoImportFailure.CANNOT_OPEN)
+        if (file == null) mutableState.value = MediaImport.Failed(owner, ImportFailure.CANNOT_OPEN)
         return file
     }
 
@@ -215,43 +183,43 @@ class VideoTakeImporter(
         return size?.let { it + repertoireConfig.videoFreeSpaceMarginBytes - files.freeBytes() } ?: 0
     }
 
-    private suspend fun take(pieceId: Long, file: PlatformFile, shot: Boolean, returnedAtEpochMs: Long) {
+    private suspend fun take(owner: TakeOwner, file: PlatformFile, shot: Boolean, returnedAtEpochMs: Long) {
         current = file
-        fun fail(reason: VideoImportFailure) {
+        fun fail(reason: ImportFailure) {
             current = null
             // A picked video has its original in the gallery; a shot is kept until the player says what becomes of it.
             if (!shot) files.discard(file)
-            mutableState.value = VideoImport.Failed(pieceId, reason, rescuePath = file.filePath.takeIf { shot })
+            mutableState.value = MediaImport.Failed(owner, reason, rescuePath = file.filePath.takeIf { shot })
         }
 
         try {
-            analyse(pieceId, file, shot, returnedAtEpochMs, ::fail)
+            analyse(owner, file, shot, returnedAtEpochMs, ::fail)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             // Stopped meanwhile — «Отмена», «Отправить видео»: that answer stands, and a next video may be on its way already.
             currentCoroutineContext().ensureActive()
             analytics.error(ErrorGroup.MEDIA, "a video could not be taken in", e)
-            fail(VideoImportFailure.CANNOT_OPEN)
+            fail(ImportFailure.CANNOT_OPEN)
         }
     }
 
-    private suspend fun analyse(pieceId: Long, file: PlatformFile, shot: Boolean, returnedAtEpochMs: Long, fail: (VideoImportFailure) -> Unit) {
-        val info = files.info(file) ?: return fail(VideoImportFailure.CANNOT_OPEN)
-        if (!info.hasSound) return fail(VideoImportFailure.NO_SOUND)
-        if (info.durationMs > intonationDefaults.maxSessionMs) return fail(VideoImportFailure.TOO_LONG)
+    private suspend fun analyse(owner: TakeOwner, file: PlatformFile, shot: Boolean, returnedAtEpochMs: Long, fail: (ImportFailure) -> Unit) {
+        val info = files.info(file) ?: return fail(ImportFailure.CANNOT_OPEN)
+        if (!info.hasSound) return fail(ImportFailure.NO_SOUND)
+        if (info.durationMs > intonationDefaults.maxSessionMs) return fail(ImportFailure.TOO_LONG)
         files.makeThumb(file)
 
         val started = elapsed.nowMs()
-        val showAtOnce = info.durationMs * speed.factor > SHOW_FROM_MS
+        val showAtOnce = info.durationMs * speed.factor > ImportPacing.SHOW_FROM_MS
         var shownAt: Long? = started.takeIf { showAtOnce || !shot }
-        mutableState.value = VideoImport.Working(pieceId, shot, copying = false, visible = shownAt != null, thumbPath = files.thumbOf(file.fileName)?.filePath)
+        mutableState.value = MediaImport.Working(owner, shot, copying = false, visible = shownAt != null, thumbPath = files.thumbOf(file.fileName)?.filePath)
         // before the timer below: whatever throws from here on must not leave it running for the next video
         val config = configSource.config.first()
         // The estimate may be wrong — a slow phone, a first analysis: one that drags on gets its sheet after all.
         val late = scope.launch {
-            delay(SHOW_FROM_MS)
-            mutableState.update { if (it is VideoImport.Working && !it.visible) it.copy(visible = true).also { shownAt = elapsed.nowMs() } else it }
+            delay(ImportPacing.SHOW_FROM_MS)
+            mutableState.update { if (it is MediaImport.Working && !it.visible) it.copy(visible = true).also { shownAt = elapsed.nowMs() } else it }
         }
         var lastShown = 0L
         // A shot is dated by when it was shot; a picked video by what it says of itself, else by now.
@@ -260,12 +228,11 @@ class VideoTakeImporter(
             analyzer.analyze(file, config, startedAt, audioFileName = file.fileName) { progress ->
                 // from the analysing thread; a StateFlow takes that, and ten updates a second are plenty
                 val now = elapsed.nowMs()
-                if (now - lastShown >= PROGRESS_EVERY_MS) {
+                if (now - lastShown >= ImportPacing.PROGRESS_EVERY_MS) {
                     lastShown = now
-                    val spent = now - started
-                    val remaining = if (progress.fraction >= REMAINING_FROM) ((spent * (1 - progress.fraction) / progress.fraction) / MS_PER_SECOND).toInt().coerceAtLeast(1) else null
+                    val remaining = ImportPacing.remainingSec(now - started, progress.fraction)
                     mutableState.update {
-                        if (it is VideoImport.Working) it.copy(percent = (progress.fraction * PERCENT).toInt().coerceIn(0, PERCENT), bars = progress.bars, remainingSec = remaining) else it
+                        if (it is MediaImport.Working) it.copy(percent = ImportPacing.percentOf(progress.fraction), bars = progress.bars, remainingSec = remaining) else it
                     }
                 }
             }
@@ -277,20 +244,20 @@ class VideoTakeImporter(
                 speed.measured(info.durationMs, elapsed.nowMs() - started)
                 // A sheet that was shown is shown long enough to be read: nothing on this app's screens flashes by.
                 shownAt?.let { at ->
-                    mutableState.update { if (it is VideoImport.Working) it.copy(percent = PERCENT, remainingSec = null) else it }
-                    val stillToShow = MIN_SHOWN_MS - (elapsed.nowMs() - at)
+                    mutableState.update { if (it is MediaImport.Working) it.copy(percent = ImportPacing.PERCENT, remainingSec = null) else it }
+                    val stillToShow = ImportPacing.MIN_SHOWN_MS - (elapsed.nowMs() - at)
                     if (stillToShow > 0) delay(stillToShow)
                 }
-                val id = sessions.save(result.session.copy(pieceId = pieceId, videoPath = file.fileName))
+                val id = sessions.save(result.session.copy(pieceId = owner.pieceId, eventId = owner.eventId, videoPath = file.fileName))
                 current = null
                 // Filming oneself is practising: a practice with a video take in it is not a forgotten one (spec 3.12).
                 if (shot) markSound(returnedAtEpochMs)
-                mutableState.value = VideoImport.Idle
-                mutableSaved.emit(Saved(pieceId, id))
+                mutableState.value = MediaImport.Idle
+                mutableSaved.emit(Saved(owner, id))
             }
-            FileAnalysisResult.NoNotes -> fail(VideoImportFailure.NO_NOTES)
-            FileAnalysisResult.TooLong -> fail(VideoImportFailure.TOO_LONG)
-            FileAnalysisResult.TooShort, FileAnalysisResult.UnsupportedRate, FileAnalysisResult.CannotOpen -> fail(VideoImportFailure.CANNOT_OPEN)
+            FileAnalysisResult.NoNotes -> fail(ImportFailure.NO_NOTES)
+            FileAnalysisResult.TooLong -> fail(ImportFailure.TOO_LONG)
+            FileAnalysisResult.TooShort, FileAnalysisResult.UnsupportedRate, FileAnalysisResult.CannotOpen -> fail(ImportFailure.CANNOT_OPEN)
         }
     }
 
@@ -310,37 +277,50 @@ class VideoTakeImporter(
 
     /** «Отмена»: a picked video simply goes; a shot is asked about, and the analysis goes on meanwhile. */
     fun cancelClicked() {
-        val working = mutableState.value as? VideoImport.Working ?: return
+        val working = mutableState.value as? MediaImport.Working ?: return
         if (working.shot) mutableState.value = working.copy(asking = true, visible = true) else stopAndDiscard()
     }
 
     /** «Продолжить разбор». */
-    fun continueClicked() = mutableState.update { if (it is VideoImport.Working) it.copy(asking = false) else it }
+    fun continueClicked() = mutableState.update { if (it is MediaImport.Working) it.copy(asking = false) else it }
 
     /**
      * «Отправить видео»: the analysis stops, the shot stays until it is deleted. Answers with the
      * file to hand to the system sheet.
      */
     fun sendClicked(): String? = when (val now = mutableState.value) {
-        is VideoImport.Working -> current?.takeIf { now.shot && !now.copying }?.let { file ->
+        is MediaImport.Working -> current?.takeIf { now.shot && !now.copying }?.let { file ->
             job?.cancel()
-            mutableState.value = VideoImport.Failed(now.pieceId, VideoImportFailure.STOPPED, rescuePath = file.filePath)
+            mutableState.value = MediaImport.Failed(now.owner, ImportFailure.STOPPED, rescuePath = file.filePath)
             file.filePath
         }
-        is VideoImport.Failed -> now.rescuePath
-        VideoImport.Idle -> null
+        is MediaImport.Failed -> now.rescuePath
+        MediaImport.Idle -> null
     }
 
     /** «Удалить» — and «Понятно», which has nothing left to delete. */
     fun dismiss() {
         when (val now = mutableState.value) {
-            is VideoImport.Working -> stopAndDiscard()
-            is VideoImport.Failed -> {
+            is MediaImport.Working -> stopAndDiscard()
+            is MediaImport.Failed -> {
                 now.rescuePath?.let { files.discard(platformFile(it)) }
                 current = null
-                mutableState.value = VideoImport.Idle
+                mutableState.value = MediaImport.Idle
             }
-            VideoImport.Idle -> Unit
+            MediaImport.Idle -> Unit
+        }
+    }
+
+    /**
+     * [owner] is gone — an event deleted (spec 3.35): a failure that waits for its screen is dropped — no screen will ever show it, and
+     * it would hold every other video back; with it goes a shot it kept to be sent, as by «Удалить». A picked video being copied or heard
+     * stops: its original is in the gallery. A shot being heard is left to become a recording: it exists nowhere else.
+     */
+    fun forget(owner: TakeOwner) {
+        when (val now = mutableState.value) {
+            is MediaImport.Failed -> if (now.owner == owner) dismiss()
+            is MediaImport.Working -> if (now.owner == owner && !now.shot) stopAndDiscard()
+            MediaImport.Idle -> Unit
         }
     }
 
@@ -348,16 +328,7 @@ class VideoTakeImporter(
         job?.cancel()
         current?.let(files::discard)
         current = null
-        mutableState.value = VideoImport.Idle
+        mutableState.value = MediaImport.Idle
     }
 
-    private companion object {
-        const val SHOW_FROM_MS = 700L
-        const val MIN_SHOWN_MS = 1_200L
-        const val PROGRESS_EVERY_MS = 100L
-        const val REMAINING_FROM = 0.2f
-        const val PERCENT = 100
-        const val MS_PER_SECOND = 1_000
-        const val BYTES_PER_MB = 1024L * 1024
-    }
 }

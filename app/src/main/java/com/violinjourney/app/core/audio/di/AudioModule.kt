@@ -22,6 +22,8 @@ import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.recording.DecodingFileTakeAnalyzer
 import com.violinjourney.app.core.recording.FileTakeAnalyzer
 import com.violinjourney.app.core.recording.TakePipeline
+import com.violinjourney.app.core.recording.audio.AppPickedSounds
+import com.violinjourney.app.core.recording.audio.PickedSounds
 import com.violinjourney.app.core.recording.video.AppVideoFiles
 import com.violinjourney.app.core.recording.video.VideoFiles
 import dagger.Module
@@ -56,6 +58,9 @@ object AudioModule {
 
     @Provides
     fun provideVideoFiles(impl: AppVideoFiles): VideoFiles = impl
+
+    @Provides
+    fun providePickedSounds(impl: AppPickedSounds): PickedSounds = impl
 
     @Provides
     fun provideFileTakeAnalyzer(

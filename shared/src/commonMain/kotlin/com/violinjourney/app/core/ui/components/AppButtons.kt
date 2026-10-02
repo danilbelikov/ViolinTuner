@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
@@ -79,9 +80,12 @@ private const val TABULAR_FIGURES = "tnum"
  * - [Quiet] — the refusal of a sheet said quietly under its main button, 48, onSurfaceVariant («Не сохранять»), usually as wide as
  *   the sheet;
  * - [Danger] — «Удалить» as a coral word with the bin, 48: deleting is never filled;
- * - [DangerFilled] — the one filled dangerous button of the app, «Восстановить» (spec 3.20): coral with a dark word.
+ * - [DangerFilled] — the one filled dangerous button of the app, «Восстановить» (spec 3.20): coral with a dark word;
+ * - [OutlineDanger] — an answer that deletes, side by side with another that deletes too, neither of them the reasonable one: an
+ *   outline of 56 with coral words and a caption in the second level of text — «Только этот урок · остальные — по понедельникам» and
+ *   «Этот и следующие · с 19 октября и дальше» of a lesson of a repeat (spec 3.36.9, 5.29 R9).
  */
-enum class AppButtonStyle { Main, Outline, Soft, Text, Quiet, Danger, DangerFilled }
+enum class AppButtonStyle { Main, Outline, Soft, Text, Quiet, Danger, DangerFilled, OutlineDanger }
 
 /**
  * The button of the redesign (spec 3.36.1, 5.29), in the [style] of its weight; a Material button underneath, so the ripple, the
@@ -91,8 +95,10 @@ enum class AppButtonStyle { Main, Outline, Soft, Text, Quiet, Danger, DangerFill
  * takes the place of [icon] with something of the caller's own before the words: the red dot of recording in «Записать дубль», or
  * the spinner while the backing is prepared (R4).
  *
- * [caption] — a second, smaller line under the words, only for [AppButtonStyle.Main] and [AppButtonStyle.Outline]: «В дорогу» ·
- * «Вена → хватает до Праги» of the home (R7); the button grows from 56 for it. [compact] makes a button of 56 one of 48 — the zone
+ * [caption] — a second, smaller line under the words, only for [AppButtonStyle.Main], [AppButtonStyle.Outline] and
+ * [AppButtonStyle.OutlineDanger]: «В дорогу» · «Вена → хватает до Праги» of the home (R7); the button grows from 56 for it. Its colour is
+ * the colour of the words at 0.8 — of [AppButtonStyle.OutlineDanger] the second level of text — unless [captionColor] names another:
+ * the answers of the sheet of a repeat say their dates in the second level of text whatever their style (5.29 R9). [compact] makes a button of 56 one of 48 — the zone
  * of a window no higher than 360 dp ([DockScope.compact]) and the halves of a row of the zone; buttons of 48 stay as they are.
  *
  * No button is ever silently grey: a disabled one ([enabled] false) is dimmed to 0.38 in its own colours and its [reason] stands on
@@ -117,6 +123,10 @@ enum class AppButtonStyle { Main, Outline, Soft, Text, Quiet, Danger, DangerFill
  * dropped: the bottom zones of a copy and a restore, where «Удалить текущие данные и восстановить» and «Сначала сохранить текущие
  * данные» need three at 320 × 544 at the font 1.5 (spec 3.36.8: «ничего не сжимается… нижняя зона видны всегда»; 5.29 R8). Without
  * it — up to two lines, as before.
+ *
+ * [linesAlign] — how the words and the [caption] under them stand against each other: at one edge, as one block in the middle of the
+ * button, beside the icon (the default — «В дорогу» · «Вена → хватает до Праги» of R7), or each line in the middle of the button — the
+ * answers of the sheet of a repeat, «Только этот урок» over «остальные — по понедельникам» (5.29 R9, events-form.html 6).
  */
 @Composable
 fun AppButton(
@@ -137,10 +147,13 @@ fun AppButton(
     keep: String? = null,
     outline: Color = Color.Unspecified,
     allLines: Boolean = false,
+    captionColor: Color = Color.Unspecified,
+    linesAlign: Alignment.Horizontal = Alignment.Start,
 ) {
-    val lines = ButtonLines(oneLine, keep, allLines)
+    val lines = ButtonLines(oneLine, keep, allLines, linesAlign)
+    val captionTint = captionColor.takeOrElse { if (style == AppButtonStyle.OutlineDanger) MaterialTheme.colorScheme.onSurfaceVariant else Color.Unspecified }
     if (reason == null && reasonReserve == null) {
-        StyledButton(text, onClick, modifier, style, icon, caption, enabled, compact, trailingIcon, leading, fontSize, lines, outline)
+        StyledButton(text, onClick, modifier, style, icon, caption, enabled, compact, trailingIcon, leading, fontSize, lines, outline, captionTint)
         return
     }
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -151,13 +164,19 @@ fun AppButton(
             if (reason != null) Reason(reason, Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         }
         Spacer(Modifier.height(ReasonGap))
-        StyledButton(text, onClick, Modifier.fillMaxWidth(), style, icon, caption, enabled, compact, trailingIcon, leading, fontSize, lines, outline)
+        StyledButton(text, onClick, Modifier.fillMaxWidth(), style, icon, caption, enabled, compact, trailingIcon, leading, fontSize, lines, outline, captionTint)
     }
 }
 
-/** How the words of a button stand: on up to two lines, [all] the lines they need, or [oneLine] with the [keep] of its caption (see [AppButton]). */
+/**
+ * How the words of a button stand: on up to two lines, [all] the lines they need, or [oneLine] with the [keep] of its caption; with a
+ * caption, the two at one edge or each in the middle ([align]) (see [AppButton]).
+ */
 @Immutable
-private data class ButtonLines(val oneLine: Boolean, val keep: String?, val all: Boolean)
+private data class ButtonLines(val oneLine: Boolean, val keep: String?, val all: Boolean, val align: Alignment.Horizontal = Alignment.Start) {
+    /** The lines of words and caption laid each in the middle of their block, as the block stands in the middle of the button. */
+    val textAlign: TextAlign get() = if (align == Alignment.CenterHorizontally) TextAlign.Center else TextAlign.Unspecified
+}
 
 /**
  * The size of the words of an [AppButton] of [style] [width] wide that keeps [text] on one line: the size of the style where it
@@ -334,10 +353,11 @@ private fun StyledButton(
     fontSize: TextUnit,
     lines: ButtonLines,
     outline: Color,
+    captionColor: Color,
 ) {
     val look = lookOf(style, compact).let { if (fontSize.isSpecified) it.copy(fontSize = fontSize) else it }
     val shown = icon ?: if (style == AppButtonStyle.Danger) AppIcons.Trash else null
-    val withCaption = caption != null && (style == AppButtonStyle.Main || style == AppButtonStyle.Outline)
+    val withCaption = caption != null && (style == AppButtonStyle.Main || style == AppButtonStyle.Outline || style == AppButtonStyle.OutlineDanger)
     Button(
         onClick = onClick,
         enabled = enabled,
@@ -370,7 +390,7 @@ private fun StyledButton(
         }
         if (lines.oneLine) {
             // what the icons leave, and no more: the words and the caption find their size in it, and the block stays in the middle
-            Column(Modifier.weight(1f, fill = false), horizontalAlignment = if (withCaption) Alignment.Start else Alignment.CenterHorizontally) {
+            Column(Modifier.weight(1f, fill = false), horizontalAlignment = if (withCaption) lines.align else Alignment.CenterHorizontally) {
                 // with a caption the two lines must stand in the 48 of a low window: exact lines (ExactLines) — Android would pad each
                 // back to Manrope's own 1.37 em, and the button grew to 50.7 (stage 117, the emulator lying at 603 × 308)
                 OneLineText(
@@ -399,14 +419,18 @@ private fun StyledButton(
                 }
             }
         } else if (withCaption) {
-            // the words and the caption under them start at one edge, beside the icon, as one block in the middle of the button
-            Column(horizontalAlignment = Alignment.Start) {
-                Text(text, style = words.copy(lineHeight = look.fontSize * CAPTION_LINE_HEIGHT), maxLines = TEXT_LINES)
+            // the words and the caption under them start at one edge, beside the icon, as one block in the middle of the button — or,
+            // [ButtonLines.align] in the middle, each line in the middle
+            Column(horizontalAlignment = lines.align) {
+                Text(text, style = words.copy(lineHeight = look.fontSize * CAPTION_LINE_HEIGHT), maxLines = TEXT_LINES, textAlign = lines.textAlign)
                 Text(
                     text = caption.orEmpty(),
-                    modifier = Modifier.alpha(CAPTION_ALPHA),
+                    // a colour of its own, or the colour of the words a little quieter
+                    modifier = if (captionColor.isSpecified) Modifier else Modifier.alpha(CAPTION_ALPHA),
+                    color = captionColor,
                     style = words.copy(fontSize = 13.sp, lineHeight = 13.sp * CAPTION_LINE_HEIGHT, fontWeight = FontWeight.SemiBold),
                     maxLines = TEXT_LINES,
+                    textAlign = lines.textAlign,
                 )
             }
         } else {
@@ -478,6 +502,10 @@ private fun lookOf(style: AppButtonStyle, compact: Boolean): ButtonLook {
         AppButtonStyle.Danger -> ButtonLook(
             height = LowHeight, shape = AppShapes.Control, container = Color.Transparent, content = ViolinTheme.dangerSoft, border = false,
             fontSize = 15.sp, weight = FontWeight.Bold, padding = 12.dp, icon = IconSizes.InButton,
+        )
+        AppButtonStyle.OutlineDanger -> ButtonLook(
+            height = tall, shape = Pill, container = Color.Transparent, content = ViolinTheme.dangerSoft, border = true,
+            fontSize = if (compact) 15.sp else 16.sp, weight = FontWeight.ExtraBold, padding = tallPadding, icon = IconSizes.InFilledButton,
         )
     }
 }

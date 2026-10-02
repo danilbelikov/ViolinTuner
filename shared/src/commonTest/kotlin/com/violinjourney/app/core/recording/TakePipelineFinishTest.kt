@@ -18,6 +18,7 @@ import com.violinjourney.app.core.time.FixedWallClock
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
@@ -118,9 +119,9 @@ class TakePipelineFinishTest {
     }
 
     /** Records for [millis] and stops it as the player does; the chain goes on, as it does on the screen. */
-    private fun TestScope.recordAndStop(takes: TakePipeline, millis: Long): Job {
+    private fun TestScope.recordAndStop(takes: TakePipeline, millis: Long, owner: TakeOwner = TakeOwner.Piece(PIECE_ID)): Job {
         val chain = launch {
-            takes.run(IntonationConfig(), pieceId = PIECE_ID, targetMode = { TargetMode.Chromatic }, unavailable = Unit) { _, _ -> }.collect {}
+            takes.run(IntonationConfig(), owner = owner, targetMode = { TargetMode.Chromatic }, unavailable = Unit) { _, _ -> }.collect {}
         }
         advance(500)
         takes.recordingRequested.value = true
@@ -213,7 +214,7 @@ class TakePipelineFinishTest {
         val events = mutableListOf<TakePipeline.Event>()
         backgroundScope.launch { takes.events.collect { events += it } }
         val chain = launch {
-            takes.run(IntonationConfig(), pieceId = PIECE_ID, targetMode = { TargetMode.Chromatic }, unavailable = Unit) { _, _ -> }.collect {}
+            takes.run(IntonationConfig(), owner = TakeOwner.Piece(PIECE_ID), targetMode = { TargetMode.Chromatic }, unavailable = Unit) { _, _ -> }.collect {}
         }
         advance(500)
         takes.recordingRequested.value = true
@@ -225,7 +226,21 @@ class TakePipelineFinishTest {
         assertEquals(listOf<TakePipeline.Event>(TakePipeline.Event.Kept(1)), events)
     }
 
+    // spec 3.35, plan D13: a sound recorded on the screen of an event is a recording of the event, not a take
+    @Test
+    fun `a recording of an event belongs to the event and to no piece`() = runTest {
+        val takes = takes(FakeAudioTap())
+        val chain = recordAndStop(takes, 3_000, owner = TakeOwner.Event(EVENT_ID))
+        chain.cancel()
+        runCurrent()
+
+        val session = sessions.saved.single()
+        assertEquals(EVENT_ID, session.eventId)
+        assertNull(session.pieceId)
+    }
+
     private companion object {
         const val PIECE_ID = 7L
+        const val EVENT_ID = 12L
     }
 }

@@ -8,6 +8,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -16,22 +19,28 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.violinjourney.app.core.domain.events.BuiltInKind
+import com.violinjourney.app.core.domain.events.KindRef
+import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.history.components.CardActions
 import com.violinjourney.app.feature.history.components.RecordCard
 import com.violinjourney.app.feature.history.components.RecordPlace
 import com.violinjourney.app.feature.history.components.SessionCard
+import com.violinjourney.app.feature.history.components.recordCardTitle
 import com.violinjourney.app.feature.practice.PracticeIntent
 import com.violinjourney.app.feature.practice.SelectedDay
 import com.violinjourney.app.feature.practice.components.DaySheetContent
@@ -41,12 +50,17 @@ import com.violinjourney.app.shared.resources.card_menu
 import com.violinjourney.app.shared.resources.card_menu_delete
 import com.violinjourney.app.shared.resources.card_menu_share
 import com.violinjourney.app.shared.resources.card_menu_sound
+import com.violinjourney.app.shared.resources.event_kind_performance_word
 import com.violinjourney.app.shared.resources.record_tile_no_sound
+import com.violinjourney.app.shared.resources.record_tile_only_video
+import com.violinjourney.app.shared.resources.record_tile_sound
 import com.violinjourney.app.shared.resources.record_tile_take
+import com.violinjourney.app.shared.resources.session_take_title
 import com.violinjourney.app.testing.assertWholeOnOneLine
 import com.violinjourney.app.testing.numbers
 import com.violinjourney.app.testing.textLayout
 import kotlinx.datetime.LocalDate
+import kotlin.math.abs
 import kotlinx.datetime.TimeZone
 import org.jetbrains.compose.resources.stringResource
 import org.junit.Assert.assertEquals
@@ -213,6 +227,99 @@ class RecordCardTest {
         assertEquals(listOf<PracticeIntent>(PracticeIntent.SessionClicked(soundTake.id)), opened)
     }
 
+    /**
+     * A record on the screen of its event (spec 3.36.9): named by the event and its date — «Осенний концерт · 24 октября» — and only
+     * opened: no «⋯», no long press; with a sheet of a day it is named the same way, as in «Записи».
+     */
+    @Test
+    fun aRecordOfAnEventIsNamedByItAndOnItsScreenOnlyOpened() {
+        val concert = SessionEvent(4, "Осенний концерт", LocalDate(2026, 10, 24), KindRef.BuiltIn(BuiltInKind.PERFORMANCE), null)
+        val card = soundTake.copy(id = 9, pieceTitle = null, pieceId = null, event = concert)
+        val clicked = mutableListOf<Long>()
+        compose.setContent {
+            words[MORE] = stringResource(Res.string.card_menu)
+            words[TITLE] = stringResource(Res.string.session_take_title, concert.title, Formats.dayAndMonth(concert.date))
+            ViolinTheme {
+                RecordCard(
+                    card = card, title = recordCardTitle(card), start = "19:02", onClick = { clicked += card.id }, place = RecordPlace.Event,
+                )
+            }
+        }
+        compose.onAllNodesWithContentDescription(words.getValue(MORE)).assertCountEquals(0)
+        val node = cardWith(words.getValue(TITLE))
+        assertFalse("no long press on the screen of an event", SemanticsActions.OnLongClick in node.fetchSemanticsNode().config)
+        node.performClick()
+        assertEquals(listOf(9L), clicked)
+    }
+
+    /**
+     * A record of an event to TalkBack (spec 3.36.9): one description, the tile first — «звук» of a sound, «видео» of a video — and the word
+     * of the kind of its event after the length, once: «звук, Осенний концерт · 24 октября, 24 октября, 19:02, 3:40, выступление»; of a kind
+     * of one's own its name as written. In «Записи» as on the screen of its event (review of stage 98a: the word was nowhere).
+     */
+    @Test
+    fun aRecordOfAnEventSaysItsTileAndTheKindOfItsEvent() {
+        val concert = SessionEvent(4, "Осенний концерт", LocalDate(2026, 10, 24), KindRef.BuiltIn(BuiltInKind.PERFORMANCE), null)
+        val rehearsal = SessionEvent(6, "Сводная", LocalDate(2026, 10, 25), KindRef.Custom(9), ORCHESTRA)
+        val sound = soundTake.copy(id = 9, pieceTitle = null, pieceId = null, event = concert)
+        val video = soundTake.copy(id = 10, pieceTitle = null, pieceId = null, hasVideo = true, event = rehearsal)
+        compose.setContent {
+            words[SOUND_TILE] = stringResource(Res.string.record_tile_sound)
+            words[VIDEO_TILE] = stringResource(Res.string.record_tile_only_video)
+            words[PERFORMANCE] = stringResource(Res.string.event_kind_performance_word)
+            words[TITLE] = stringResource(Res.string.session_take_title, concert.title, Formats.dayAndMonth(concert.date))
+            ViolinTheme {
+                Column {
+                    SessionCard(sound, TimeZone.UTC, onClick = {})
+                    SessionCard(video, TimeZone.UTC, onClick = {}, place = RecordPlace.Sheet)
+                    RecordCard(card = sound.copy(id = 11), title = "Прогон", start = "19:30", onClick = {}, place = RecordPlace.Event)
+                }
+            }
+        }
+        val said = cardWith(words.getValue(TITLE)).fetchSemanticsNode().config[SemanticsProperties.ContentDescription].single()
+        assertTrue("the tile first: «$said»", said.startsWith(words.getValue(SOUND_TILE)))
+        assertEquals("the kind of its event, once: «$said»", 1, said.split(words.getValue(PERFORMANCE)).size - 1)
+        val saidOfVideo = cardWith("Сводная").fetchSemanticsNode().config[SemanticsProperties.ContentDescription].single()
+        assertTrue("«$saidOfVideo»", saidOfVideo.startsWith(words.getValue(VIDEO_TILE)))
+        assertTrue("a kind of one's own by its name as written: «$saidOfVideo»", ORCHESTRA in saidOfVideo)
+        val saidOnItsScreen = cardWith("Прогон").fetchSemanticsNode().config[SemanticsProperties.ContentDescription].single()
+        assertTrue("on the screen of its event as in «Записи»: «$saidOnItsScreen»", words.getValue(PERFORMANCE) in saidOnItsScreen)
+    }
+
+    /**
+     * On the screen of its event a record has a chevron at its end where other lists have «⋯» (spec 3.36.9, 5.29 R9: 24 in the third level
+     * of text) — seen in the pixels of the card: the box of 24, 12 from its end, has ink there and none in «Записи» without «⋯».
+     */
+    @Test
+    fun onTheScreenOfItsEventARecordHasAChevronAtItsEnd() {
+        val concert = SessionEvent(4, "Осенний концерт", LocalDate(2026, 10, 24), KindRef.BuiltIn(BuiltInKind.PERFORMANCE), null)
+        val card = soundTake.copy(id = 9, pieceTitle = null, pieceId = null, event = concert)
+        compose.setContent {
+            ViolinTheme {
+                Column(Modifier.requiredWidth(FIELD)) {
+                    RecordCard(card = card, title = SHORT, start = "19:02", onClick = {}, place = RecordPlace.Event, modifier = Modifier.testTag(EVENT_CARD))
+                    RecordCard(card = card, title = SHORT, start = "19:02", onClick = {}, place = RecordPlace.Records, modifier = Modifier.testTag(RECORDS_CARD))
+                }
+            }
+        }
+        assertTrue("a chevron at the end on the screen of its event", inkAtTheEnd(EVENT_CARD))
+        assertFalse("none in «Записи» without «⋯»", inkAtTheEnd(RECORDS_CARD))
+    }
+
+    /** Whether the box of the chevron of the card tagged [tag] — 24 at 12 from its end, in the middle of its height — holds any ink. */
+    private fun inkAtTheEnd(tag: String): Boolean {
+        val image = compose.onNodeWithTag(tag).captureToImage().toPixelMap()
+        val density = compose.density
+        val end = with(density) { 12.dp.roundToPx() }
+        val box = with(density) { 24.dp.roundToPx() }
+        val ground = image[image.width - 2, image.height / 2]
+        val left = image.width - end - box
+        val top = image.height / 2 - box / 2
+        return (left until left + box).any { x -> (top until top + box).any { y -> image[x, y].differsFrom(ground) } }
+    }
+
+    private fun Color.differsFrom(other: Color): Boolean = abs(red - other.red) + abs(green - other.green) + abs(blue - other.blue) > INK
+
     private companion object {
         const val CONCERTO = "Концерт ля минор, 1 ч."
         const val MINUET = "Менуэт соль мажор"
@@ -233,5 +340,16 @@ class RecordCardTest {
         const val DELETE = "delete"
         const val SHARE = "share"
         const val SOUND = "sound"
+        const val TITLE = "title"
+        const val SOUND_TILE = "soundTile"
+        const val VIDEO_TILE = "videoTile"
+        const val PERFORMANCE = "performance"
+        const val ORCHESTRA = "Оркестр ДК"
+        const val SHORT = "Концерт"
+        const val EVENT_CARD = "event"
+        const val RECORDS_CARD = "records"
+
+        /** How far apart, in the sum of the channels, a pixel of ink is from the ground of the card. */
+        const val INK = 0.15f
     }
 }

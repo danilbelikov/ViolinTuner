@@ -34,6 +34,8 @@ import com.violinjourney.app.core.domain.venue.Venues
 import com.violinjourney.app.core.recording.FileTakeAnalyzer
 import com.violinjourney.app.core.recording.RecordingWatch
 import com.violinjourney.app.core.recording.TakePipeline
+import com.violinjourney.app.core.recording.audio.AudioTakeImporter
+import com.violinjourney.app.core.recording.audio.PickedSounds
 import com.violinjourney.app.core.recording.video.AnalysisSpeed
 import com.violinjourney.app.feature.share.RenderSpeed
 import com.violinjourney.app.core.recording.video.VideoFiles
@@ -146,6 +148,24 @@ object SharedModule {
         @DefaultDispatcher dispatcher: CoroutineDispatcher,
         analytics: Analytics,
     ) = VideoTakeImporter(files, analyzer, sessions, configSource, practice, practiceConfig, repertoireConfig, intonationDefaults, clock, elapsed, speed, dispatcher, analytics)
+
+    /** One per app, with a scope of its own, as the importer of videos: «Звук из файла» of an event (spec 3.35, 5.28). */
+    @Provides
+    @Singleton
+    fun provideAudioTakeImporter(
+        files: PickedSounds,
+        analyzer: FileTakeAnalyzer,
+        sessions: SessionRepository,
+        configSource: IntonationConfigSource,
+        repertoireConfig: RepertoireConfig,
+        intonationDefaults: IntonationConfig,
+        clock: WallClock,
+        elapsed: ElapsedClock,
+        speed: AnalysisSpeed,
+        @IoDispatcher io: CoroutineDispatcher,
+        @DefaultDispatcher dispatcher: CoroutineDispatcher,
+        analytics: Analytics,
+    ) = AudioTakeImporter(files, analyzer, sessions, configSource, repertoireConfig, intonationDefaults, clock, elapsed, speed, io, dispatcher, analytics)
 
     /** One per app: it measures how fast renders go on this phone (spec 5.11). */
     @Provides

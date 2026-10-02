@@ -33,18 +33,16 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.distinctUntilChanged
 import com.violinjourney.app.core.data.repertoire.SheetFiles
-import com.violinjourney.app.core.domain.IntonationConfig
-import com.violinjourney.app.core.domain.IntonationReading
-import com.violinjourney.app.core.domain.LoudnessMeter
-import com.violinjourney.app.core.domain.TargetMode
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.SheetPage
 import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.recording.MediaImport
+import com.violinjourney.app.core.recording.TakeOwner
 import com.violinjourney.app.core.recording.TakePipeline
+import com.violinjourney.app.core.recording.of
 import com.violinjourney.app.core.recording.video.VideoFiles
-import com.violinjourney.app.core.recording.video.VideoImport
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
 import com.violinjourney.app.core.settings.IntonationConfigSource
 import com.violinjourney.app.feature.history.Selection
@@ -107,20 +105,16 @@ open class PieceViewModel(
     private val effectChannel = Channel<PieceEffect>(Channel.BUFFERED)
     val effects: Flow<PieceEffect> = effectChannel.receiveAsFlow()
 
+    /** Whose takes this screen makes (plan D13). */
+    private val owner = TakeOwner.Piece(pieceId)
+
     /**
      * A video on its way to becoming a take of this piece (spec 3.19). The importer is a singleton
-     * that outlives the screen; what it does for another piece is none of this screen's business.
+     * that outlives the screen; what it does for another piece — or for an event — is none of this screen's business.
      */
-    val videoImport: StateFlow<VideoImport> = importer.state
-        .map { import ->
-            val owner = when (import) {
-                is VideoImport.Working -> import.pieceId
-                is VideoImport.Failed -> import.pieceId
-                VideoImport.Idle -> pieceId
-            }
-            if (owner == pieceId) import else VideoImport.Idle
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), VideoImport.Idle)
+    val videoImport: StateFlow<MediaImport> = importer.state
+        .map { import -> import.of(owner) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), MediaImport.Idle)
 
     /** The take recorded a moment ago, while it is still highlighted in the list. */
     private val newTakeId = MutableStateFlow<Long?>(null)
@@ -221,7 +215,7 @@ open class PieceViewModel(
             if (!wanted || granted != true) {
                 flowOf(TakeState.idle(granted, config.levelBars))
             } else {
-                blindChain(intonation)
+                BlindTake.chain(takes, intonation, owner, config)
                     .map { output ->
                         // The stop is the chain's to handle, on its next frame: that is where a take
                         // without notes is told apart from one the player simply left. Only then
@@ -241,29 +235,6 @@ open class PieceViewModel(
         if (take.recording && played != null) take.copy(backingPlayedMs = played, backingDurationMs = block?.durationMs) else take
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(TAKE_STOP_TIMEOUT_MS), TakeState.idle(micPermission.value, config.levelBars))
 
-    /** Blind on purpose (spec 3.15): of all the engine reads, only "too noisy" reaches the screen, beside how loud it is. */
-    private fun blindChain(intonation: IntonationConfig): Flow<TakePipeline.Output<BlindShown>> {
-        val meter = LoudnessMeter(intonation)
-        val history = LevelHistory(config.levelBars, config.levelBarMs)
-        val silent = List(config.levelBars) { 0f }
-        return takes.run(
-            config = intonation,
-            pieceId = pieceId,
-            targetMode = { TargetMode.Chromatic },
-            // a lost microphone ends the take quietly (spec 3.15) and the bar goes: nothing is said under it (spec 3.36.4)
-            unavailable = BlindShown(silent, problem = null),
-            onRestart = {
-                meter.reset()
-                history.reset()
-            },
-        ) { frame, reading ->
-            BlindShown(
-                levels = history.add(frame.tMs, meter.process(frame.tMs, frame.rms)),
-                problem = TakeProblem.TOO_NOISY.takeIf { reading == IntonationReading.TooNoisy },
-            )
-        }
-    }
-
     init {
         viewModelScope.launch { takes.watchPractice() }
         // The backing's sound is made ready for the mix as soon as the piece has one (spec 5.25): a take must not wait for a decoder.
@@ -276,7 +247,7 @@ open class PieceViewModel(
             }
         }
         // A video take lands in the list the way a recorded one does: on top, highlighted, the session screen shut.
-        viewModelScope.launch { importer.saved.collect { if (it.pieceId == pieceId) highlight(it.sessionId) } }
+        viewModelScope.launch { importer.saved.collect { if (it.owner == owner) highlight(it.sessionId) } }
         viewModelScope.launch {
             takes.events.collect { event ->
                 when (event) {
@@ -364,10 +335,10 @@ open class PieceViewModel(
             }
             is PieceIntent.VideoShotFinished -> {
                 val file = savedState.remove<String>(KEY_VIDEO_FILE)?.let(::platformFile) ?: return
-                if (intent.saved) importer.shot(pieceId, file) else file.deleteFile()
+                if (intent.saved) importer.shot(owner, file) else file.deleteFile()
             }
             // a pick that is not wanted now is let go: on iOS it is the app's own copy, maybe gigabytes
-            is PieceIntent.VideoPicked -> intent.uri?.let { uri -> if (videoAllowed()) importer.picked(pieceId, uri) else importer.release(uri) }
+            is PieceIntent.VideoPicked -> intent.uri?.let { uri -> if (videoAllowed()) importer.picked(owner, uri) else importer.release(uri) }
             PieceIntent.VideoImportCancelClicked -> importer.cancelClicked()
             PieceIntent.VideoImportContinueClicked -> importer.continueClicked()
             PieceIntent.VideoImportDismissed -> importer.dismiss()
@@ -521,7 +492,7 @@ open class PieceViewModel(
     private fun takeRunning(): Boolean = takes.recordingRequested.value || listening.value
 
     // Two takes are not made at once, and takes are not made while others are being picked for deletion.
-    private fun videoAllowed(): Boolean = !takeRunning() && !ui.value.selection.active && importer.state.value == VideoImport.Idle
+    private fun videoAllowed(): Boolean = !takeRunning() && !ui.value.selection.active && importer.state.value == MediaImport.Idle
 
     private fun toggleBest(sessionId: Long) {
         // Read from what is on screen: the one place that already knows which take carries the mark.

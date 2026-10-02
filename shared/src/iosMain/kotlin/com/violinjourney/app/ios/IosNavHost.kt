@@ -27,6 +27,8 @@ import com.violinjourney.app.feature.camera.CaptureViewModel
 import com.violinjourney.app.feature.camera.IosShotCamera
 import com.violinjourney.app.feature.camera.IosVideoMux
 import com.violinjourney.app.feature.camera.ShotCameraFactory
+import com.violinjourney.app.feature.events.screen.EventRoute
+import com.violinjourney.app.feature.events.screen.EventViewModel
 import com.violinjourney.app.feature.history.HistoryRoute
 import com.violinjourney.app.feature.history.HistoryViewModel
 import com.violinjourney.app.feature.home.HomeLookViewModel
@@ -125,6 +127,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 onOpenJourney = { navController.navigate(Routes.JOURNEY) { launchSingleTop = true } },
                 onOpenHome = { navController.navigate(Routes.HOME) { launchSingleTop = true } },
                 onOpenSettings = navController::navigateToSettings,
+                onOpenEvent = navController::navigateToEvent,
                 viewModel = viewModel {
                     PracticeViewModel(
                         repository = graph.practice, runningStore = graph.runningPractice, finisher = graph.finisher,
@@ -157,7 +160,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 onOpenSound = navController::navigateToSound,
                 onOpenLive = { navController.navigateToTopLevel(TopLevelDestination.LIVE) },
                 viewModel = viewModel {
-                    HistoryViewModel(graph.sessions, graph.repertoire, graph.intonationConfig, graph.clock, graph.audioFiles, graph.backings)
+                    HistoryViewModel(graph.sessions, graph.repertoire, graph.intonationConfig, graph.clock, graph.audioFiles, graph.backings, graph.events)
                 },
                 onShare = share::start,
                 shareHost = { ShareHost(share) },
@@ -179,7 +182,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                         playerFactory = graph.playerFactory, repertoire = graph.repertoire, sound = graph.sound,
                         soundConfig = graph.soundConfig, pictureFactory = graph.pictureFactory,
                         savedState = createSavedStateHandle(), backings = graph.backings, backingPcm = graph.backingPcm,
-                        waveforms = graph.waveforms,
+                        waveforms = graph.waveforms, events = graph.events,
                     )
                 },
                 onShare = share::start,
@@ -204,7 +207,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                         savedState = createSavedStateHandle(), sound = graph.sound, sessions = graph.sessions,
                         repertoire = graph.repertoire, audioFiles = graph.audioFiles, playerFactory = graph.playerFactory,
                         waveforms = graph.waveforms, config = graph.soundConfig, backings = graph.backings,
-                        backingPcm = graph.backingPcm, backingConfig = graph.backingConfig, clock = graph.clock, io = graph.io,
+                        backingPcm = graph.backingPcm, backingConfig = graph.backingConfig, clock = graph.clock, events = graph.events, io = graph.io,
                     )
                 },
                 onShare = share::start,
@@ -227,6 +230,17 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 onShare = share::start,
                 shareHost = { ShareHost(share) },
                 onOpenCapture = navController::navigateToCapture,
+            )
+        }
+        // The screen of an event (spec 3.35, 3.36.9): above the tabs; «назад» — where it was opened from
+        composable(route = Routes.EVENT_PATTERN, arguments = listOf(navArgument(EventViewModel.ARG_EVENT_ID) { type = NavType.LongType })) {
+            EventRoute(
+                onClose = navController::popBackStack,
+                onOpenPiece = navController::navigateToPiece,
+                onOpenSession = navController::navigateToSession,
+                onOpenRepertoire = { navController.navigateToTopLevel(TopLevelDestination.REPERTOIRE) },
+                viewModel = viewModel { eventViewModel(graph, createSavedStateHandle()) },
+                tracking = viewModel { AnalyticsViewModel(graph.analytics) },
             )
         }
         // «Снять под минусовку» (spec 3.32): the app's own camera, over everything
@@ -358,7 +372,10 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
             BackupRoute(
                 onClose = navController::popBackStack,
                 viewModel = viewModel {
-                    BackupViewModel(graph.backupManager, graph.backupStore, graph.backupConfig, graph.recordingWatch, graph.videoImporter, createSavedStateHandle())
+                    BackupViewModel(
+                        graph.backupManager, graph.backupStore, graph.backupConfig, graph.recordingWatch, graph.videoImporter, graph.audioImporter,
+                        createSavedStateHandle(),
+                    )
                 },
             )
         }
@@ -376,7 +393,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 onClose = navController::popBackStack,
                 onOpenBackup = navController::navigateToBackup,
                 viewModel = viewModel {
-                    RestoreViewModel(graph.backupManager, graph.backupStore, graph.recordingWatch, graph.videoImporter, createSavedStateHandle())
+                    RestoreViewModel(graph.backupManager, graph.backupStore, graph.recordingWatch, graph.videoImporter, graph.audioImporter, createSavedStateHandle())
                 },
             )
         }
@@ -453,11 +470,18 @@ private fun pieceViewModel(graph: IosGraph, savedState: SavedStateHandle) = Piec
     backingConfig = graph.backingConfig, io = graph.io,
 )
 
+private fun eventViewModel(graph: IosGraph, savedState: SavedStateHandle) = EventViewModel(
+    savedState = savedState, events = graph.events, sessions = graph.sessions, repertoire = graph.repertoire,
+    configSource = graph.configSource, takes = graph.takes(), importer = graph.videoImporter, audioImporter = graph.audioImporter,
+    videos = graph.videoFiles, shareFiles = graph.shareFiles, config = graph.eventsConfig, repertoireConfig = graph.repertoireConfig,
+    clock = graph.clock,
+)
+
 private fun shareViewModel(graph: IosGraph, texts: IosTexts) = ShareViewModel(
     sessions = graph.sessions, repertoire = graph.repertoire, sound = graph.sound, audioFiles = graph.audioFiles,
     files = graph.shareFiles, renderer = graph.renderer, texts = texts.share, speed = graph.renderSpeed, clock = graph.elapsed,
     config = graph.soundConfig, videos = graph.videoFiles, backings = graph.backings, backingPcm = graph.backingPcm,
-    analytics = graph.analytics, io = graph.io,
+    analytics = graph.analytics, events = graph.events, io = graph.io,
 )
 
 private fun homeViewModel(graph: IosGraph) = HomeViewModel(graph.home, graph.journey, graph.clock, graph.venues, graph.journeyConfig)
@@ -496,6 +520,11 @@ private fun NavHostController.navigateToSession(sessionId: Long) {
 /** [sessionId] null opens the sound of all recordings. */
 private fun NavHostController.navigateToSound(sessionId: Long?) {
     navigate(Routes.sound(sessionId)) { launchSingleTop = true }
+}
+
+/** The screen of an event (spec 3.36.9): from a row of the sheet of the day and of the reminder on «Занятия». */
+private fun NavHostController.navigateToEvent(eventId: Long) {
+    navigate(Routes.event(eventId)) { launchSingleTop = true }
 }
 
 private fun NavHostController.navigateToPiece(pieceId: Long) {

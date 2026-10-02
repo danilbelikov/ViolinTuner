@@ -388,7 +388,7 @@ private fun Subtitle(state: SoundState, zone: TimeZone) {
         return
     }
     val recording = state.recording ?: return
-    val name = sessionTitle(recording.title, recording.pieceTitle, recording.startedAtEpochMs, zone)
+    val name = sessionTitle(recording.title, recording.pieceTitle, recording.startedAtEpochMs, zone, recording.event)
     val mode = modeWords(state)
     val video = stringResource(Res.string.record_tile_video).takeIf { recording.hasVideo }
     val spoken = listOfNotNull(video, name, mode).joinToString(SAID_SEPARATOR)
@@ -551,7 +551,7 @@ private fun ListenOnRow(recording: RecordingName, latest: Boolean, canPick: Bool
         Column(Modifier.weight(1f)) {
             Text(caption, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp))
             Text(
-                text = sessionTitle(recording.title, recording.pieceTitle, recording.startedAtEpochMs, zone),
+                text = sessionTitle(recording.title, recording.pieceTitle, recording.startedAtEpochMs, zone, recording.event),
                 color = colors.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

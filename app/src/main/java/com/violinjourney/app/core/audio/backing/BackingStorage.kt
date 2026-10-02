@@ -1,13 +1,11 @@
 package com.violinjourney.app.core.audio.backing
 
 import android.content.Context
-import android.media.MediaCodec
-import android.media.MediaExtractor
-import android.media.MediaFormat
 import android.net.Uri
 import androidx.core.net.toUri
 import android.provider.OpenableColumns
 import android.util.Log
+import com.violinjourney.app.core.audio.AudioProbe
 import com.violinjourney.app.core.audio.playback.PcmDecoder
 import com.violinjourney.app.core.audio.playback.PcmSamples
 import com.violinjourney.app.core.backup.DataLayout
@@ -70,12 +68,12 @@ class BackingImporter @Inject constructor(
         val source = uri.toUri()
         val resolver = context.contentResolver
         val (displayName, size) = describe(source)
-        val probe = probe(source) ?: return BackingImport.Unreadable
+        val probe = AudioProbe.of(context, source) as? AudioProbe.Sound ?: return BackingImport.Unreadable
         if (probe.durationUs / US_PER_MS > config.maxDurationMs) return BackingImport.TooLong
         val needed = (size ?: 0L) + config.spareBytes
         if (context.filesDir.usableSpace < needed) return BackingImport.NoSpace(needed - context.filesDir.usableSpace)
 
-        val extension = displayName?.substringAfterLast('.', "")?.takeIf { it.isNotEmpty() } ?: probe.extension
+        val extension = displayName?.substringAfterLast('.', "")?.takeIf { it.isNotEmpty() } ?: probe.mime.substringAfter('/')
         val target = files.newFile(extension)
         val partial = File(target.parentFile, target.name + PARTIAL)
         try {
@@ -115,40 +113,6 @@ class BackingImporter @Inject constructor(
     } catch (e: SecurityException) {
         Log.w(TAG, "cannot describe the backing", e)
         null to null
-    }
-
-    private class Probe(val durationUs: Long, val sampleRate: Int, val channels: Int, val extension: String)
-
-    /** Null when there is no audio track this phone can decode. */
-    private fun probe(uri: Uri): Probe? {
-        val extractor = MediaExtractor()
-        try {
-            extractor.setDataSource(context, uri, null)
-            val track = (0 until extractor.trackCount).firstOrNull { extractor.getTrackFormat(it).getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true }
-                ?: return null
-            val format = extractor.getTrackFormat(track)
-            val mime = format.getString(MediaFormat.KEY_MIME) ?: return null
-            // the codec is only asked for, not started: can this phone decode it at all
-            MediaCodec.createDecoderByType(mime).release()
-            if (!format.containsKey(MediaFormat.KEY_DURATION)) return null
-            return Probe(
-                durationUs = format.getLong(MediaFormat.KEY_DURATION),
-                sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE),
-                channels = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT),
-                extension = mime.substringAfter('/'),
-            )
-        } catch (e: IOException) {
-            Log.w(TAG, "cannot open the backing", e)
-        } catch (e: IllegalArgumentException) {
-            Log.w(TAG, "cannot read the backing", e)
-        } catch (e: IllegalStateException) {
-            Log.w(TAG, "no decoder for the backing", e)
-        } catch (e: SecurityException) {
-            Log.w(TAG, "no access to the backing", e)
-        } finally {
-            extractor.release()
-        }
-        return null
     }
 
     private companion object {

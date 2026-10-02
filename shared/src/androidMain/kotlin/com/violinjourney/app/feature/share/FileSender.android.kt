@@ -9,7 +9,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
-import com.violinjourney.app.core.audio.share.ShareNames
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.ui.components.LocalMessages
 import com.violinjourney.app.shared.resources.Res
@@ -19,21 +18,22 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 
 @Composable
-actual fun rememberFileSender(): (file: PlatformFile, text: String?) -> Unit {
+actual fun rememberFileSender(): (file: PlatformFile, text: String?, type: String) -> Unit {
     val context = LocalContext.current
     val messages = LocalMessages.current
     val scope = rememberCoroutineScope()
     return remember(context) {
-        { file, text -> scope.launch { context.send(file, text) { messages.show(it) } } }
+        { file, text, type -> scope.launch { context.send(file, text, type) { messages.show(it) } } }
     }
 }
 
 /** The receiver gets a temporary grant to read this one file; the app asks for no permission (spec 3.17). */
-private suspend fun Context.send(file: PlatformFile, text: String?, say: (String) -> Unit) {
+private suspend fun Context.send(file: PlatformFile, text: String?, type: String, say: (String) -> Unit) {
     val uri = FileProvider.getUriForFile(this, "$packageName$FILES_AUTHORITY_SUFFIX", file)
     val intent = Intent(Intent.ACTION_SEND).apply {
-        // by the file's own extension: «Видео как снято» of a take shot on an iPhone is a `.mov`
-        type = ShareNames.mimeTypeOf(file.name)
+        // by what the recording is (plan D48): «Видео как снято» of a take shot on an iPhone is a `.mov`, a sound from a file is sound
+        // whatever its extension
+        this.type = type
         putExtra(Intent.EXTRA_STREAM, uri)
         if (text != null) putExtra(Intent.EXTRA_TEXT, text)
         // the chooser reads the grant and the preview from the clip data

@@ -35,7 +35,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.violinjourney.app.core.recording.video.VideoImport
+import com.violinjourney.app.core.recording.MediaImport
 import com.violinjourney.app.core.ui.components.AppDock
 import com.violinjourney.app.core.ui.components.LocalDockInset
 import com.violinjourney.app.core.ui.components.currentDockMetrics
@@ -89,7 +89,7 @@ fun PieceScreen(
     // asked once: a new zone on every recomposition is a new object, and every take card would recompose with it
     zone: TimeZone = remember { TimeZone.currentSystemDefault() },
     takeActions: CardActions? = null,
-    videoImport: VideoImport = VideoImport.Idle,
+    videoImport: MediaImport = MediaImport.Idle,
     onPickVideo: () -> Unit = {},
     backing: BackingUi? = null,
 ) {
@@ -112,7 +112,16 @@ fun PieceScreen(
             }
         }
     }
-    VideoImportSheet(videoImport, onIntent)
+    MediaImportSheet(videoImport, ImportWords.VIDEO_TAKE) { action ->
+        onIntent(
+            when (action) {
+                ImportAction.Cancel -> PieceIntent.VideoImportCancelClicked
+                ImportAction.Continue -> PieceIntent.VideoImportContinueClicked
+                ImportAction.Dismiss -> PieceIntent.VideoImportDismissed
+                ImportAction.Send -> PieceIntent.VideoImportSendClicked
+            },
+        )
+    }
 }
 
 /** What both layouts are made of — one bag, not eleven parameters twice. */
@@ -126,7 +135,7 @@ private class ElementScreen(
     val addPhoto: AddPhotoActions,
     val zone: TimeZone,
     val takeActions: CardActions?,
-    val videoImport: VideoImport,
+    val videoImport: MediaImport,
     val onPickVideo: () -> Unit,
 ) {
     val selecting: Boolean get() = state.selection.active

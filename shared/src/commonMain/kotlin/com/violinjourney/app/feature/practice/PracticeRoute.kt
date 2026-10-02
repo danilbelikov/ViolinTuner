@@ -31,6 +31,7 @@ fun PracticeRoute(
     onOpenJourney: () -> Unit,
     onOpenHome: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenEvent: (eventId: Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: PracticeViewModel,
     homeLookViewModel: HomeLookViewModel,
@@ -54,6 +55,7 @@ fun PracticeRoute(
     val currentOnOpenJourney by rememberUpdatedState(onOpenJourney)
     val currentOnOpenHome by rememberUpdatedState(onOpenHome)
     val currentOnOpenSettings by rememberUpdatedState(onOpenSettings)
+    val currentOnOpenEvent by rememberUpdatedState(onOpenEvent)
     val homeLook by homeLookViewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(viewModel, lifecycleOwner) {
@@ -65,6 +67,7 @@ fun PracticeRoute(
                     PracticeEffect.OpenJourney -> currentOnOpenJourney()
                     PracticeEffect.OpenHome -> currentOnOpenHome()
                     PracticeEffect.OpenSettings -> currentOnOpenSettings()
+                    is PracticeEffect.OpenEvent -> currentOnOpenEvent(effect.id)
                     PracticeEffect.ShowTooShort ->
                         messages.show(getString(Res.string.practice_too_short))
                     PracticeEffect.ShowPhotoFailed ->
@@ -74,7 +77,7 @@ fun PracticeRoute(
         }
     }
 
-    // Back from a record opened from the sheet of the day (spec 3.36.2): the sheet that stepped aside for it rises again.
+    // Back from a record or an event opened from the sheet of the day (spec 3.36.2, 3.36.9): the sheet that stepped aside for it rises again.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onIntent(PracticeIntent.Resumed) }
 
     // Decorative motion of this screen (spec 3.16) follows the system setting «убрать анимации».

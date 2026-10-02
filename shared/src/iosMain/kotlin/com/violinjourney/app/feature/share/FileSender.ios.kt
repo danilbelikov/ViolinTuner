@@ -7,10 +7,10 @@ import com.violinjourney.app.core.ui.components.SystemScreens
 import platform.Foundation.NSURL
 import platform.UIKit.UIActivityViewController
 
-/** The system's sheet of «Поделиться»: the file, and the words beside it for the receivers that take them. */
+/** The system's sheet of «Поделиться»: the file, and the words beside it for the receivers that take them; iOS reads its type itself. */
 @Composable
-actual fun rememberFileSender(): (file: PlatformFile, text: String?) -> Unit = remember {
-    { file, text ->
+actual fun rememberFileSender(): (file: PlatformFile, text: String?, type: String) -> Unit = remember {
+    { file, text, _ ->
         val items = listOfNotNull<Any>(NSURL.fileURLWithPath(file.path), text)
         SystemScreens.present(UIActivityViewController(activityItems = items, applicationActivities = null))
     }

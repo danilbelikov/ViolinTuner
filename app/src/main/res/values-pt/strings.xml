@@ -404,6 +404,7 @@
     <string name="record_tile_record">gravação</string>
     <string name="record_tile_only_video">vídeo</string>
     <string name="record_tile_no_sound">sem som</string>
+    <string name="record_tile_sound">som</string>
     <string name="history_empty_title">Suas gravações aparecerão aqui</string>
     <string name="history_empty_text">Grave com o botão do Live ou um take na tela de uma peça\u00A0— depois vem a análise: o que se mantém e o que escapa.</string>
     <string name="history_open_live">Abrir o Live</string>
@@ -503,6 +504,83 @@
     <string name="event_reminder_more_description_one">Mais %1$d evento: %2$s</string>
     <string name="event_reminder_more_description_few">Mais %1$d eventos: %2$s</string>
     <string name="event_reminder_more_description_many">Mais %1$d eventos: %2$s</string>
+    <string name="event_program">Programa</string>
+    <string name="event_program_done">Pronto · %1$d</string>
+    <string name="event_program_empty_title">O repertório ainda está vazio</string>
+    <string name="event_program_empty_text_program">Adicione peças, escalas e estudos\u00A0— e marque aqui o que vai tocar no concerto.</string>
+    <string name="event_program_empty_text_played">Adicione peças, escalas e estudos\u00A0— e marque aqui o que foi tocado.</string>
+    <string name="event_notes_ask_lesson">O que foi passado?</string>
+    <string name="event_notes_ask_before">Que horas é a concentração, quem acompanha?</string>
+    <string name="event_notes_ask_after">Como foi?</string>
+    <string name="event_program_empty">O que você vai tocar?</string>
+    <string name="event_add_to_program">Adicionar ao programa</string>
+    <string name="event_records_from">Gravações a partir de %1$s</string>
+    <string name="event_can_add">Você pode adicionar</string>
+    <string name="event_can_add_note">Uma anotação</string>
+    <string name="event_can_add_note_caption">o que houve, o que lembrar</string>
+    <string name="event_can_add_program">Um programa</string>
+    <string name="event_can_add_from_repertoire">do repertório</string>
+    <string name="event_can_add_record">Uma gravação</string>
+    <string name="event_can_add_record_caption">som ou vídeo</string>
+    <string name="event_not_found">Evento não encontrado</string>
+    <string name="event_program_remove">Remover “%1$s”</string>
+    <string name="event_repeat_until_end">%1$s, até %2$s</string>
+    <string name="event_add_record">Adicionar gravação</string>
+    <string name="event_add_file">Som de um arquivo</string>
+    <string name="event_add_file_caption">mp3, m4a, wav…</string>
+    <string name="event_add_mic">Gravar som</string>
+    <string name="event_add_mic_caption">às cegas, análise depois</string>
+    <string name="event_add_camera_caption">câmera do sistema</string>
+    <string name="event_mic_reason">Para gravar som, é preciso acesso ao microfone.</string>
+    <string name="event_recording_description">Gravando, %1$s</string>
+    <string name="file_copying">Adicionando o arquivo…</string>
+    <string name="file_error_too_long">O arquivo tem mais de 60 minutos\u00A0— não dá para analisar</string>
+    <string name="file_error_cannot_open">Não foi possível abrir o arquivo</string>
+    <string name="file_error_no_sound">O arquivo não tem som</string>
+    <string name="file_error_no_notes">Nenhuma nota encontrada no arquivo\u00A0— a gravação não foi adicionada</string>
+    <string name="event_video_error_no_notes">Nenhuma nota encontrada no vídeo\u00A0— a gravação não foi adicionada</string>
+    <string name="event_series_delete_q_lesson">Excluir a aula de %1$s?</string>
+    <string name="event_series_delete_q_rehearsal">Excluir o ensaio de %1$s?</string>
+    <string name="event_series_delete_q_event">Excluir o evento de %1$s?</string>
+    <string name="event_series_this_lesson">Só esta aula</string>
+    <string name="event_series_this_rehearsal">Só este ensaio</string>
+    <string name="event_series_this_event">Só este evento</string>
+    <string name="event_series_following_lesson">Esta e as seguintes</string>
+    <string name="event_series_following_rehearsal">Este e os seguintes</string>
+    <string name="event_series_following_event">Este e os seguintes</string>
+    <string name="event_series_from_date">a partir de %1$s</string>
+    <string name="event_series_past_short_lesson">As aulas passadas não mudam.</string>
+    <string name="event_series_past_short_rehearsal">Os ensaios passados não mudam.</string>
+    <string name="event_series_past_short_event">Os eventos passados não mudam.</string>
+    <string name="event_delete_text_program">As anotações e o programa serão excluídos. As gravações ficam em “Gravações”.</string>
+    <string name="event_delete_text_played">As anotações e “O que foi tocado” serão excluídos. As gravações ficam em “Gravações”.</string>
+    <string-array name="event_repeat_weekly_on">
+        <item>Toda semana, às segundas</item>
+        <item>Toda semana, às terças</item>
+        <item>Toda semana, às quartas</item>
+        <item>Toda semana, às quintas</item>
+        <item>Toda semana, às sextas</item>
+        <item>Toda semana, aos sábados</item>
+        <item>Toda semana, aos domingos</item>
+    </string-array>
+    <string-array name="event_repeat_biweekly_on">
+        <item>A cada duas semanas, às segundas</item>
+        <item>A cada duas semanas, às terças</item>
+        <item>A cada duas semanas, às quartas</item>
+        <item>A cada duas semanas, às quintas</item>
+        <item>A cada duas semanas, às sextas</item>
+        <item>A cada duas semanas, aos sábados</item>
+        <item>A cada duas semanas, aos domingos</item>
+    </string-array>
+    <string-array name="event_rest_on_weekdays">
+        <item>o resto\u00A0— às segundas</item>
+        <item>o resto\u00A0— às terças</item>
+        <item>o resto\u00A0— às quartas</item>
+        <item>o resto\u00A0— às quintas</item>
+        <item>o resto\u00A0— às sextas</item>
+        <item>o resto\u00A0— aos sábados</item>
+        <item>o resto\u00A0— aos domingos</item>
+    </string-array>
     <string name="practice_step_down">Menos %1$d minutos</string>
     <string name="practice_step_up">Mais %1$d minutos</string>
     <string name="practice_save">Salvar</string>

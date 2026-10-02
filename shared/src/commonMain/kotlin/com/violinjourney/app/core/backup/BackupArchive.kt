@@ -3,6 +3,7 @@ package com.violinjourney.app.core.backup
 import com.violinjourney.app.core.io.ByteInput
 import com.violinjourney.app.core.io.ByteOutput
 import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.recording.audio.PickedSounds
 import okio.IOException
 
 sealed interface BackupFileProblem {
@@ -104,15 +105,25 @@ object BackupPaths {
 
     /** Accompaniment files (spec 3.32); a part of the sound. */
     const val BACKINGS = DataLayout.BACKINGS
-    const val AUDIO_EXTENSION = ".m4a"
+    private const val AUDIO_EXTENSION = ".m4a"
 
     /** The last entry of a copy: an archive without it was cut short. */
     const val COMPLETE_ENTRY = "complete.txt"
 
+    /**
+     * The file of the folder of the recordings named [name] is sound, not a video (plan D17): the sound of a take, `.m4a`, and a sound
+     * from a file of an event, `<uuid>.sound.<ext>` (spec 3.35, 5.28) — an mp3 among them would otherwise go with the videos and be lost
+     * from a copy «без видео». A video, its thumbnail and anything else of the folder are the video's.
+     */
+    fun isSound(name: String): Boolean {
+        val file = name.substringAfterLast('/')
+        return file.endsWith(AUDIO_EXTENSION) || PickedSounds.MARK in file
+    }
+
     /** The top folder of a path says which part it belongs to. */
     fun partOf(path: String): BackupPart = when (path.substringBefore('/')) {
         SHEETS -> BackupPart.SHEETS
-        SESSIONS -> if (path.endsWith(AUDIO_EXTENSION)) BackupPart.AUDIO else BackupPart.VIDEO
+        SESSIONS -> if (isSound(path)) BackupPart.AUDIO else BackupPart.VIDEO
         BACKINGS -> BackupPart.AUDIO
         else -> BackupPart.DATA
     }

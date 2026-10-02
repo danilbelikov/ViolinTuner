@@ -15,6 +15,7 @@ import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.deleteFile
 import com.violinjourney.app.core.io.fileName
+import com.violinjourney.app.core.recording.TakeOwner
 import com.violinjourney.app.core.recording.TakePipeline
 import com.violinjourney.app.core.recording.video.VideoFiles
 import com.violinjourney.app.core.recording.video.VideoMux
@@ -209,7 +210,7 @@ open class CaptureViewModel(
             emptyFlow()
         } else {
             // what the chain shows here is only whether the microphone can be had: blind, like any take (spec 3.15)
-            takes.run(config = intonation, pieceId = pieceId, targetMode = { TargetMode.Chromatic }, unavailable = true) { _, _ -> false }.map { output ->
+            takes.run(config = intonation, owner = TakeOwner.Piece(pieceId), targetMode = { TargetMode.Chromatic }, unavailable = true) { _, _ -> false }.map { output ->
                 if (!takes.recordingRequested.value && output.recording == null) {
                     // the take is over — kept, dropped or ended by the microphone: what the chain does with it is done
                     listening.value = false

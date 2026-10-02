@@ -201,11 +201,11 @@ class TakePipeline(
      * the tolerance) means a new call, with a new engine and a new collection of the source.
      * [present] runs on the engine's thread for every frame; [onRestart] whenever the source is
      * (re)opened; [unavailable] is shown while the microphone cannot be had. Sessions recorded
-     * here belong to [pieceId], or to no piece.
+     * here belong to [owner] — a piece or an event (plan D13) — or, from Live, to no one.
      */
     fun <T> run(
         config: IntonationConfig,
-        pieceId: Long?,
+        owner: TakeOwner?,
         targetMode: () -> TargetMode,
         unavailable: T,
         onRestart: () -> Unit = {},
@@ -252,7 +252,7 @@ class TakePipeline(
                     // shot by the app's camera: the file of the take is the video made of this sound and the picture
                     val video = if (hook != null && audioName != null) audioFiles.existing(audioName)?.let { hook.onRecordingFinished(it, recordStartNanos) } else null
                     if (video != null) audioName?.let(audioFiles::delete) else if (hook != null) hook.onRecordingDiscarded()
-                    val session = result.session.copy(audioPath = video ?: audioName, videoPath = video, pieceId = pieceId)
+                    val session = result.session.copy(audioPath = video ?: audioName, videoPath = video, pieceId = owner.pieceId, eventId = owner.eventId)
                     val id = sessionRepository.save(session)
                     if (plan != null) {
                         // the headphones' lag goes on top of the clocks only as far as the output's clock does not hold it

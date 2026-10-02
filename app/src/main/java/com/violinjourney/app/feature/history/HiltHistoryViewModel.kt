@@ -4,6 +4,7 @@ import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.di.DefaultDispatcher
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.backing.BackingRepository
+import com.violinjourney.app.core.domain.events.EventRepository
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.time.WallClock
@@ -20,5 +21,6 @@ class HiltHistoryViewModel @Inject constructor(
     clock: WallClock,
     audioFiles: SessionAudioFiles,
     backings: BackingRepository,
+    events: EventRepository,
     @DefaultDispatcher background: CoroutineDispatcher,
-) : HistoryViewModel(repository, repertoire, config, clock, audioFiles, backings, background)
+) : HistoryViewModel(repository, repertoire, config, clock, audioFiles, backings, events, background)

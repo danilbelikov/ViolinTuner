@@ -404,6 +404,7 @@
     <string name="record_tile_record">запись</string>
     <string name="record_tile_only_video">видео</string>
     <string name="record_tile_no_sound">без звука</string>
+    <string name="record_tile_sound">звук</string>
     <string name="history_empty_title">Здесь появятся ваши записи</string>
     <string name="history_empty_text">Запишите игру кнопкой на Live или дубль на экране произведения\u00A0— после записи будет разбор: что держится, а что уходит.</string>
     <string name="history_open_live">Открыть Live</string>
@@ -503,6 +504,83 @@
     <string name="event_reminder_more_description_one">Ещё %1$d событие: %2$s</string>
     <string name="event_reminder_more_description_few">Ещё %1$d события: %2$s</string>
     <string name="event_reminder_more_description_many">Ещё %1$d событий: %2$s</string>
+    <string name="event_program">Программа</string>
+    <string name="event_program_done">Готово · %1$d</string>
+    <string name="event_program_empty_title">В репертуаре пока пусто</string>
+    <string name="event_program_empty_text_program">Добавьте произведения, гаммы и этюды\u00A0— и отметьте здесь, что играете на концерте.</string>
+    <string name="event_program_empty_text_played">Добавьте произведения, гаммы и этюды\u00A0— и отметьте здесь, что играли.</string>
+    <string name="event_notes_ask_lesson">Что задали?</string>
+    <string name="event_notes_ask_before">Во сколько сбор, кто аккомпанирует?</string>
+    <string name="event_notes_ask_after">Как прошло?</string>
+    <string name="event_program_empty">Что будете играть?</string>
+    <string name="event_add_to_program">Добавить в программу</string>
+    <string name="event_records_from">Записи появятся с %1$s</string>
+    <string name="event_can_add">Можно добавить</string>
+    <string name="event_can_add_note">Заметку</string>
+    <string name="event_can_add_note_caption">что было, что запомнить</string>
+    <string name="event_can_add_program">Программу</string>
+    <string name="event_can_add_from_repertoire">из репертуара</string>
+    <string name="event_can_add_record">Запись</string>
+    <string name="event_can_add_record_caption">звук или видео</string>
+    <string name="event_not_found">Событие не найдено</string>
+    <string name="event_program_remove">Убрать «%1$s»</string>
+    <string name="event_repeat_until_end">%1$s, до %2$s</string>
+    <string name="event_add_record">Добавить запись</string>
+    <string name="event_add_file">Звук из файла</string>
+    <string name="event_add_file_caption">mp3, m4a, wav…</string>
+    <string name="event_add_mic">Записать звук</string>
+    <string name="event_add_mic_caption">запись вслепую, разбор\u00A0— после</string>
+    <string name="event_add_camera_caption">системная камера</string>
+    <string name="event_mic_reason">Чтобы записать звук, нужен доступ к микрофону.</string>
+    <string name="event_recording_description">Идёт запись, %1$s</string>
+    <string name="file_copying">Добавляем файл…</string>
+    <string name="file_error_too_long">Файл длиннее 60 минут\u00A0— такое не разобрать</string>
+    <string name="file_error_cannot_open">Не получилось открыть файл</string>
+    <string name="file_error_no_sound">В файле нет звука</string>
+    <string name="file_error_no_notes">В файле не нашлось нот\u00A0— запись не добавлена</string>
+    <string name="event_video_error_no_notes">В видео не нашлось нот\u00A0— запись не добавлена</string>
+    <string name="event_series_delete_q_lesson">Удалить урок %1$s?</string>
+    <string name="event_series_delete_q_rehearsal">Удалить репетицию %1$s?</string>
+    <string name="event_series_delete_q_event">Удалить событие %1$s?</string>
+    <string name="event_series_this_lesson">Только этот урок</string>
+    <string name="event_series_this_rehearsal">Только эту репетицию</string>
+    <string name="event_series_this_event">Только это событие</string>
+    <string name="event_series_following_lesson">Этот и следующие</string>
+    <string name="event_series_following_rehearsal">Эту и следующие</string>
+    <string name="event_series_following_event">Это и следующие</string>
+    <string name="event_series_from_date">с %1$s и дальше</string>
+    <string name="event_series_past_short_lesson">Прошедшие уроки не изменятся.</string>
+    <string name="event_series_past_short_rehearsal">Прошедшие репетиции не изменятся.</string>
+    <string name="event_series_past_short_event">Прошедшие события не изменятся.</string>
+    <string name="event_delete_text_program">Заметки и программа удалятся. Записи останутся в «Записях».</string>
+    <string name="event_delete_text_played">Заметки и «Что играли» удалятся. Записи останутся в «Записях».</string>
+    <string-array name="event_repeat_weekly_on">
+        <item>Каждую неделю по понедельникам</item>
+        <item>Каждую неделю по вторникам</item>
+        <item>Каждую неделю по средам</item>
+        <item>Каждую неделю по четвергам</item>
+        <item>Каждую неделю по пятницам</item>
+        <item>Каждую неделю по субботам</item>
+        <item>Каждую неделю по воскресеньям</item>
+    </string-array>
+    <string-array name="event_repeat_biweekly_on">
+        <item>Раз в две недели по понедельникам</item>
+        <item>Раз в две недели по вторникам</item>
+        <item>Раз в две недели по средам</item>
+        <item>Раз в две недели по четвергам</item>
+        <item>Раз в две недели по пятницам</item>
+        <item>Раз в две недели по субботам</item>
+        <item>Раз в две недели по воскресеньям</item>
+    </string-array>
+    <string-array name="event_rest_on_weekdays">
+        <item>остальные\u00A0— по понедельникам</item>
+        <item>остальные\u00A0— по вторникам</item>
+        <item>остальные\u00A0— по средам</item>
+        <item>остальные\u00A0— по четвергам</item>
+        <item>остальные\u00A0— по пятницам</item>
+        <item>остальные\u00A0— по субботам</item>
+        <item>остальные\u00A0— по воскресеньям</item>
+    </string-array>
     <string name="practice_step_down">Минус %1$d минут</string>
     <string name="practice_step_up">Плюс %1$d минут</string>
     <string name="practice_save">Сохранить</string>

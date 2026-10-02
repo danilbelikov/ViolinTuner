@@ -13,6 +13,7 @@ import com.violinjourney.app.core.domain.events.EventRules
 import com.violinjourney.app.core.domain.events.EventSeries
 import com.violinjourney.app.core.domain.events.EventsConfig
 import com.violinjourney.app.core.domain.events.KindRules
+import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.journey.JourneyRepository
 import com.violinjourney.app.core.domain.practice.BlockRules
@@ -124,7 +125,7 @@ open class PracticeViewModel(
      * One sheet at a time (spec 3.36.2): a sheet opened from another one — «Трофеи» and «Имя и фото» from «Мой путь», «Время за
      * день» from the sheet of the day — takes its place, and [parent] remembers what it stood on, to come back to when it is
      * closed. The day selected in the calendar is the day of the open sheet, nothing more ([selectedDate]). [away] — a record
-     * opened from the sheet of the day is on the screen: the sheet steps aside and rises again when the screen is back.
+     * or an event opened from the sheet of the day is on the screen: the sheet steps aside and rises again when the screen is back.
      */
     private data class Ui(
         val month: YearMonth? = null,
@@ -241,16 +242,23 @@ open class PracticeViewModel(
     private data class EventsNow(val events: List<CalendarEvent>, val kinds: List<EventKind>, val series: List<EventSeries>, val at: Instant)
 
     /**
-     * The day's records and what they need to be named and marked: the pieces, and the takes made under a backing (spec 3.32) — and the
-     * events, which come with them: the first state waits for them too, so the reminder comes with «Сегодня» (spec 3.36.9, «Загрузка»).
+     * The day's records and what they need to be named and marked: the pieces, the takes made under a backing (spec 3.32) and the events
+     * of the recordings (spec 3.35: «Осенний концерт · 24 октября») — and the events, which come with them: the first state waits for
+     * them too, so the reminder comes with «Сегодня» (spec 3.36.9, «Загрузка»).
      */
-    private val records: Flow<Records> = combine(sessions.sessions, repertoire.pieces, backings.takesUnderBacking, eventsNow, ::Records)
+    private val records: Flow<Records> = combine(sessions.sessions, repertoire.pieces, backings.takesUnderBacking, eventsNow, events.recordEvents, ::Records)
 
-    private data class Records(val sessions: List<SessionSummary>, val pieces: List<Piece>, val underBacking: Set<Long>, val events: EventsNow)
+    private data class Records(
+        val sessions: List<SessionSummary>,
+        val pieces: List<Piece>,
+        val underBacking: Set<Long>,
+        val events: EventsNow,
+        val recordEvents: Map<Long, SessionEvent>,
+    )
 
     /** The screen worked out from everything it is made of: collected while the screen watches ([state]). */
     private val worked: Flow<PracticeState> =
-        combine(repository.entries, records, runningSince, screen, progress) { entries, (sessions, pieces, underBacking, now), runningSince, screen, (trophies, profile) ->
+        combine(repository.entries, records, runningSince, screen, progress) { entries, (sessions, pieces, underBacking, now, recordEvents), runningSince, screen, (trophies, profile) ->
             val (ui, today) = screen
             PracticeReducer.stateOf(
                 entries = entries,
@@ -269,6 +277,7 @@ open class PracticeViewModel(
                 avatarPath = profile.avatarFile?.let(avatarFiles::existing)?.filePath,
                 progressConfig = progressConfig,
                 underBackingIds = underBacking,
+                recordEvents = recordEvents,
                 recapPending = screen.recapPending,
                 sheetsAway = ui.away,
                 events = now.events,
@@ -350,6 +359,8 @@ open class PracticeViewModel(
             PracticeIntent.JourneyClicked -> effectChannel.trySend(PracticeEffect.OpenJourney)
             PracticeIntent.HomeClicked -> effectChannel.trySend(PracticeEffect.OpenHome)
             is PracticeIntent.SessionClicked -> openSession(intent.id)
+            is PracticeIntent.DayEventClicked -> openEvent(intent.id)
+            is PracticeIntent.ReminderEventClicked -> effectChannel.trySend(PracticeEffect.OpenEvent(intent.id))
             PracticeIntent.ProfileClicked -> openOver<PracticeSheet.Path> { PracticeSheet.Profile(latestProfile.name, importingPhoto = false) }
             is PracticeIntent.ProfileNameChanged ->
                 updateProfile { it.copy(nameDraft = intent.text.takeCodePoints(Profile.MAX_NAME_LENGTH)) }
@@ -609,6 +620,12 @@ open class PracticeViewModel(
     private fun openSession(id: Long) {
         ui.update { if (it.sheet is PracticeSheet.Day) it.copy(away = true) else it }
         effectChannel.trySend(PracticeEffect.OpenSession(id))
+    }
+
+    /** An event of the sheet of the day: its screen opens, and the sheet steps aside while it is there, as for a record (spec 3.36.9). */
+    private fun openEvent(id: Long) {
+        ui.update { if (it.sheet is PracticeSheet.Day) it.copy(away = true) else it }
+        effectChannel.trySend(PracticeEffect.OpenEvent(id))
     }
 
     private fun saveEdit() {

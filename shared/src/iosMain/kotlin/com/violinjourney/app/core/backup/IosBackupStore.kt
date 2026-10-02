@@ -94,10 +94,10 @@ internal class IosBackupStore(
     private fun mediaOf(part: BackupPart): List<Pair<String, PlatformFile>> = when (part) {
         BackupPart.DATA -> listing(BackupPaths.PROFILE)
         BackupPart.SHEETS -> listing(BackupPaths.SHEETS)
-        // the sound of takes and the backings they were made under (spec 3.32): both are sound
-        BackupPart.AUDIO -> listing(BackupPaths.SESSIONS).filter { it.second.path.endsWith(BackupPaths.AUDIO_EXTENSION) } + listing(BackupPaths.BACKINGS)
+        // the sound of takes and of files of events, and the backings they were made under (spec 3.32, plan D17): all of it is sound
+        BackupPart.AUDIO -> listing(BackupPaths.SESSIONS).filter { BackupPaths.isSound(it.second.path) } + listing(BackupPaths.BACKINGS)
         // the video and the thumbnail that stands beside it
-        BackupPart.VIDEO -> listing(BackupPaths.SESSIONS).filterNot { it.second.path.endsWith(BackupPaths.AUDIO_EXTENSION) }
+        BackupPart.VIDEO -> listing(BackupPaths.SESSIONS).filterNot { BackupPaths.isSound(it.second.path) }
     }
 
     // a half-written import is not data yet

@@ -8,6 +8,7 @@ import com.violinjourney.app.core.audio.share.SoundRenderer
 import com.violinjourney.app.core.di.ElapsedClock
 import com.violinjourney.app.core.di.IoDispatcher
 import com.violinjourney.app.core.domain.backing.BackingRepository
+import com.violinjourney.app.core.domain.events.EventRepository
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.sound.SoundConfig
@@ -33,5 +34,9 @@ class HiltShareViewModel @Inject constructor(
     backings: BackingRepository,
     backingPcm: BackingPcm,
     analytics: Analytics,
+    events: EventRepository,
     @IoDispatcher io: CoroutineDispatcher,
-) : ShareViewModel(sessions, repertoire, sound, audioFiles, files, renderer, texts, speed, clock, config, videos, backings, backingPcm, analytics, io)
+) : ShareViewModel(
+    sessions, repertoire, sound, audioFiles, files, renderer, texts, speed, clock, config, videos, backings, backingPcm, analytics, events,
+    io = io,
+)

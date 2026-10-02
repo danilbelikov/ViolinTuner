@@ -84,11 +84,11 @@ fun DaySheetContent(
             }
         }
         if (day.isFuture) {
-            FutureDay(day)
+            FutureDay(day, onIntent)
             if (day.events.isNotEmpty()) onAddEvent?.let { AddEventRow(it) }
         } else {
             DayTime(day, onIntent)
-            DayEventRows(day)
+            DayEventRows(day, onIntent)
             DayRecords(day, onIntent, zone)
             onAddEvent?.let { AddEventRow(it) }
         }
@@ -138,7 +138,7 @@ private fun DayTime(day: SelectedDay, onIntent: (PracticeIntent) -> Unit) {
 
 /** «События» of today or of a day gone by (spec 3.36.9): a heading and the rows, between the time and the records; nothing without events. */
 @Composable
-private fun DayEventRows(day: SelectedDay) {
+private fun DayEventRows(day: SelectedDay, onIntent: (PracticeIntent) -> Unit) {
     if (day.events.isEmpty()) return
     Text(
         text = stringResource(Res.string.practice_day_events),
@@ -149,7 +149,7 @@ private fun DayEventRows(day: SelectedDay) {
         ),
     )
     Column(Modifier.padding(top = EventsDimens.DayEventsGap), verticalArrangement = Arrangement.spacedBy(EventsDimens.DayEventsGap)) {
-        day.events.forEach { DayEventRow(it) }
+        day.events.forEach { event -> DayEventRow(event, onClick = { onIntent(PracticeIntent.DayEventClicked(event.eventId)) }) }
     }
 }
 
@@ -176,7 +176,7 @@ private fun DayRecords(day: SelectedDay, onIntent: (PracticeIntent) -> Unit, zon
  * no such line — «Событий нет» and «Урок, репетиция, выступление — всё, что стоит в этот день.».
  */
 @Composable
-private fun FutureDay(day: SelectedDay) {
+private fun FutureDay(day: SelectedDay, onIntent: (PracticeIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
     if (day.events.isEmpty()) {
         Text(
@@ -201,7 +201,7 @@ private fun FutureDay(day: SelectedDay) {
             style = MaterialTheme.typography.bodySmall.copy(fontSize = EventsDimens.TimeLaterText, lineHeight = EventsDimens.TimeLaterHeight),
         )
         Column(Modifier.padding(top = EventsDimens.TimeLaterRowsTop), verticalArrangement = Arrangement.spacedBy(EventsDimens.DayEventsGap)) {
-            day.events.forEach { DayEventRow(it) }
+            day.events.forEach { event -> DayEventRow(event, onClick = { onIntent(PracticeIntent.DayEventClicked(event.eventId)) }) }
         }
     }
 }

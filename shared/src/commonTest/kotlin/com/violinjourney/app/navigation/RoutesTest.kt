@@ -6,6 +6,7 @@ import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.feature.backup.RestoreViewModel
 import com.violinjourney.app.feature.camera.CaptureViewModel
+import com.violinjourney.app.feature.events.screen.EventViewModel
 import com.violinjourney.app.feature.home.HomeViewModel
 import com.violinjourney.app.feature.journey.StopViewModel
 import com.violinjourney.app.feature.repertoire.RepertoireViewModel
@@ -72,6 +73,7 @@ class RoutesTest {
         assertEquals(fill(Routes.HOME_SHOP_PATTERN, HomeViewModel.ARG_SLOT to "deskR"), Routes.homeShop("deskR"))
         assertEquals(Routes.HOME_SHOP, Routes.homeShop(null))
         assertEquals(Routes.HOME_SHOP, Routes.homeShop())
+        assertEquals(fill(Routes.EVENT_PATTERN, EventViewModel.ARG_EVENT_ID to 12), Routes.event(12))
     }
 
     @Test
@@ -89,14 +91,14 @@ class RoutesTest {
             Routes.SESSION_PATTERN, Routes.SOUND_PATTERN, Routes.PIECE_PATTERN, Routes.CAPTURE_PATTERN, Routes.STAND_PATTERN,
             Routes.PIECE_FORM_PATTERN, Routes.SCALE_FORM_PATTERN, Routes.SECTION_PATTERN, Routes.JOURNEY, Routes.JOURNEY_MAP,
             Routes.JOURNEY_PASSPORT, Routes.JOURNEY_STOP_PATTERN, Routes.HOME, Routes.HOME_SHOP_PATTERN, Routes.HOME_ARRANGE, Routes.HOME_HOUSES,
-            Routes.SPLASH_AWAY, Routes.SPLASH_HOME, Routes.SETTINGS, Routes.BACKUP, Routes.RESTORE_PATTERN,
+            Routes.SPLASH_AWAY, Routes.SPLASH_HOME, Routes.SETTINGS, Routes.BACKUP, Routes.RESTORE_PATTERN, Routes.EVENT_PATTERN,
         )
         // the keys of screen_open (spec 5.27): a new name here is a new screen in the statistics, on both platforms; the shop by place
         // is the shop — its place is not in the key (5.29 R7)
         val keys = listOf(
             "session", "sound", "piece", "capture", "stand", "pieceForm", "scaleForm", "section", "journey", "journeyMap",
             "journeyPassport", "journeyStop", "home", "homeShop", "homeArrange", "homeHouses", "splashAway", "splashHome",
-            "settings", "backup", "restore",
+            "settings", "backup", "restore", "event",
         )
         assertEquals(keys, routes.map(::screenKeyOf))
         assertEquals(Routes.SPLASH_HOME, Routes.stop(JourneyRoute.HOME), "the home of the journey opens through its title card")

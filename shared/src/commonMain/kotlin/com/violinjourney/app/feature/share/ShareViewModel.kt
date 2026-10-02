@@ -14,6 +14,7 @@ import com.violinjourney.app.core.di.ElapsedClock
 import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingRepository
 import com.violinjourney.app.core.domain.backing.TakeBacking
+import com.violinjourney.app.core.domain.events.EventRepository
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.sound.SoundConfig
@@ -27,6 +28,8 @@ import com.violinjourney.app.core.io.moveTo
 import com.violinjourney.app.core.io.sibling
 import com.violinjourney.app.core.io.sizeBytes
 import com.violinjourney.app.core.recording.video.VideoFiles
+import com.violinjourney.app.feature.events.EventWords
+import com.violinjourney.app.feature.events.ResourceEventWords
 import com.violinjourney.app.feature.sound.SoundReducer
 import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CancellationException
@@ -102,6 +105,9 @@ open class ShareViewModel(
     private val backings: BackingRepository,
     private val backingPcm: BackingPcm?,
     private val analytics: Analytics,
+    /** The events of recordings (spec 3.35): a recording of one is named by it, its title and the file too. */
+    private val events: EventRepository,
+    private val eventWords: EventWords = ResourceEventWords,
     private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 
@@ -142,8 +148,10 @@ open class ShareViewModel(
             } ?: return@launchAlone
             val (file, originalBytes, picture) = found
             val pieceTitle = session.pieceId?.let { repertoire.piece(it) }?.title
+            // a recording of an event is named by the event until it is given a name of its own (spec 3.35): «Осенний концерт · 24 октября»
+            val event = session.eventId?.let { events.recordEvents.first()[it] }
             val effective = sound.effective(sessionId).first().settings
-            val title = texts.title(session.title, pieceTitle, session.startedAtEpochMs)
+            val title = texts.title(session.title ?: event?.let { eventWords.recordTitleOf(it) }, pieceTitle, session.startedAtEpochMs)
             // the backing the take was made under, if its copy is still there (spec 3.32)
             val under = backings.takeBackings.first().firstOrNull { it.sessionId == sessionId }
                 ?.let { take -> backings.backing(take.backingId)?.takeIf { backingPcm != null }?.let { it to take } }
@@ -155,9 +163,11 @@ open class ShareViewModel(
                 processedBytes = ((session.durationMs + SoundRules.tailSec(effective, config) * MS_PER_SECOND) / MS_PER_SECOND * SoundRenderer.BIT_RATE / BITS_PER_BYTE).toLong(),
                 originalBytes = originalBytes,
                 caption = SoundReducer.captionOf(effective, sound.presets.first(), config),
-                message = texts.message(session.title, pieceTitle, session.scorePercent, session.startedAtEpochMs),
+                message = texts.message(session.title ?: event?.let { eventWords.nameOf(it.name) }, pieceTitle, session.scorePercent, session.startedAtEpochMs),
                 videoFileName = session.videoPath?.let { ShareNames.videoFileName(title) },
                 originalVideoFileName = session.videoPath?.let { ShareNames.originalVideoFileName(title, it) },
+                // a sound brought in from a file goes as it came, «….mp3» (plan D48); a take's own sound is an `.m4a` either way
+                originalAudioFileName = session.audioPath?.takeIf { session.videoPath == null }?.let { ShareNames.originalAudioFileName(title, it) },
                 resolution = picture?.let { minOf(it.width, it.height) } ?: 0,
                 processed = !SoundRules.isNeutral(effective),
                 backing = under != null,
@@ -271,7 +281,7 @@ open class ShareViewModel(
         } else {
             holdProgress(info, ShareVariant.ORIGINAL)
             mutableSheet.value = null
-            effectChannel.send(ShareEffect.Send(copy, info.message.takeIf { withText }))
+            effectChannel.send(ShareEffect.Send(copy, info.message.takeIf { withText }, info.typeOf(ShareVariant.ORIGINAL)))
         }
     }
 
@@ -293,7 +303,7 @@ open class ShareViewModel(
         // made now or long ago, it is handed over now: the sweep must not take it from under the receiver
         files.handedOver(target)
         mutableSheet.value = null
-        effectChannel.send(ShareEffect.Send(target, info.message.takeIf { choice.withText }))
+        effectChannel.send(ShareEffect.Send(target, info.message.takeIf { choice.withText }, info.typeOf(choice.variant)))
     }
 
     /** Renders into a `.part` beside [target] and renames: what lies under the final name is always whole. */

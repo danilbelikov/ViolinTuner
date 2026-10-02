@@ -7,7 +7,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import com.violinjourney.app.core.backup.IosPickedPlaces
 import com.violinjourney.app.core.ui.components.SystemScreens
 import kotlinx.cinterop.ExperimentalForeignApi
-import platform.Foundation.NSProcessInfo
 import platform.Foundation.NSURL
 import platform.UIKit.UIApplication
 import platform.UIKit.UIDocumentPickerDelegateProtocol
@@ -28,9 +27,8 @@ actual fun rememberBackupSystem(onPlacePicked: (uri: String?) -> Unit, onCopyPic
     val placePicked by rememberUpdatedState(onPlacePicked)
     val copyPicked by rememberUpdatedState(onCopyPicked)
     val restart = LocalAppRestart.current
-    // One window per press, as on Android, though UIKit would refuse a second one while the first is coming up: the delegate of
-    // a picker answers a pick and a cancel; a picker gone without a word is seen in UIKit's own state (SystemScreens.nothingUp).
-    val gate = remember { SystemWindowGate(now = ::uptimeMs, pickerGone = SystemScreens::nothingUp) }
+    // one window per press, as on Android (rememberSystemWindowGate)
+    val gate = rememberSystemWindowGate()
     return remember(restart) { iosBackupSystem(gate, onPlacePicked = { placePicked(it) }, onCopyPicked = { copyPicked(it) }, restart = restart) }
 }
 
@@ -71,11 +69,6 @@ internal fun iosBackupSystem(
         goesOnInBackground = false,
     )
 }
-
-/** Milliseconds since the start of the phone, which only go forward. */
-private fun uptimeMs(): Long = (NSProcessInfo.processInfo.systemUptime * MS_PER_SECOND).toLong()
-
-private const val MS_PER_SECOND = 1_000
 
 @OptIn(ExperimentalForeignApi::class)
 private class PickerDelegate(private val onPicked: (NSURL?) -> Unit) : NSObject(), UIDocumentPickerDelegateProtocol {

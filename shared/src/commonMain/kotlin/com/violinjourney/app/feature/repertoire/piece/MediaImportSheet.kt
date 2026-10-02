@@ -26,8 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.domain.session.RecordingRibbon
-import com.violinjourney.app.core.recording.video.VideoImport
-import com.violinjourney.app.core.recording.video.VideoImportFailure
+import com.violinjourney.app.core.recording.ImportFailure
+import com.violinjourney.app.core.recording.MediaImport
 import com.violinjourney.app.core.ui.components.AppButton
 import com.violinjourney.app.core.ui.components.AppButtonStyle
 import com.violinjourney.app.core.ui.components.AppSheet
@@ -37,6 +37,12 @@ import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.event_video_error_no_notes
+import com.violinjourney.app.shared.resources.file_copying
+import com.violinjourney.app.shared.resources.file_error_cannot_open
+import com.violinjourney.app.shared.resources.file_error_no_notes
+import com.violinjourney.app.shared.resources.file_error_no_sound
+import com.violinjourney.app.shared.resources.file_error_too_long
 import com.violinjourney.app.shared.resources.video_cancel
 import com.violinjourney.app.shared.resources.video_continue
 import com.violinjourney.app.shared.resources.video_copying
@@ -61,6 +67,7 @@ import org.jetbrains.compose.resources.stringResource
 
 private val ThumbWidth = 64.dp
 private val ThumbHeight = 36.dp
+private val ThumbIcon = 20.dp
 private val StripHeight = 48.dp
 private val StripCorner = 10.dp
 private val StripBar = 6.dp
@@ -68,22 +75,45 @@ private val StripCursor = 2.dp
 private val FaceGap = 14.dp
 private const val TABULAR_FIGURES = "tnum"
 
-/** The faces of the sheet of a video on its way in: each a face of one frame (spec 3.36.3). */
+/**
+ * Whose words the sheet speaks (plan D19): a video that is to be a take of a piece («дубль не добавлен»), a video of an event that is
+ * to be a recording («запись не добавлена» — it is no take, spec 3.36.9), a sound from a file («Добавляем файл…», «Не получилось
+ * открыть файл», spec 3.35, 5.28).
+ */
+enum class ImportWords { VIDEO_TAKE, VIDEO_RECORD, SOUND_FILE }
+
+/** What a button of the sheet asks of the importer; the screen hands it on as its own intent. */
+enum class ImportAction {
+    /** «Отмена»: a picked file goes, a shot is asked about. */
+    Cancel,
+
+    /** «Продолжить разбор». */
+    Continue,
+
+    /** «Удалить» of a shot that did not become a recording, and «Понятно» of any other failure. */
+    Dismiss,
+
+    /** «Отправить видео»: a shot that did not become a recording goes to the system sheet. */
+    Send,
+}
+
+/** The faces of the sheet of a file on its way in: each a face of one frame (spec 3.36.3). */
 private enum class ImportFace { WORKING, ASKING, FAILED }
 
 /**
- * A video on its way to becoming a take (spec 3.19, 3.36.4, handoff 20b), in the frame of the sheets of R1. Closes neither by a tap
- * outside, nor by a swipe, nor by «назад»: behind it a file may be deleted — only the importer lets it go ([AppSheet] with
- * `dismissible = false`, no handle). What went wrong is a line here, not a toast; «Удалить» and the sign of a failure are coral.
- * Its buttons of 56 — «Отправить видео», «Понятно», «Отмена» — are 48 in a window no higher than 360, as those of
- * [com.violinjourney.app.core.ui.components.AppSheetButtons]; «Удалить» and «Продолжить» are 48 anyway.
+ * A file on its way to becoming a recording (spec 3.19, 3.35, 3.36.4, handoff 20b) — a video, shot or picked, or a sound from a file —
+ * in the frame of the sheets of R1, in the [words] of whose it is to be. Closes neither by a tap outside, nor by a swipe, nor by
+ * «назад»: behind it a file may be deleted — only the importer lets it go ([AppSheet] with `dismissible = false`, no handle). What went
+ * wrong is a line here, not a toast; «Удалить» and the sign of a failure are coral. Its buttons of 56 — «Отправить видео», «Понятно»,
+ * «Отмена» — are 48 in a window no higher than 360, as those of [com.violinjourney.app.core.ui.components.AppSheetButtons]; «Удалить»
+ * and «Продолжить» are 48 anyway. A sound has no first frame: its place under the thumbnail holds the sign of a file of sound.
  */
 @Composable
-fun VideoImportSheet(import: VideoImport, onIntent: (PieceIntent) -> Unit) {
+fun MediaImportSheet(import: MediaImport, words: ImportWords, onAction: (ImportAction) -> Unit) {
     val shown = when (import) {
-        VideoImport.Idle -> null
-        is VideoImport.Working -> import.takeIf { it.visible }
-        is VideoImport.Failed -> import
+        MediaImport.Idle -> null
+        is MediaImport.Working -> import.takeIf { it.visible }
+        is MediaImport.Failed -> import
     }
     AppSheet(
         value = shown,
@@ -91,23 +121,23 @@ fun VideoImportSheet(import: VideoImport, onIntent: (PieceIntent) -> Unit) {
         dismissible = false,
         faceOf = { value ->
             when (value) {
-                is VideoImport.Working -> if (value.asking) ImportFace.ASKING else ImportFace.WORKING
+                is MediaImport.Working -> if (value.asking) ImportFace.ASKING else ImportFace.WORKING
                 else -> ImportFace.FAILED
             }
         },
     ) { value ->
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(FaceGap)) {
             when {
-                value is VideoImport.Working && value.asking -> Rescue(Res.string.video_stop_title, showContinue = true, onIntent)
-                value is VideoImport.Working -> Working(value, onIntent)
-                value is VideoImport.Failed -> Failed(value, onIntent)
+                value is MediaImport.Working && value.asking -> Rescue(Res.string.video_stop_title, showContinue = true, onAction)
+                value is MediaImport.Working -> Working(value, words, onAction)
+                value is MediaImport.Failed -> Failed(value, words, onAction)
             }
         }
     }
 }
 
 @Composable
-private fun Working(import: VideoImport.Working, onIntent: (PieceIntent) -> Unit) {
+private fun Working(import: MediaImport.Working, words: ImportWords, onAction: (ImportAction) -> Unit) {
     val colors = MaterialTheme.colorScheme
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         val thumb = import.thumbPath?.let { rememberSmallFileImage(it) }
@@ -116,11 +146,19 @@ private fun Working(import: VideoImport.Working, onIntent: (PieceIntent) -> Unit
                 .size(ThumbWidth, ThumbHeight)
                 .clip(RoundedCornerShape(6.dp))
                 .background(colors.surfaceContainerHighest),
+            contentAlignment = Alignment.Center,
         ) {
             if (thumb != null) Image(thumb, contentDescription = stringResource(Res.string.video_thumb), contentScale = ContentScale.Crop, modifier = Modifier.size(ThumbWidth, ThumbHeight))
+            if (words == ImportWords.SOUND_FILE) AppIcon(AppIcons.FileAudio, contentDescription = null, tint = colors.onSurfaceVariant, size = ThumbIcon)
         }
         Text(
-            text = stringResource(if (import.copying) Res.string.video_copying else Res.string.video_listening),
+            text = stringResource(
+                when {
+                    !import.copying -> Res.string.video_listening
+                    words == ImportWords.SOUND_FILE -> Res.string.file_copying
+                    else -> Res.string.video_copying
+                },
+            ),
             modifier = Modifier.weight(1f),
             color = colors.onSurface,
             style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold),
@@ -149,7 +187,7 @@ private fun Working(import: VideoImport.Working, onIntent: (PieceIntent) -> Unit
         )
         // an outline of 56, as every button of 56 of this sheet — 48 in a window no higher than 360 (spec 3.36.4; the rule of
         // AppSheetButtons, R3)
-        AppButton(stringResource(Res.string.video_cancel), onClick = { onIntent(PieceIntent.VideoImportCancelClicked) }, style = AppButtonStyle.Outline, compact = currentDockMetrics().compact)
+        AppButton(stringResource(Res.string.video_cancel), onClick = { onAction(ImportAction.Cancel) }, style = AppButtonStyle.Outline, compact = currentDockMetrics().compact)
     }
 }
 
@@ -186,19 +224,26 @@ private fun EmergingStrip(bars: RecordingRibbon, fraction: Float) {
 }
 
 @Composable
-private fun Failed(import: VideoImport.Failed, onIntent: (PieceIntent) -> Unit) {
-    if (import.reason == VideoImportFailure.STOPPED) {
-        Rescue(Res.string.video_stopped_title, showContinue = false, onIntent)
+private fun Failed(import: MediaImport.Failed, words: ImportWords, onAction: (ImportAction) -> Unit) {
+    if (import.reason == ImportFailure.STOPPED) {
+        Rescue(Res.string.video_stopped_title, showContinue = false, onAction)
         return
     }
     val colors = MaterialTheme.colorScheme
+    val sound = words == ImportWords.SOUND_FILE
     val title = when (import.reason) {
-        VideoImportFailure.NO_SOUND -> stringResource(Res.string.video_error_no_sound)
-        VideoImportFailure.TOO_LONG -> stringResource(Res.string.video_error_too_long)
-        VideoImportFailure.CANNOT_OPEN -> stringResource(Res.string.video_error_cannot_open)
-        VideoImportFailure.NO_NOTES -> stringResource(Res.string.video_error_no_notes)
-        VideoImportFailure.NO_SPACE -> stringResource(Res.string.video_error_no_space, import.missingMb ?: 0)
-        VideoImportFailure.STOPPED -> ""
+        ImportFailure.NO_SOUND -> stringResource(if (sound) Res.string.file_error_no_sound else Res.string.video_error_no_sound)
+        ImportFailure.TOO_LONG -> stringResource(if (sound) Res.string.file_error_too_long else Res.string.video_error_too_long)
+        ImportFailure.CANNOT_OPEN -> stringResource(if (sound) Res.string.file_error_cannot_open else Res.string.video_error_cannot_open)
+        ImportFailure.NO_NOTES -> stringResource(
+            when (words) {
+                ImportWords.VIDEO_TAKE -> Res.string.video_error_no_notes
+                ImportWords.VIDEO_RECORD -> Res.string.event_video_error_no_notes
+                ImportWords.SOUND_FILE -> Res.string.file_error_no_notes
+            },
+        )
+        ImportFailure.NO_SPACE -> stringResource(Res.string.video_error_no_space, import.missingMb ?: 0)
+        ImportFailure.STOPPED -> ""
     }
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         AppIcon(AppIcons.Alert, contentDescription = null, tint = ViolinTheme.dangerSoft)
@@ -207,40 +252,40 @@ private fun Failed(import: VideoImport.Failed, onIntent: (PieceIntent) -> Unit) 
             val more = when {
                 // a shot exists only here — that is what the two ways out below are about
                 import.rescuePath != null -> stringResource(Res.string.video_stop_text)
-                import.reason == VideoImportFailure.NO_NOTES -> stringResource(Res.string.video_error_no_notes_gallery)
+                // a video from the gallery is still there; a file of sound is wherever it was picked, and says nothing of a gallery
+                import.reason == ImportFailure.NO_NOTES && !sound -> stringResource(Res.string.video_error_no_notes_gallery)
                 else -> null
             }
             if (more != null) Text(more, color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
         }
     }
     if (import.rescuePath != null) {
-        RescueButtons(onIntent)
+        RescueButtons(onAction)
     } else {
-        AppButton(stringResource(Res.string.video_ok), onClick = { onIntent(PieceIntent.VideoImportDismissed) }, modifier = Modifier.fillMaxWidth(), compact = currentDockMetrics().compact)
+        AppButton(stringResource(Res.string.video_ok), onClick = { onAction(ImportAction.Dismiss) }, modifier = Modifier.fillMaxWidth(), compact = currentDockMetrics().compact)
     }
 }
 
-/** A shot that did not become a take exists nowhere else: send it somewhere, or let it go. */
+/** A shot that did not become a recording exists nowhere else: send it somewhere, or let it go. */
 @Composable
-private fun Rescue(title: StringResource, showContinue: Boolean, onIntent: (PieceIntent) -> Unit) {
+private fun Rescue(title: StringResource, showContinue: Boolean, onAction: (ImportAction) -> Unit) {
     val colors = MaterialTheme.colorScheme
     Text(stringResource(title), color = colors.onSurface, style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold))
     Text(stringResource(Res.string.video_stop_text), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
-    RescueButtons(onIntent)
+    RescueButtons(onAction)
     if (showContinue) {
-        AppButton(stringResource(Res.string.video_continue), onClick = { onIntent(PieceIntent.VideoImportContinueClicked) }, modifier = Modifier.fillMaxWidth(), style = AppButtonStyle.Quiet)
+        AppButton(stringResource(Res.string.video_continue), onClick = { onAction(ImportAction.Continue) }, modifier = Modifier.fillMaxWidth(), style = AppButtonStyle.Quiet)
     }
 }
 
-/** «Отправить видео» — the main button, the only way to keep a shot that did not become a take; under it «Удалить», coral (R1). */
+/** «Отправить видео» — the main button, the only way to keep a shot that did not become a recording; under it «Удалить», coral (R1). */
 @Composable
-private fun RescueButtons(onIntent: (PieceIntent) -> Unit) {
+private fun RescueButtons(onAction: (ImportAction) -> Unit) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         AppButton(
-            stringResource(Res.string.video_send), onClick = { onIntent(PieceIntent.VideoImportSendClicked) }, modifier = Modifier.fillMaxWidth(), icon = AppIcons.Share,
+            stringResource(Res.string.video_send), onClick = { onAction(ImportAction.Send) }, modifier = Modifier.fillMaxWidth(), icon = AppIcons.Share,
             compact = currentDockMetrics().compact,
         )
-        AppButton(stringResource(Res.string.video_delete), onClick = { onIntent(PieceIntent.VideoImportDismissed) }, modifier = Modifier.fillMaxWidth(), style = AppButtonStyle.Danger)
+        AppButton(stringResource(Res.string.video_delete), onClick = { onAction(ImportAction.Dismiss) }, modifier = Modifier.fillMaxWidth(), style = AppButtonStyle.Danger)
     }
 }
-

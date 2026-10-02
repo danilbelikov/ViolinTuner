@@ -32,6 +32,9 @@ import com.violinjourney.app.feature.backup.rememberBackupSystem
 import com.violinjourney.app.feature.camera.CaptureRoute
 import com.violinjourney.app.feature.camera.HiltCaptureViewModel
 import com.violinjourney.app.feature.camera.CaptureViewModel
+import com.violinjourney.app.feature.events.HiltEventViewModel
+import com.violinjourney.app.feature.events.screen.EventRoute
+import com.violinjourney.app.feature.events.screen.EventViewModel
 import com.violinjourney.app.feature.history.HiltHistoryViewModel
 import com.violinjourney.app.feature.history.HistoryRoute
 import com.violinjourney.app.feature.home.HiltHomeLookViewModel
@@ -124,6 +127,7 @@ fun AppNavHost(
                 onOpenJourney = { navController.navigate(Routes.JOURNEY) { launchSingleTop = true } },
                 onOpenHome = { navController.navigate(Routes.HOME) { launchSingleTop = true } },
                 onOpenSettings = navController::navigateToSettings,
+                onOpenEvent = navController::navigateToEvent,
                 viewModel = hiltViewModel<HiltPracticeViewModel>(),
                 homeLookViewModel = hiltViewModel<HiltHomeLookViewModel>(),
             )
@@ -220,6 +224,20 @@ fun AppNavHost(
                 onShare = shareViewModel::start,
                 shareHost = { ShareHost(shareViewModel) },
                 changingConfigurations = { activity?.isChangingConfigurations == true },
+            )
+        }
+        // The screen of an event (spec 3.35, 3.36.9): above the tabs; «назад» — where it was opened from
+        composable(
+            route = Routes.EVENT_PATTERN,
+            arguments = listOf(navArgument(EventViewModel.ARG_EVENT_ID) { type = NavType.LongType }),
+        ) {
+            EventRoute(
+                onClose = navController::popBackStack,
+                onOpenPiece = navController::navigateToPiece,
+                onOpenSession = navController::navigateToSession,
+                onOpenRepertoire = navController::navigateToRepertoire,
+                viewModel = hiltViewModel<HiltEventViewModel>(),
+                tracking = hiltViewModel<HiltAnalyticsViewModel>(),
             )
         }
         // «Снять под минусовку» (spec 3.32): the app's own camera, over everything
@@ -479,6 +497,11 @@ private fun NavHostController.navigateToOnboarding() {
         popUpTo(graph.id) { inclusive = true }
         launchSingleTop = true
     }
+}
+
+/** The screen of an event (spec 3.36.9): from a row of the sheet of the day and of the reminder on «Занятия». */
+fun NavHostController.navigateToEvent(eventId: Long) {
+    navigate(Routes.event(eventId)) { launchSingleTop = true }
 }
 
 fun NavHostController.navigateToPiece(pieceId: Long) {

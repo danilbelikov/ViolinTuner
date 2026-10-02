@@ -17,6 +17,7 @@ import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.sizeBytes
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.domain.IntonationConfig
+import com.violinjourney.app.core.domain.events.EventRepository
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.sound.EffectiveSound
@@ -28,6 +29,7 @@ import com.violinjourney.app.feature.sound.OriginalHold
 import com.violinjourney.app.feature.sound.SoundReducer
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -35,7 +37,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -55,6 +61,8 @@ open class SessionViewModel(
     private val backingPcm: BackingPcm?,
     /** The waveform of the player at the bottom — the same as that of «Звук» (spec 3.36.5, 5.11). */
     private val waveforms: SessionWaveforms,
+    /** The event of a recording of one (spec 3.35): its name and date name the recording, until it is given a name of its own. */
+    private val events: EventRepository,
     /** Where the analysis becomes the screen's content — a contour for every note: an hour of samples is too much for the main thread. */
     private val compute: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
@@ -87,8 +95,28 @@ open class SessionViewModel(
     private val effectChannel = Channel<SessionEffect>(Channel.BUFFERED)
     val effects: Flow<SessionEffect> = effectChannel.receiveAsFlow()
 
+    /** The event this recording is of, as last read; null — of none. */
+    private val eventId = MutableStateFlow<Long?>(null)
+
     init {
         viewModelScope.launch { load() }
+        followEvent()
+    }
+
+    /**
+     * A recording of an event is named by it (spec 3.35): the event renamed, the name of the head follows; the event deleted, the
+     * recording keeps the name it wore — written into it with the deletion — and the head reads it back.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun followEvent() {
+        viewModelScope.launch {
+            eventId.filterNotNull()
+                .flatMapLatest { id -> events.recordEvents.map { it[id] } }
+                .distinctUntilChanged()
+                .collect { event ->
+                    if (event == null) refreshHeader() else updateLoaded { it.copy(content = it.content.copy(event = event)) }
+                }
+        }
     }
 
     fun onIntent(intent: SessionIntent) {
@@ -176,6 +204,7 @@ open class SessionViewModel(
     private suspend fun load() {
         val details = repository.details(sessionId)
         val piece = details?.summary?.pieceId?.let { repertoire.piece(it) }
+        val event = details?.summary?.eventId?.let { events.recordEvents.first()[it] }
         val shown = details?.let {
             withContext(compute) {
                 val sound = it.summary.audioPath?.let(audioFiles::existing)
@@ -190,11 +219,14 @@ open class SessionViewModel(
             if (shown == null) {
                 SessionState.NotFound
             } else {
-                val content = shown.first.copy(pieceTitle = piece?.title, pieceId = piece?.id, best = piece?.bestTakeId == sessionId, underBacking = underBacking)
+                val content = shown.first.copy(
+                    pieceTitle = piece?.title, pieceId = piece?.id, best = piece?.bestTakeId == sessionId, underBacking = underBacking, event = event,
+                )
                 val loaded = previous as? SessionState.Loaded ?: SessionState.Loaded(content, sound = soundRow)
                 loaded.copy(content = content, dialog = null)
             }
         }
+        eventId.value = details?.summary?.eventId
         if (player == null) shown?.second?.let(::startPlayer)
         if (picture == null) details?.summary?.videoPath?.let(::startPicture)
     }
@@ -206,8 +238,8 @@ open class SessionViewModel(
     )
 
     /**
-     * After a rename or a star: only the name, the piece and the mark are read again — not the samples, which have not
-     * changed. What is open and what is playing stays as it is.
+     * After a rename, a star or the deletion of its event: only the name, the piece, the mark and the event are read again — not the
+     * samples, which have not changed. What is open and what is playing stays as it is.
      */
     private suspend fun refreshHeader() {
         val summary = repository.summary(sessionId)
@@ -216,12 +248,16 @@ open class SessionViewModel(
             return
         }
         val piece = summary.pieceId?.let { repertoire.piece(it) }
+        val event = summary.eventId?.let { events.recordEvents.first()[it] }
         updateLoaded {
             it.copy(
-                content = it.content.copy(title = summary.title, pieceTitle = piece?.title, pieceId = piece?.id, best = piece?.bestTakeId == sessionId),
+                content = it.content.copy(
+                    title = summary.title, pieceTitle = piece?.title, pieceId = piece?.id, best = piece?.bestTakeId == sessionId, event = event,
+                ),
                 dialog = null,
             )
         }
+        eventId.value = summary.eventId
     }
 
     private var surface: VideoSurfaceHandle? = null

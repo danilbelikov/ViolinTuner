@@ -308,8 +308,8 @@ data class PracticeState(
     val gift: Gift?,
     val sheet: PracticeSheet?,
     /**
-     * A record opened from the sheet of the day is on the screen: the sheets of «Занятия» step aside — the model keeps [sheet] — and
-     * the sheet of the day rises again when the screen is back (spec 3.36.2: «назад» from the record — to the same sheet).
+     * A record or an event opened from the sheet of the day is on the screen: the sheets of «Занятия» step aside — the model keeps
+     * [sheet] — and the sheet of the day rises again when the screen is back (spec 3.36.2, 3.36.9: «назад» from it — to the same sheet).
      */
     val sheetsAway: Boolean = false,
     /** Whole minutes of one stepper step, from the config: the sheets word their hint with it. */
@@ -436,6 +436,12 @@ sealed interface PracticeIntent {
     /** A record of the sheet of the day: its screen opens, and «назад» from it comes back to the sheet. */
     data class SessionClicked(val id: Long) : PracticeIntent
 
+    /** An event of the sheet of the day (spec 3.36.9): its screen opens, and «назад» from it comes back to the sheet, as from a record. */
+    data class DayEventClicked(val id: Long) : PracticeIntent
+
+    /** A row of the reminder (spec 3.36.9): the screen of its event; «назад» comes back to «Занятия». */
+    data class ReminderEventClicked(val id: Long) : PracticeIntent
+
     /** «Имя и фото» of «Мой путь»: the sheet «Имя и фото» takes its place. Heard only over «Мой путь». */
     data object ProfileClicked : PracticeIntent
 
@@ -473,6 +479,9 @@ sealed interface PracticeEffect {
     data object OpenLive : PracticeEffect
 
     data class OpenSession(val id: Long) : PracticeEffect
+
+    /** The screen of an event (spec 3.35, 3.36.9). */
+    data class OpenEvent(val id: Long) : PracticeEffect
 
     data object OpenJourney : PracticeEffect
 

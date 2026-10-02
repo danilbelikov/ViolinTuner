@@ -2,6 +2,7 @@ package com.violinjourney.app.feature.sound
 
 import com.violinjourney.app.core.audio.playback.PlayerState
 import com.violinjourney.app.core.domain.backing.BackingOutput
+import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.domain.sound.BuiltInPreset
 import com.violinjourney.app.core.domain.sound.EqBand
 import com.violinjourney.app.core.domain.sound.ReverbSpace
@@ -40,6 +41,8 @@ data class RecordingName(
     val startedAtEpochMs: Long,
     /** The sound being set is that of a video take: the header says so (spec 3.19). */
     val hasVideo: Boolean = false,
+    /** The event it is a recording of (spec 3.35): «Осенний концерт · 24 октября» until it is given a name of its own. */
+    val event: SessionEvent? = null,
 )
 
 sealed interface SoundDialog {

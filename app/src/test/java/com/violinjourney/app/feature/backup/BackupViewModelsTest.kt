@@ -22,6 +22,10 @@ import com.violinjourney.app.core.domain.session.FakeSessionRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.core.recording.RecordingWatch
+import com.violinjourney.app.core.recording.MediaImport
+import com.violinjourney.app.core.recording.TakeOwner
+import com.violinjourney.app.core.recording.audio.AudioTakeImporter
+import com.violinjourney.app.core.recording.audio.FakePickedSounds
 import com.violinjourney.app.core.recording.video.AnalysisSpeed
 import com.violinjourney.app.core.recording.video.FakeFileTakeAnalyzer
 import com.violinjourney.app.core.recording.video.FakeVideoFiles
@@ -43,6 +47,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.TimeZone
@@ -85,8 +90,14 @@ class BackupViewModelsTest {
         analytics = NoOpAnalytics(),
     )
 
+    private fun TestScope.audioImporter() = AudioTakeImporter(
+        FakePickedSounds(), FakeFileTakeAnalyzer(), FakeSessionRepository(), SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()),
+        RepertoireConfig(), IntonationConfig(), clock, { testScheduler.currentTime }, AnalysisSpeed(), StandardTestDispatcher(testScheduler),
+        StandardTestDispatcher(testScheduler), analytics = NoOpAnalytics(),
+    )
+
     private fun TestScope.backupScreen(manager: BackupManager, savedState: SavedStateHandle = SavedStateHandle()) =
-        BackupViewModel(manager, store, BackupConfig(), watch, importer(), savedState)
+        BackupViewModel(manager, store, BackupConfig(), watch, importer(), audioImporter(), savedState)
 
     /** The block «Данные» over the same manager and the same date of the last copy; it reads while something watches it. */
     private fun TestScope.dataBlock(manager: BackupManager) =
@@ -95,7 +106,7 @@ class BackupViewModelsTest {
         }
 
     private fun TestScope.restoreScreen(manager: BackupManager, uri: String?) =
-        RestoreViewModel(manager, store, watch, importer(), SavedStateHandle(listOfNotNull(uri?.let { RestoreViewModel.ARG_URI to it }).toMap()))
+        RestoreViewModel(manager, store, watch, importer(), audioImporter(), SavedStateHandle(listOfNotNull(uri?.let { RestoreViewModel.ARG_URI to it }).toMap()))
 
     private fun <T> TestScope.collected(effects: Flow<T>): List<T> = mutableListOf<T>().also { got ->
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { effects.collect { got += it } }
@@ -106,6 +117,42 @@ class BackupViewModelsTest {
         advanceUntilIdle()
         manager.dismiss()
         return manager.inspect(uri) as BackupCandidate.Copy
+    }
+
+    @Test
+    fun `a copy waits while a sound from a file is on its way in, as for a video`() = runTest {
+        // plan D37: the copy of the data takes the files of the recordings, and a file being copied in is not one yet
+        val sounds = audioImporter()
+        val screen = BackupViewModel(manager(), store, BackupConfig(), watch, importer(), sounds, SavedStateHandle())
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { screen.state.collect {} }
+        runCurrent()
+        assertFalse(screen.state.value.busy)
+        sounds.picked(TakeOwner.Event(1), "content://audio/1")
+        runCurrent()
+        assertTrue("the copy waits for the sound", screen.state.value.busy)
+        advanceUntilIdle()
+        assertFalse("and goes on once it is in", screen.state.value.busy)
+    }
+
+    @Test
+    fun `a sound that failed does not hold the copy back - its copy is gone already`() = runTest {
+        // review of stage 98a: a failure only the screen of its event shows would hold the copy for good once that screen is left
+        val picked = FakePickedSounds().apply { probe = null }
+        val sounds = AudioTakeImporter(
+            picked, FakeFileTakeAnalyzer(), FakeSessionRepository(), SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()),
+            RepertoireConfig(), IntonationConfig(), clock, { testScheduler.currentTime }, AnalysisSpeed(), StandardTestDispatcher(testScheduler),
+            StandardTestDispatcher(testScheduler), analytics = NoOpAnalytics(),
+        )
+        val screen = BackupViewModel(manager(), store, BackupConfig(), watch, importer(), sounds, SavedStateHandle())
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { screen.state.collect {} }
+        sounds.picked(TakeOwner.Event(1), "content://audio/1")
+        advanceUntilIdle()
+        assertTrue(sounds.state.value is MediaImport.Failed)
+        assertFalse("a failure is no work", screen.state.value.busy)
+        val restore = RestoreViewModel(manager(), store, watch, importer(), sounds, SavedStateHandle())
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { restore.state.collect {} }
+        runCurrent()
+        assertFalse(restore.state.value.busy)
     }
 
     @Test
@@ -319,7 +366,7 @@ class BackupViewModelsTest {
         manager.saveTo("content://downloads/1", BackupPart.entries.toSet(), "копия.zip")
         advanceUntilIdle()
         manager.dismiss()
-        val screen = RestoreViewModel(manager, empty, watch, importer(), SavedStateHandle(mapOf(RestoreViewModel.ARG_URI to "content://downloads/1")))
+        val screen = RestoreViewModel(manager, empty, watch, importer(), audioImporter(), SavedStateHandle(mapOf(RestoreViewModel.ARG_URI to "content://downloads/1")))
         val effects = collected(screen.effects)
         advanceUntilIdle()
         assertTrue((screen.state.value.stage as RestoreStage.Ready).current.counts.isEmpty)

@@ -14,8 +14,9 @@ import com.violinjourney.app.core.backup.stoppable
 import com.violinjourney.app.core.backup.underWay
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.session.SessionSummary
+import com.violinjourney.app.core.recording.MediaImport
 import com.violinjourney.app.core.recording.RecordingWatch
-import com.violinjourney.app.core.recording.video.VideoImport
+import com.violinjourney.app.core.recording.audio.AudioTakeImporter
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.io.PlatformFile
@@ -34,9 +35,15 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** A recording or the analysis of a video is under way: neither a copy nor a restore starts under them (spec 3.20). */
-private fun busyFlow(watch: RecordingWatch, importer: VideoTakeImporter): Flow<Boolean> =
-    combine(watch.recording, importer.state) { recording, import -> recording || import != VideoImport.Idle }
+/**
+ * A recording, or the analysis of a video or of a sound from a file is under way: neither a copy nor a restore starts under them (spec
+ * 3.20, plan D37). A video's failure waiting for its screen too — it may keep a shot among the recordings, to be sent or deleted; a
+ * sound's not: its copy is gone already, and a failure no screen shows any more must not hold the copy back for good.
+ */
+private fun busyFlow(watch: RecordingWatch, importer: VideoTakeImporter, audioImporter: AudioTakeImporter): Flow<Boolean> =
+    combine(watch.recording, importer.state, audioImporter.state) { recording, video, sound ->
+        recording || video != MediaImport.Idle || sound is MediaImport.Working
+    }
 
 /**
  * «Копия данных» (spec 3.20, 3.36.8). [savedState] keeps the parts chosen: a screen made anew under the system's «Сохранить как…» — the
@@ -48,6 +55,7 @@ open class BackupViewModel(
     private val config: BackupConfig,
     watch: RecordingWatch,
     importer: VideoTakeImporter,
+    audioImporter: AudioTakeImporter,
     private val savedState: SavedStateHandle,
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(BackupState(parts = partsKept(savedState), shareUpToBytes = config.shareUpToBytes))
@@ -75,7 +83,7 @@ open class BackupViewModel(
                 onIntent(picked)
             }
         }
-        viewModelScope.launch { busyFlow(watch, importer).collect { busy -> mutableState.update { it.copy(busy = busy) } } }
+        viewModelScope.launch { busyFlow(watch, importer, audioImporter).collect { busy -> mutableState.update { it.copy(busy = busy) } } }
         viewModelScope.launch {
             var shared: PlatformFile? = null
             manager.job.collect { job ->
@@ -173,6 +181,7 @@ open class RestoreViewModel(
     private val store: BackupStore,
     watch: RecordingWatch,
     importer: VideoTakeImporter,
+    audioImporter: AudioTakeImporter,
     savedState: SavedStateHandle,
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(RestoreState())
@@ -195,7 +204,7 @@ open class RestoreViewModel(
 
     init {
         savedState.get<String>(ARG_URI)?.let(::inspect)
-        viewModelScope.launch { busyFlow(watch, importer).collect { busy -> mutableState.update { it.copy(busy = busy) } } }
+        viewModelScope.launch { busyFlow(watch, importer, audioImporter).collect { busy -> mutableState.update { it.copy(busy = busy) } } }
         viewModelScope.launch {
             manager.job.collect { job ->
                 // «Остановить?» goes by itself as soon as the restore has passed the point where stopping meant anything

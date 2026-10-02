@@ -404,6 +404,7 @@
     <string name="record_tile_record">録音</string>
     <string name="record_tile_only_video">動画</string>
     <string name="record_tile_no_sound">音なし</string>
+    <string name="record_tile_sound">音</string>
     <string name="history_empty_title">ここに録音が並びます</string>
     <string name="history_empty_text">Live の録音ボタンか、曲の画面のテイクで録音してください。録音のあとに分析が出ます：安定している音と、ずれていく音。</string>
     <string name="history_open_live">Live を開く</string>
@@ -503,6 +504,83 @@
     <string name="event_reminder_more_description_one">ほかに予定%1$d件：%2$s</string>
     <string name="event_reminder_more_description_few">ほかに予定%1$d件：%2$s</string>
     <string name="event_reminder_more_description_many">ほかに予定%1$d件：%2$s</string>
+    <string name="event_program">プログラム</string>
+    <string name="event_program_done">完了 · %1$d</string>
+    <string name="event_program_empty_title">レパートリーはまだ空です</string>
+    <string name="event_program_empty_text_program">曲・音階・練習曲を追加して、コンサートで弾くものをここで選びましょう。</string>
+    <string name="event_program_empty_text_played">曲・音階・練習曲を追加して、弾いたものをここで選びましょう。</string>
+    <string name="event_notes_ask_lesson">何が課題ですか？</string>
+    <string name="event_notes_ask_before">集合は何時、伴奏は誰？</string>
+    <string name="event_notes_ask_after">どうでしたか？</string>
+    <string name="event_program_empty">何を弾きますか？</string>
+    <string name="event_add_to_program">プログラムに追加</string>
+    <string name="event_records_from">録音は%1$sから</string>
+    <string name="event_can_add">追加できるもの</string>
+    <string name="event_can_add_note">メモ</string>
+    <string name="event_can_add_note_caption">あったこと、覚えておくこと</string>
+    <string name="event_can_add_program">プログラム</string>
+    <string name="event_can_add_from_repertoire">レパートリーから</string>
+    <string name="event_can_add_record">録音</string>
+    <string name="event_can_add_record_caption">音または動画</string>
+    <string name="event_not_found">予定が見つかりません</string>
+    <string name="event_program_remove">「%1$s」を外す</string>
+    <string name="event_repeat_until_end">%1$s、%2$sまで</string>
+    <string name="event_add_record">録音を追加</string>
+    <string name="event_add_file">ファイルの音</string>
+    <string name="event_add_file_caption">mp3、m4a、wav…</string>
+    <string name="event_add_mic">音を録音</string>
+    <string name="event_add_mic_caption">画面なしで録音、分析はあとで</string>
+    <string name="event_add_camera_caption">標準カメラ</string>
+    <string name="event_mic_reason">音を録音するにはマイクへのアクセスが必要です。</string>
+    <string name="event_recording_description">録音中、%1$s</string>
+    <string name="file_copying">ファイルを追加中…</string>
+    <string name="file_error_too_long">60分を超えるファイルは分析できません</string>
+    <string name="file_error_cannot_open">ファイルを開けませんでした</string>
+    <string name="file_error_no_sound">ファイルに音がありません</string>
+    <string name="file_error_no_notes">ファイルに音が見つからず、録音は追加されませんでした</string>
+    <string name="event_video_error_no_notes">動画に音が見つからず、録音は追加されませんでした</string>
+    <string name="event_series_delete_q_lesson">%1$sのレッスンを削除しますか？</string>
+    <string name="event_series_delete_q_rehearsal">%1$sのリハーサルを削除しますか？</string>
+    <string name="event_series_delete_q_event">%1$sの予定を削除しますか？</string>
+    <string name="event_series_this_lesson">このレッスンだけ</string>
+    <string name="event_series_this_rehearsal">このリハーサルだけ</string>
+    <string name="event_series_this_event">この予定だけ</string>
+    <string name="event_series_following_lesson">このレッスン以降すべて</string>
+    <string name="event_series_following_rehearsal">このリハーサル以降すべて</string>
+    <string name="event_series_following_event">この予定以降すべて</string>
+    <string name="event_series_from_date">%1$s以降</string>
+    <string name="event_series_past_short_lesson">過去のレッスンは変わりません。</string>
+    <string name="event_series_past_short_rehearsal">過去のリハーサルは変わりません。</string>
+    <string name="event_series_past_short_event">過去の予定は変わりません。</string>
+    <string name="event_delete_text_program">メモとプログラムは削除されます。録音は「録音」に残ります。</string>
+    <string name="event_delete_text_played">メモと「弾いたもの」は削除されます。録音は「録音」に残ります。</string>
+    <string-array name="event_repeat_weekly_on">
+        <item>毎週月曜日</item>
+        <item>毎週火曜日</item>
+        <item>毎週水曜日</item>
+        <item>毎週木曜日</item>
+        <item>毎週金曜日</item>
+        <item>毎週土曜日</item>
+        <item>毎週日曜日</item>
+    </string-array>
+    <string-array name="event_repeat_biweekly_on">
+        <item>隔週月曜日</item>
+        <item>隔週火曜日</item>
+        <item>隔週水曜日</item>
+        <item>隔週木曜日</item>
+        <item>隔週金曜日</item>
+        <item>隔週土曜日</item>
+        <item>隔週日曜日</item>
+    </string-array>
+    <string-array name="event_rest_on_weekdays">
+        <item>残りは月曜日</item>
+        <item>残りは火曜日</item>
+        <item>残りは水曜日</item>
+        <item>残りは木曜日</item>
+        <item>残りは金曜日</item>
+        <item>残りは土曜日</item>
+        <item>残りは日曜日</item>
+    </string-array>
     <string name="practice_step_down">%1$d 分減らす</string>
     <string name="practice_step_up">%1$d 分増やす</string>
     <string name="practice_save">保存</string>

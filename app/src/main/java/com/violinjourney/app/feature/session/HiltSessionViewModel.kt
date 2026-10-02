@@ -9,6 +9,7 @@ import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.di.DefaultDispatcher
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.backing.BackingRepository
+import com.violinjourney.app.core.domain.events.EventRepository
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.sound.SoundConfig
@@ -31,5 +32,9 @@ class HiltSessionViewModel @Inject constructor(
     backings: BackingRepository,
     backingPcm: BackingPcm,
     waveforms: SessionWaveforms,
+    events: EventRepository,
     @DefaultDispatcher compute: CoroutineDispatcher,
-) : SessionViewModel(repository, defaultConfig, audioFiles, playerFactory, repertoire, sound, soundConfig, pictureFactory, savedState, backings, backingPcm, waveforms, compute)
+) : SessionViewModel(
+    repository, defaultConfig, audioFiles, playerFactory, repertoire, sound, soundConfig, pictureFactory, savedState, backings, backingPcm, waveforms,
+    events, compute,
+)

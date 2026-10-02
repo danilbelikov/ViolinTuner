@@ -7,6 +7,7 @@ import com.violinjourney.app.core.backup.BackupPrefs
 import com.violinjourney.app.core.backup.BackupStore
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.recording.RecordingWatch
+import com.violinjourney.app.core.recording.audio.AudioTakeImporter
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
 import com.violinjourney.app.core.time.WallClock
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,8 +20,9 @@ class HiltBackupViewModel @Inject constructor(
     config: BackupConfig,
     watch: RecordingWatch,
     importer: VideoTakeImporter,
+    audioImporter: AudioTakeImporter,
     savedState: SavedStateHandle,
-) : BackupViewModel(manager, store, config, watch, importer, savedState)
+) : BackupViewModel(manager, store, config, watch, importer, audioImporter, savedState)
 
 @HiltViewModel
 class HiltRestoreViewModel @Inject constructor(
@@ -28,8 +30,9 @@ class HiltRestoreViewModel @Inject constructor(
     store: BackupStore,
     watch: RecordingWatch,
     importer: VideoTakeImporter,
+    audioImporter: AudioTakeImporter,
     savedState: SavedStateHandle,
-) : RestoreViewModel(manager, store, watch, importer, savedState)
+) : RestoreViewModel(manager, store, watch, importer, audioImporter, savedState)
 
 @HiltViewModel
 class HiltDataBlockViewModel @Inject constructor(

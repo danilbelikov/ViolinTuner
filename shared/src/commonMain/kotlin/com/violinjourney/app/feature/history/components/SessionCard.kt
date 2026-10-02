@@ -60,11 +60,14 @@ import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.theme.AppShapes
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.feature.events.eventKindWord
+import com.violinjourney.app.feature.events.eventRecordTitle
 import com.violinjourney.app.feature.history.HistoryCard
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.backing_take_mark
@@ -73,6 +76,7 @@ import com.violinjourney.app.shared.resources.record_default_title
 import com.violinjourney.app.shared.resources.record_tile_no_sound
 import com.violinjourney.app.shared.resources.record_tile_only_video
 import com.violinjourney.app.shared.resources.record_tile_record
+import com.violinjourney.app.shared.resources.record_tile_sound
 import com.violinjourney.app.shared.resources.record_tile_take
 import com.violinjourney.app.shared.resources.selection_select
 import com.violinjourney.app.shared.resources.session_default_title
@@ -94,6 +98,9 @@ private val CardGap = 12.dp
 private val TitleGap = 6.dp
 private val LineTop = 2.dp
 private val BestStar = 14.dp
+
+/** The chevron of a card on the screen of an event, in the place of «⋯» (5.29 R9). */
+private val ChevronSize = 24.dp
 
 /** The sign of the backing in the line: as high as the words (13 sp gives 14, 5.29 R5), a gap of 5 after it, in the same scale. */
 private val BackingSignSize = 1.08.em
@@ -131,7 +138,7 @@ fun SessionCard(
 ) {
     RecordCard(
         card = card,
-        title = card.title ?: card.pieceTitle ?: stringResource(Res.string.record_default_title),
+        title = recordCardTitle(card),
         // The date stands once, above the group (the day header of «Записи», the date of the sheet of a day): the card adds the time.
         // A reader going from card to card skips the headers, so to it the card says its date as well (spec 3.21).
         start = Formats.timeOfDay(card.startedAtEpochMs, zone),
@@ -147,12 +154,21 @@ fun SessionCard(
 }
 
 /**
- * The one card of a recording — in «Записи», in «Записи этого дня» of «Занятия», a take on the screen of its piece (spec 3.21,
- * 3.36.5; which list — [place]). Quiet on purpose: a tile of one colour, a title, one line — no score, no zone, no bars. A take
+ * What the card of a recording is called (spec 3.21, 3.35): its own name; else, of a recording of an event, the event and its date —
+ * «Осенний концерт · 24 октября»; else its piece; else «Запись».
+ */
+@Composable
+fun recordCardTitle(card: HistoryCard): String =
+    card.title ?: card.event?.let { eventRecordTitle(it) } ?: card.pieceTitle ?: stringResource(Res.string.record_default_title)
+
+/**
+ * The one card of a recording — in «Записи», in «Записи этого дня» of «Занятия», a take on the screen of its piece, a recording on
+ * the screen of its event (spec 3.21, 3.36.5, 3.36.9; which list — [place]). Quiet on purpose: a tile of one colour, a title, one line — no score, no zone, no bars. A take
  * marked as the best carries a star after its title; [highlighted] belongs to a take recorded a moment ago.
  *
  * The line: [start] — the time of the start, or the date of a take with a name of its own — and the length, then what the recording
- * is ([RecordLine.wordsOf]): «18:42 · 2:05 · дубль», «· видео», «· без звука» after the kind, the sign of the backing and «под
+ * is ([RecordLine.wordsOf]): «18:42 · 2:05 · дубль», «· видео», of a recording of an event the word of its kind — «19:02 · 3:40 ·
+ * выступление», its name as written for a kind of one's own (spec 3.36.9) — «· без звука» after the kind, the sign of the backing and «под
  * минусовку» last. One line: the words end in an ellipsis first, the length is never cut, the start gives way only to it.
  *
  * [selected] is null outside the selection mode (spec 3.18). Inside it the card is a checkbox: the tile turns into a mark of the same
@@ -160,9 +176,9 @@ fun SessionCard(
  * the card a little. «⋯» ([actions]) stands at every card of a list that has them, so the edge of the list is even; «Записи этого
  * дня» has none.
  *
- * TalkBack hears the card as one description: its kind, «лучший», the title, [spokenDate] (for a list that writes the date above its
- * cards, not on them), the time, the length, «под минусовку», «без звука» — the word of the kind seen in the line is not heard twice;
- * «⋯» is a button of its own, «Ещё».
+ * TalkBack hears the card as one description: its kind — what its tile is, «звук» of the sound of an event — «лучший», the title,
+ * [spokenDate] (for a list that writes the date above its cards, not on them), the time, the length, the word of the kind of its event,
+ * «под минусовку», «без звука» — a word seen in the line is not heard twice; «⋯» is a button of its own, «Ещё».
  *
  * [current] — the one chosen where the card is only picked (the sheet «Слушать на…» of «Звук записей», spec 3.36.5): the outline of
  * 1.5 in the accent, without the fill of a fresh take; TalkBack hears it «выбрано».
@@ -190,6 +206,8 @@ fun RecordCard(
     val length = Formats.duration(card.durationMs)
     val backingWords = stringResource(Res.string.backing_take_mark)
     val noSoundWords = stringResource(Res.string.record_tile_no_sound)
+    // «выступление», «урок», the name of a kind of one's own as written (spec 3.36.9)
+    val eventWord = card.event?.let { eventKindWord(it.kind, it.ownName) }
     val said = listOfNotNull(
         stringResource(spokenKindOf(RecordLine.kindOf(card))),
         stringResource(Res.string.take_best).takeIf { card.best },
@@ -197,6 +215,8 @@ fun RecordCard(
         spokenDate,
         start,
         length,
+        // in every list alike, as the kind: on the screen of its event too, where the line does not show it
+        eventWord,
         backingWords.takeIf { card.underBacking },
         noSoundWords.takeIf { !card.hasAudio },
     ).joinToString(SAID_SEPARATOR)
@@ -274,10 +294,14 @@ fun RecordCard(
                         AppIcon(AppIcons.Star, contentDescription = null, tint = colors.primary, size = BestStar)
                     }
                 }
-                RecordLineText(card, place, start, length, noSoundWords, backingWords, Modifier.padding(top = LineTop))
+                RecordLineText(card, place, start, length, noSoundWords, backingWords, eventWord, Modifier.padding(top = LineTop))
             }
         }
         if (menu != null) CardMenuButton(card, menu)
+        // here a recording is only opened (spec 3.36.9): the chevron says so where «⋯» stands in other lists
+        if (place == RecordPlace.Event && !selecting) {
+            AppIcon(AppIcons.ChevronRight, contentDescription = null, tint = ViolinTheme.textTertiary, size = ChevronSize)
+        }
     }
 }
 
@@ -286,10 +310,20 @@ fun RecordCard(
  * pieces laid side by side by [RecordLinePolicy]: the length « · 2:05» is never cut; the start — the time, or the date of a take with a
  * name of its own — takes what is left beside it, and ends in an ellipsis only when the two cannot stand whole together (a date with
  * its year in German or Spanish on 360 at a large font); the words ([RecordLine.wordsOf], in their order) take what is left after both
- * and are the first to end in an ellipsis. The words of the kind are those TalkBack heard on the tile before.
+ * and are the first to end in an ellipsis. The words of the kind are those TalkBack heard on the tile before; [eventWord] — the word of
+ * the kind of the event of a recording of one (spec 3.36.9), heard after the length.
  */
 @Composable
-private fun RecordLineText(card: HistoryCard, place: RecordPlace, start: String, length: String, noSound: String, backing: String, modifier: Modifier) {
+private fun RecordLineText(
+    card: HistoryCard,
+    place: RecordPlace,
+    start: String,
+    length: String,
+    noSound: String,
+    backing: String,
+    eventWord: String?,
+    modifier: Modifier,
+) {
     val color = MaterialTheme.colorScheme.onSurfaceVariant
     val style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES)
     val separator = stringResource(Res.string.dot_separator)
@@ -308,6 +342,7 @@ private fun RecordLineText(card: HistoryCard, place: RecordPlace, start: String,
                             LineWord.TAKE -> append(take)
                             LineWord.VIDEO -> append(video)
                             LineWord.NO_SOUND -> append(noSound)
+                            LineWord.EVENT_KIND -> append(eventWord.orEmpty())
                             LineWord.BACKING -> {
                                 appendInlineContent(BACKING_SIGN)
                                 append(backing)
@@ -376,18 +411,21 @@ private fun spokenKindOf(kind: RecordKind): StringResource = when (kind) {
     RecordKind.VIDEO -> Res.string.record_tile_only_video
     RecordKind.TAKE -> Res.string.record_tile_take
     RecordKind.RECORD -> Res.string.record_tile_record
+    RecordKind.SOUND -> Res.string.record_tile_sound
 }
 
 /**
  * What a recording is called where no date stands beside it — on its own screen and in the name
- * of the file that is shared (spec 3.21): its own name when it was given one; otherwise a take is
- * named after its piece — «Менуэт · 18 сентября» — and a free recording is «Запись · …». The
- * cards of the lists leave the date out: there it stands once, above them or in their line.
+ * of the file that is shared (spec 3.21): its own name when it was given one; otherwise a recording of
+ * an event is named after the event and its date — «Осенний концерт · 24 октября» (spec 3.35) — a take
+ * after its piece — «Менуэт · 18 сентября» — and a free recording is «Запись · …». The cards of the
+ * lists leave the date out: there it stands once, above them or in their line.
  */
 @Composable
-fun sessionTitle(title: String?, pieceTitle: String?, startedAtEpochMs: Long, zone: TimeZone): String {
+fun sessionTitle(title: String?, pieceTitle: String?, startedAtEpochMs: Long, zone: TimeZone, event: SessionEvent? = null): String {
     val date = Formats.dayAndMonth(startedAtEpochMs, zone)
     return title
+        ?: event?.let { eventRecordTitle(it) }
         ?: pieceTitle?.let { stringResource(Res.string.session_take_title, it, date) }
         ?: stringResource(Res.string.session_default_title, date)
 }

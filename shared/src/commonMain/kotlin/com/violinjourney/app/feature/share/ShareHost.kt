@@ -153,7 +153,7 @@ fun ShareHost(viewModel: ShareViewModel) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.effects.collect { effect ->
                 when (effect) {
-                    is ShareEffect.Send -> send(effect.file, effect.text)
+                    is ShareEffect.Send -> send(effect.file, effect.text, effect.type)
                 }
             }
         }
@@ -546,6 +546,10 @@ private fun sizeText(bytes: Long): String {
     return if (kb < BYTES_PER_KB) stringResource(Res.string.share_size_kb, kb.coerceAtLeast(1)) else stringResource(Res.string.share_size_mb, Formats.oneDecimal(kb / BYTES_PER_KB.toDouble()))
 }
 
-/** Hands a prepared file to the system's «Поделиться», with [text] beside it where the receiver takes one (spec 3.17). */
+/**
+ * Hands a prepared file to the system's «Поделиться», with [text] beside it where the receiver takes one (spec 3.17); `type` — what the
+ * receivers are told the file is, decided by the recording ([ShareInfo.typeOf], plan D48): Android picks the receivers by it, iOS by the
+ * file itself.
+ */
 @Composable
-expect fun rememberFileSender(): (file: PlatformFile, text: String?) -> Unit
+expect fun rememberFileSender(): (file: PlatformFile, text: String?, type: String) -> Unit

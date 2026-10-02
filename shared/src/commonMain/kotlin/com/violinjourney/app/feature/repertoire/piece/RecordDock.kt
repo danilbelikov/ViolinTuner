@@ -48,7 +48,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.core.recording.video.VideoImport
+import com.violinjourney.app.core.recording.MediaImport
 import com.violinjourney.app.core.ui.components.AppButton
 import com.violinjourney.app.core.ui.components.AppButtonStyle
 import com.violinjourney.app.core.ui.components.AppMenu
@@ -129,7 +129,7 @@ fun DockScope.RecordDock(
     /** Read inside: the bar follows twenty readings a second, the rest of the zone only the start and the end of a take. */
     take: State<TakeState>,
     backing: BackingUi?,
-    videoImport: VideoImport,
+    videoImport: MediaImport,
     selecting: Boolean,
     onIntent: (PieceIntent) -> Unit,
     onPickVideo: () -> Unit,
@@ -173,9 +173,9 @@ fun DockScope.RecordDock(
             VideoTakeCircle(
                 // not asleep of its own while takes are picked: the whole zone is at 0.38 then and takes no touch (5.29 R4), and the
                 // circle dimmed inside it would be dimmed twice
-                enabled = videoImport == VideoImport.Idle,
+                enabled = videoImport == MediaImport.Idle,
                 // a short analysis shows no sheet: the circle says what is going on instead
-                busy = videoImport is VideoImport.Working && !videoImport.visible,
+                busy = videoImport is MediaImport.Working && !videoImport.visible,
                 size = if (compact) VideoCircleCompact else VideoCircle,
                 // a piece with a backing is filmed by the app's own camera only: the system one knows nothing of the backing
                 ownCamera = backing.takeIf { it.present }?.let { if (it.enabled) OwnCamera.UNDER_BACKING else OwnCamera.PLAIN },

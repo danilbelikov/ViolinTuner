@@ -293,12 +293,40 @@ class ControlsTouchTest {
         compose.runOnIdle { assertEquals(1, presses) }
     }
 
+    /**
+     * A word at the end of a row (spec 3.36.9: «Записать звук» without the microphone): only the word is pressed — a text button of 48
+     * — and the row itself is not; also an outlined coral answer of a deletion (5.29 R9) is at least 48.
+     */
+    @Test
+    fun aWordAtTheEndOfARowIsTheOnlyTargetAndIsFortyEight() {
+        var rows = 0
+        compose.setContent {
+            ViolinTheme {
+                Column {
+                    ListRow(
+                        "Записать звук", onClick = { rows++ }, modifier = Modifier.testTag(TAG), caption = MIC_REASON,
+                        end = ListRowEnd.TextAction(GRANT) { presses++ },
+                    )
+                    AppButton("Только этот урок", onClick = {}, Modifier.testTag("outlineDanger"), style = AppButtonStyle.OutlineDanger, caption = "остальные — по понедельникам")
+                }
+            }
+        }
+        compose.onNodeWithText(GRANT).assertHeightIsAtLeast(48.dp).performClick()
+        compose.onNodeWithText("Записать звук").performClick()
+        compose.onNodeWithTag("outlineDanger").assertHeightIsAtLeast(48.dp)
+        compose.runOnIdle {
+            assertEquals("the word asks", 1, presses)
+            assertEquals("the row itself is not pressed", 0, rows)
+        }
+    }
+
     private companion object {
         const val TAG = "control"
         const val SLOT = "slot"
         const val NEIGHBOUR = "neighbour"
         const val REASON = "Чтобы записать дубль, нужен доступ к микрофону."
         const val GRANT = "Разрешить доступ"
+        const val MIC_REASON = "Чтобы записать звук, нужен доступ к микрофону."
         const val ROOM = "Комната"
         const val OUTSIDE = "Снаружи"
         /** What a long press does, as TalkBack puts it in «дважды нажмите и удерживайте, чтобы …»: a verb, not a sentence of its own. */

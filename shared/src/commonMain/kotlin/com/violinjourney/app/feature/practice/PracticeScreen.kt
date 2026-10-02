@@ -463,7 +463,8 @@ private fun TodayBlock(
 
 /**
  * The reminder as shown ([rememberShownReminder]): its strength read where it is drawn, so its fade does not recompose the block.
- * «ещё N» opens the sheet of the day of the first event it stands for, and the calendar comes to its month (spec 3.36.9).
+ * A row opens the screen of its event; «ещё N» opens the sheet of the day of the first event it stands for, and the calendar comes
+ * to its month (spec 3.36.9).
  */
 @Composable
 private fun Reminder(shown: ShownReminder, compact: Boolean, lying: Boolean, onIntent: (PracticeIntent) -> Unit) {
@@ -474,6 +475,7 @@ private fun Reminder(shown: ShownReminder, compact: Boolean, lying: Boolean, onI
         lying = lying,
         onMore = { date -> onIntent(PracticeIntent.DaySelected(date, moveMonth = true)) },
         modifier = Modifier.graphicsLayer { alpha = shown.alpha() },
+        onOpen = { id -> onIntent(PracticeIntent.ReminderEventClicked(id)) },
     )
 }
 

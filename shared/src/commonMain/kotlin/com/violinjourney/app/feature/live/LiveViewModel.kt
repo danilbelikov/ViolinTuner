@@ -95,7 +95,8 @@ open class LiveViewModel(
         val picture = FramePicture(config.toleranceCents.roundToInt(), config.a4Hz.roundToInt(), config.silenceRms)
         return takes.run(
             config = config,
-            pieceId = null,
+            // a recording of Live belongs to no piece and no event
+            owner = null,
             targetMode = { LiveReducer.targetModeOf(target.value) },
             unavailable = LiveReadout.Shown(LiveSignal.MicUnavailable),
             // a reopened input starts from nothing, and its frames count their own time

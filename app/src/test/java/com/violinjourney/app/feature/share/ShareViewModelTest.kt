@@ -8,6 +8,11 @@ import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.audio.share.ShareFiles
 import com.violinjourney.app.core.audio.share.SoundRenderer
 import com.violinjourney.app.core.domain.IntonationConfig
+import com.violinjourney.app.core.domain.events.BuiltInKind
+import com.violinjourney.app.core.domain.events.EventName
+import com.violinjourney.app.core.domain.events.FakeEventRepository
+import com.violinjourney.app.core.domain.events.KindRef
+import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
@@ -19,6 +24,7 @@ import com.violinjourney.app.core.domain.sound.FakeSoundRepository
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundPresets
 import com.violinjourney.app.core.domain.sound.SoundSettings
+import com.violinjourney.app.feature.events.EventWords
 import com.violinjourney.app.feature.sound.SoundCaption
 import java.io.File
 import kotlinx.coroutines.CompletableDeferred
@@ -35,6 +41,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.LocalDate
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -143,6 +150,17 @@ class ShareViewModelTest {
 
     private val files = Files()
     private val videoFiles = com.violinjourney.app.core.recording.video.FakeVideoFiles()
+    private val events = FakeEventRepository()
+
+    /** The words of an event as the resources would say them: in a JVM test there are none to read. */
+    private val eventWords = object : EventWords {
+        override suspend fun nameOf(name: EventName): String = when (name) {
+            is EventName.Titled -> name.title
+            is EventName.OfKind -> "Урок"
+        }
+
+        override suspend fun recordTitleOf(event: SessionEvent): String = "${nameOf(event.name)} · 24 октября"
+    }
     private val speed = RenderSpeed()
 
     @Before
@@ -154,7 +172,7 @@ class ShareViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private suspend fun recording(audioName: String? = "take.m4a", durationMs: Long = 10_000, pieceId: Long? = null): Long {
+    private suspend fun recording(audioName: String? = "take.m4a", durationMs: Long = 10_000, pieceId: Long? = null, eventId: Long? = null): Long {
         val intonation = IntonationConfig()
         val samples = List(40) { SessionSample(69, 1.0) }
         val analysis = SessionAnalyzer.analyze(samples, intonation)
@@ -162,6 +180,7 @@ class ShareViewModelTest {
             NewSession(
                 startedAtEpochMs = 1_000, durationMs = durationMs, config = intonation, samples = samples, metrics = analysis.metrics!!,
                 previewZones = SessionAnalyzer.previewZones(analysis.segments, intonation), audioPath = audioName, pieceId = pieceId,
+                eventId = eventId,
             ),
         )
     }
@@ -176,7 +195,7 @@ class ShareViewModelTest {
     private fun TestScope.share(renderer: SoundRenderer, analytics: Analytics = NoOpAnalytics()): Pair<ShareViewModel, MutableList<ShareEffect>> {
         val viewModel = ShareViewModel(
             sessions, repertoire, sound, audioFiles, files, renderer, texts, speed, { testScheduler.currentTime }, config, videoFiles, backings, backingPcm, analytics,
-            io = StandardTestDispatcher(testScheduler),
+            events = events, eventWords = eventWords, io = StandardTestDispatcher(testScheduler),
         )
         val effects = mutableListOf<ShareEffect>()
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
@@ -210,6 +229,69 @@ class ShareViewModelTest {
         assertEquals("ten seconds and the tail of the hall at 128 kbps", (11.8 * 16_000).toLong(), sheet.info.processedBytes)
         assertEquals(audio.length(), sheet.info.originalBytes)
         assertTrue(effects.isEmpty())
+    }
+
+    @Test
+    fun `a recording of an event is named by it - its file and what goes along`() = runTest {
+        events.recordEvents.value = mapOf(5L to SessionEvent(5, "Осенний концерт", LocalDate(2026, 10, 24), KindRef.BuiltIn(BuiltInKind.PERFORMANCE), null))
+        sound.setDefault(hall)
+        val (viewModel, _) = share(Renderer(tookMs = 100))
+        viewModel.start(recording(eventId = 5))
+        runCurrent()
+        val sheet = viewModel.sheet.value as ShareSheet.Choose
+        assertEquals("Осенний концерт · 24 октября.m4a", sheet.info.fileName)
+        assertEquals("Осенний концерт · ${sessions.sessions.value.single().scorePercent} % · 18 сентября", sheet.info.message)
+    }
+
+    @Test
+    fun `a sound brought in from a file goes as it came, under its own extension, and processed as m4a`() = runTest {
+        // plan D48: «Как записано» of `<uuid>.sound.mp3` is an mp3, not an m4a of the same bytes
+        audio = folder.newFile("a1.sound.mp3").apply { writeText("original sound") }
+        events.recordEvents.value = mapOf(5L to SessionEvent(5, "", LocalDate(2026, 9, 21), KindRef.BuiltIn(BuiltInKind.LESSON), null))
+        sound.setDefault(hall)
+        val (viewModel, effects) = share(Renderer(tookMs = 100))
+        viewModel.start(recording(audioName = "a1.sound.mp3", eventId = 5))
+        runCurrent()
+        val sheet = viewModel.sheet.value as ShareSheet.Choose
+        assertEquals("Урок · 24 октября.m4a", sheet.info.fileNameOf(ShareVariant.PROCESSED))
+        assertEquals("Урок · 24 октября.mp3", sheet.info.fileNameOf(ShareVariant.ORIGINAL))
+
+        viewModel.onIntent(ShareIntent.VariantSelected(ShareVariant.ORIGINAL))
+        viewModel.onIntent(ShareIntent.TextToggled(withText = false))
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(1_000)
+        runCurrent()
+        val sent = effects.single() as ShareEffect.Send
+        assertEquals("Урок · 24 октября.mp3", sent.file.name)
+        assertEquals("original sound", sent.file.readText())
+        assertEquals("the receivers are told it is an mp3", "audio/mpeg", sent.type)
+    }
+
+    @Test
+    fun `a sound from a file of a kind not known here goes as sound all the same`() = runTest {
+        // review of stage 98a: the name sent is made of the title, «Урок · 24 октября.webm»; the type is the recording's — no picture, sound
+        audio = folder.newFile("a1.sound.webm").apply { writeText("original sound") }
+        events.recordEvents.value = mapOf(5L to SessionEvent(5, "", LocalDate(2026, 9, 21), KindRef.BuiltIn(BuiltInKind.LESSON), null))
+        sound.setDefault(hall)
+        val (viewModel, effects) = share(Renderer(tookMs = 100))
+        viewModel.start(recording(audioName = "a1.sound.webm", eventId = 5))
+        runCurrent()
+        viewModel.onIntent(ShareIntent.VariantSelected(ShareVariant.ORIGINAL))
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(1_000)
+        runCurrent()
+        val original = effects.single() as ShareEffect.Send
+        assertEquals("Урок · 24 октября.webm", original.file.name)
+        assertEquals("any sound, never a video", "audio/*", original.type)
+
+        effects.clear()
+        viewModel.start(recording(audioName = "a1.sound.webm", eventId = 5))
+        runCurrent()
+        viewModel.onIntent(ShareIntent.VariantSelected(ShareVariant.PROCESSED))
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(1_000)
+        runCurrent()
+        assertEquals("what is made here is an m4a", "audio/mp4", (effects.single() as ShareEffect.Send).type)
     }
 
     @Test
@@ -516,6 +598,7 @@ class ShareViewModelTest {
         viewModel.onIntent(ShareIntent.ContinueClicked)
         runCurrent()
         assertEquals("Менуэт · 18 сентября.mov", (effects.single() as ShareEffect.Send).file.name)
+        assertEquals("a QuickTime movie, told so", "video/quicktime", (effects.single() as ShareEffect.Send).type)
     }
 
     @Test
@@ -538,6 +621,7 @@ class ShareViewModelTest {
         runCurrent()
         assertEquals(1 to 0, renderer.videoRenders to renderer.renders)
         assertEquals("Менуэт · 18 сентября.mp4", (effects.single() as ShareEffect.Send).file.name)
+        assertEquals("video/mp4", (effects.single() as ShareEffect.Send).type)
     }
 
     @Test
@@ -553,6 +637,7 @@ class ShareViewModelTest {
         runCurrent()
         assertEquals(0 to 1, renderer.videoRenders to renderer.renders)
         assertEquals("Менуэт · 18 сентября.m4a", (effects.single() as ShareEffect.Send).file.name)
+        assertEquals("the sound of a video take is sound", "audio/mp4", (effects.single() as ShareEffect.Send).type)
     }
 
     @Test

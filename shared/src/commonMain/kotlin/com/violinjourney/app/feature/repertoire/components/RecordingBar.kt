@@ -44,6 +44,7 @@ import com.violinjourney.app.shared.resources.record_stop
 import com.violinjourney.app.shared.resources.stand_recording_description
 import com.violinjourney.app.shared.resources.take_level_description
 import com.violinjourney.app.shared.resources.take_recording_label
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 // The bar of a running take (spec 3.36.4, 5.29 R4, «Нижняя зона записи»; repertoire.html 3, «Идёт дубль»).
@@ -80,7 +81,8 @@ private const val MS_PER_SECOND = 1_000L
  * backing's progress ([backingPlayedMs] of [backingDurationMs]) and, while it is [noisy], «Слишком шумно» with a hollow dot; the
  * bars go quieter then. The stand has neither the levels nor the backing ([levels] null): the dot, the timer, the noise and «стоп».
  * The dot does not pulse — R4 has no motion of its own (5.29 R4). [compact] — a window no higher than 360 dp: «стоп» of 48.
- * TalkBack hears «Идёт запись дубля, 1:12», «Микрофон слышит» and «Остановить запись».
+ * TalkBack hears «Идёт запись дубля, 1:12» — [spoken], «Идёт запись, 1:12» on the screen of an event, where a recording is no take
+ * (spec 3.36.9) — «Микрофон слышит» and «Остановить запись».
  */
 @Composable
 fun RecordingBar(
@@ -92,12 +94,13 @@ fun RecordingBar(
     backingPlayedMs: Long? = null,
     backingDurationMs: Long? = null,
     compact: Boolean = false,
+    spoken: StringResource = Res.string.stand_recording_description,
 ) {
     val colors = MaterialTheme.colorScheme
     Column(modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(BarGap)) {
             val time = Formats.timer(elapsedSeconds * MS_PER_SECOND)
-            val said = stringResource(Res.string.stand_recording_description, time)
+            val said = stringResource(spoken, time)
             Row(
                 modifier = Modifier.clearAndSetSemantics { contentDescription = said },
                 verticalAlignment = Alignment.CenterVertically,

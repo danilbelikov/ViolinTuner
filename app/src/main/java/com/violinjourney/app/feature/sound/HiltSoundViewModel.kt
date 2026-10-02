@@ -8,6 +8,7 @@ import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.di.IoDispatcher
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.backing.BackingRepository
+import com.violinjourney.app.core.domain.events.EventRepository
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.sound.SoundConfig
@@ -31,5 +32,6 @@ class HiltSoundViewModel @Inject constructor(
     backingPcm: BackingPcm,
     backingConfig: BackingConfig,
     clock: WallClock,
+    events: EventRepository,
     @IoDispatcher io: CoroutineDispatcher,
-) : SoundViewModel(savedState, sound, sessions, repertoire, audioFiles, playerFactory, waveforms, config, backings, backingPcm, backingConfig, clock, io)
+) : SoundViewModel(savedState, sound, sessions, repertoire, audioFiles, playerFactory, waveforms, config, backings, backingPcm, backingConfig, clock, events, io)

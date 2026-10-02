@@ -18,6 +18,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.captureToImage
@@ -30,6 +32,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpRect
 import androidx.compose.ui.unit.DpSize
@@ -162,6 +165,16 @@ class ReminderCardTest {
     private val isButton = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button)
 
     /**
+     * The target of «ещё N» of a compact card: the narrowest of the buttons — the row beside it is a button too since stage 98: it
+     * opens the screen of its event.
+     */
+    private fun narrowestButton(): SemanticsNodeInteraction {
+        val buttons = compose.onAllNodes(isButton)
+        val nodes = buttons.fetchSemanticsNodes()
+        return buttons[nodes.indices.minBy { nodes[it].boundsInRoot.width }]
+    }
+
+    /**
      * «Занятия» on the Sunday of the mockups: 40 minutes on each day of September in [days] — by default the week of the mockups, so
      * «Сегодня» is full: today's time, «Неделя» and the chip of the streak — and the reminder of [events].
      */
@@ -180,6 +193,7 @@ class ReminderCardTest {
         var orchestra = ""
         var lesson = ""
         var more = ""
+        var moreSaid = ""
         compose.setContent {
             // the sentences TalkBack hears of the three rows, in the language of the app: a kind of one's own is its name as written
             exam = stringResource(
@@ -194,6 +208,8 @@ class ReminderCardTest {
                 "Анна Сергеевна",
             )
             more = stringResource(Res.string.event_reminder_more, 1)
+            val hidden = Formats.plural(1, Res.string.event_reminder_more_description_one, Res.string.event_reminder_more_description_few, Res.string.event_reminder_more_description_many)
+            moreSaid = stringResource(hidden, 1, stringResource(Res.string.event_kind_lesson_word))
             ViolinTheme {
                 TestWindow(DpSize(412.dp, 892.dp)) {
                     Box(Modifier.padding(16.dp)) {
@@ -205,7 +221,8 @@ class ReminderCardTest {
         compose.waitForIdle()
         // «весь день» first, then 11:00: the lesson at 17:00 is the third, under «ещё 1»
         compose.onAllNodesWithText(more, useUnmergedTree = true).fetchSemanticsNodes().let { assertTrue("«$more» is drawn", it.isNotEmpty()) }
-        val rows = compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.ContentDescription) and !isButton).fetchSemanticsNodes()
+        // a row is a button since stage 98 — it opens the screen of its event — and «ещё 1» is one of its own
+        val rows = compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.ContentDescription) and isButton and !hasContentDescription(moreSaid)).fetchSemanticsNodes()
         assertEquals("two rows of the full card", 2, rows.size)
         assertEquals(
             "the exam of the whole day, then the orchestra at 11:00 — each one sentence",
@@ -215,8 +232,41 @@ class ReminderCardTest {
         with(compose.density) {
             rows.forEach { row -> assertTrue("a row of at least 56: ${row.size.height.toDp()}", row.size.height.toDp() >= 56.dp - 0.5.dp) }
         }
-        compose.onNode(isButton).assertHasClickAction().assertHeightIsAtLeast(48.dp)
+        compose.onNode(hasContentDescription(moreSaid) and isButton).assertHasClickAction().assertHeightIsAtLeast(48.dp)
         assertTrue("the lesson is under «ещё», not a row", compose.onAllNodes(SemanticsMatcher.expectValue(SemanticsProperties.ContentDescription, listOf(lesson))).fetchSemanticsNodes().isEmpty())
+    }
+
+    /**
+     * A row opens the screen of its event (spec 3.36.9, stage 98): in the full card every row, in the compact one its row — beside
+     * «ещё N», which opens the sheet of the day; «ещё N» opens no event.
+     */
+    @Test
+    fun aRowOpensTheScreenOfItsEvent() {
+        val opened = mutableListOf<Long>()
+        val days = mutableListOf<LocalDate>()
+        var orchestra = ""
+        var compact by mutableStateOf(false)
+        compose.setContent {
+            orchestra = stringResource(Res.string.event_reminder_tomorrow_at_said, Formats.clockOf(11 * 60), "Оркестр")
+            ViolinTheme {
+                TestWindow(DpSize(412.dp, 892.dp)) {
+                    Box(Modifier.padding(16.dp)) {
+                        ReminderCard(reminderOf(threeAtTimes), compact = compact, lying = false, onMore = { days += it }, onOpen = { opened += it })
+                    }
+                }
+            }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription(orchestra).assert(isButton).assertHasClickAction().performClick()
+        assertEquals(listOf(2L), opened)
+
+        compact = true
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription(orchestra).assertHasClickAction().performClick()
+        assertEquals("the row of the compact card opens its event too", listOf(2L, 2L), opened)
+        narrowestButton().performClick()
+        assertEquals("«ещё N» opens the sheet of their day, not an event", listOf(2L, 2L), opened)
+        assertEquals(listOf(tomorrow), days)
     }
 
     /**
@@ -238,7 +288,7 @@ class ReminderCardTest {
         for ((sideways, width, gap) in listOf(Triple(false, 56.dp, 12.dp), Triple(true, 52.dp, 10.dp))) {
             lying = sideways
             compose.waitForIdle()
-            val target = compose.onNode(isButton).assertHasClickAction().getUnclippedBoundsInRoot()
+            val target = narrowestButton().assertHasClickAction().getUnclippedBoundsInRoot()
             assertEquals("lying $sideways: the target is $width wide", width.value, target.width.value, 0.5f)
             assertTrue("lying $sideways: the target is at least 56 high: ${target.height}", target.height >= 56.dp - 0.5.dp)
             val card = compose.onNodeWithTag(CARD).getUnclippedBoundsInRoot()
@@ -282,7 +332,7 @@ class ReminderCardTest {
             assertTrue("$language: a longer title is cut with an ellipsis", layout.isLineEllipsized(layout.lineCount - 1))
         }
         assertWordsWhole(compose.onNodeWithText(more, useUnmergedTree = true), "$language: $more")
-        val target = compose.onNode(isButton).getUnclippedBoundsInRoot()
+        val target = narrowestButton().getUnclippedBoundsInRoot()
         assertEquals("$language: the target keeps its 56", 56f, target.width.value, 0.5f)
     }
 

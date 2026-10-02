@@ -20,6 +20,8 @@ import com.violinjourney.app.core.domain.events.EventName
 import com.violinjourney.app.core.domain.events.KindLook
 import com.violinjourney.app.core.domain.events.KindRef
 import com.violinjourney.app.core.domain.events.KindSign
+import com.violinjourney.app.core.domain.events.SessionEvent
+import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.icons.drawMiniSign
@@ -34,6 +36,7 @@ import com.violinjourney.app.shared.resources.event_kind_performance
 import com.violinjourney.app.shared.resources.event_kind_performance_word
 import com.violinjourney.app.shared.resources.event_kind_rehearsal
 import com.violinjourney.app.shared.resources.event_kind_rehearsal_word
+import com.violinjourney.app.shared.resources.session_take_title
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -68,8 +71,8 @@ fun kindColors(look: KindLook): KindColors = ViolinTheme.eventsColors.of(look.co
  */
 @Composable
 fun eventKindName(kind: KindRef, ownName: String?): String = when (kind) {
-    is KindRef.BuiltIn -> stringResource(nameOf(kind.kind))
-    is KindRef.Custom -> ownName ?: stringResource(nameOf(BuiltInKind.OTHER))
+    is KindRef.BuiltIn -> stringResource(builtInKindName(kind.kind))
+    is KindRef.Custom -> ownName ?: stringResource(builtInKindName(BuiltInKind.OTHER))
 }
 
 @Composable
@@ -102,7 +105,16 @@ fun eventWordOf(name: EventName): String = when (name) {
     is EventName.OfKind -> eventKindWord(name.kind, name.ownName)
 }
 
-private fun nameOf(kind: BuiltInKind): StringResource = when (kind) {
+/**
+ * What a recording of [event] is called until it is given a name of its own (spec 3.35, 3.36.9): the name of the event and its date —
+ * «Осенний концерт · 24 октября», «Урок · 21 сентября». It follows the event: renamed, the recording is renamed with it.
+ */
+@Composable
+fun eventRecordTitle(event: SessionEvent): String =
+    stringResource(Res.string.session_take_title, eventNameOf(event.name), Formats.dayAndMonth(event.date))
+
+/** The string of the name of a built-in kind: «Урок». */
+internal fun builtInKindName(kind: BuiltInKind): StringResource = when (kind) {
     BuiltInKind.LESSON -> Res.string.event_kind_lesson
     BuiltInKind.REHEARSAL -> Res.string.event_kind_rehearsal
     BuiltInKind.PERFORMANCE -> Res.string.event_kind_performance

@@ -17,6 +17,8 @@ import com.violinjourney.app.core.domain.backing.TakeBacking
 import com.violinjourney.app.core.domain.backing.takesUnderBacking
 import com.violinjourney.app.core.audio.playback.SessionWaveforms
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
+import com.violinjourney.app.core.domain.events.EventRepository
+import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.session.SessionSummary
@@ -71,6 +73,8 @@ open class SoundViewModel(
     val backingConfig: BackingConfig,
     /** «Today» and the zone the cards of «Слушать на…» are dated in. */
     private val clock: WallClock,
+    /** The events of the recordings (spec 3.35): a recording of one is named by it until it is given a name of its own. */
+    private val events: EventRepository,
     private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 
@@ -267,15 +271,22 @@ open class SoundViewModel(
     }
 
     /**
-     * The recordings: whose screen this is, what the default can be listened on — as the cards of «Записи», with their piece, «лучший»
-     * and the sign of the backing (spec 3.36.5) — and how many it touches. The screen comes with the first of them.
+     * The recordings: whose screen this is, what the default can be listened on — as the cards of «Записи», with their piece, «лучший»,
+     * the sign of the backing (spec 3.36.5) and the event they are of (spec 3.35) — and how many it touches. The screen comes with the
+     * first of them.
      */
     private suspend fun follow() {
-        combine(sessions.sessions, sound.own, repertoire.pieces, backings.takesUnderBacking) { all, own, pieces, under ->
-            Recordings(all, own.keys, titles = pieces.associate { it.id to it.title }, best = pieces.mapNotNull { it.bestTakeId }.toSet(), under = under)
+        combine(sessions.sessions, sound.own, repertoire.pieces, backings.takesUnderBacking, events.recordEvents) { all, own, pieces, under, ofEvents ->
+            Recordings(
+                all, own.keys, titles = pieces.associate { it.id to it.title }, best = pieces.mapNotNull { it.bestTakeId }.toSet(), under = under,
+                events = ofEvents,
+            )
         }
-            .collect { (all, own, titles, best, under) ->
-                fun nameOf(session: SessionSummary) = RecordingName(session.id, session.title, session.pieceId?.let(titles::get), session.startedAtEpochMs, hasVideo = session.videoPath != null)
+            .collect { (all, own, titles, best, under, ofEvents) ->
+                fun nameOf(session: SessionSummary) = RecordingName(
+                    session.id, session.title, session.pieceId?.let(titles::get), session.startedAtEpochMs, hasVideo = session.videoPath != null,
+                    event = session.eventId?.let(ofEvents::get),
+                )
                 val mine = all.firstOrNull { it.id == sessionId }
                 if (mode == SoundMode.RECORDING && mine == null) {
                     effectChannel.trySend(SoundEffect.Close) // deleted from under the screen
@@ -290,6 +301,7 @@ open class SoundViewModel(
                         found to found.map { session ->
                             HistoryReducer.cardOf(
                                 session, today, clock.zone, pieceTitle = session.pieceId?.let(titles::get), best = session.id in best, underBacking = session.id in under,
+                                event = session.eventId?.let(ofEvents::get),
                             )
                         }
                     }
@@ -311,8 +323,15 @@ open class SoundViewModel(
             }
     }
 
-    /** What [follow] reads of the recordings, the pieces and the backings. */
-    private data class Recordings(val all: List<SessionSummary>, val own: Set<Long>, val titles: Map<Long, String>, val best: Set<Long>, val under: Set<Long>)
+    /** What [follow] reads of the recordings, the pieces, the backings and the events. */
+    private data class Recordings(
+        val all: List<SessionSummary>,
+        val own: Set<Long>,
+        val titles: Map<Long, String>,
+        val best: Set<Long>,
+        val under: Set<Long>,
+        val events: Map<Long, SessionEvent>,
+    )
 
     private fun listenOn(session: SessionSummary?) {
         val file = session?.audioPath?.let(audioFiles::existing) ?: return

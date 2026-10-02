@@ -1,5 +1,6 @@
 package com.violinjourney.app.feature.share
 
+import com.violinjourney.app.core.audio.share.ShareNames
 import com.violinjourney.app.feature.sound.SoundCaption
 import com.violinjourney.app.core.io.PlatformFile
 
@@ -45,10 +46,16 @@ data class ShareInfo(
      * processed, under the backing — is always an `.mp4` ([videoFileName]). Null — the same as [videoFileName].
      */
     val originalVideoFileName: String? = null,
+    /**
+     * A recording without a picture as it was recorded, in the format of its own file (plan D48): «….mp3» of a sound brought in from a
+     * file (spec 5.28), «….m4a» of a take. What is made here — the processed sound — is always an `.m4a` ([fileName]). Null — [fileName].
+     */
+    val originalAudioFileName: String? = null,
 ) {
     val video: Boolean get() = videoFileName != null
 
     fun fileNameOf(variant: ShareVariant): String = when {
+        !video && variant == ShareVariant.ORIGINAL -> originalAudioFileName ?: fileName
         !video || variant == ShareVariant.SOUND -> fileName
         variant == ShareVariant.ORIGINAL -> originalVideoFileName ?: videoFileName!!
         else -> videoFileName!!
@@ -56,9 +63,20 @@ data class ShareInfo(
 
     /**
      * The format of the file a variant makes (spec 3.36.5, the chip of each variant): «.m4a» of a sound, «.mp4» of a video made here,
-     * and a video as shot in the container of its own file — «.mov» from the camera of an iPhone.
+     * a video as shot in the container of its own file — «.mov» from the camera of an iPhone — and a sound from a file as it came,
+     * «.mp3».
      */
     fun extensionOf(variant: ShareVariant): String = "." + fileNameOf(variant).substringAfterLast('.', "").lowercase()
+
+    /**
+     * The type other apps are told the file of a variant is (Android's `Intent.type`, plan D48), by what the recording is, not by the name
+     * made of its title: a recording without a picture sends sound whatever the extension of its own file — a sound from a file of a kind
+     * not known here goes as any sound, never as a video ([ShareNames.soundTypeOf]); a video take sends its video, or its sound alone.
+     */
+    fun typeOf(variant: ShareVariant): String {
+        val name = fileNameOf(variant)
+        return if (video) ShareNames.mimeTypeOf(name) else ShareNames.soundTypeOf(name)
+    }
 
     /** An estimate for what is rendered, the real size for what is sent as it is. A processed video weighs what its picture does. */
     fun bytesOf(variant: ShareVariant): Long = when {
@@ -118,6 +136,6 @@ sealed interface ShareIntent {
 }
 
 sealed interface ShareEffect {
-    /** Hand [file] to the system share sheet, with [text] when there is one. */
-    data class Send(val file: PlatformFile, val text: String?) : ShareEffect
+    /** Hand [file] to the system share sheet, with [text] when there is one; [type] — what the receivers are told it is ([ShareInfo.typeOf]). */
+    data class Send(val file: PlatformFile, val text: String?, val type: String) : ShareEffect
 }

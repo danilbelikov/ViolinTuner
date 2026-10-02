@@ -5,6 +5,7 @@ import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.feature.backup.RestoreViewModel
 import com.violinjourney.app.feature.camera.CaptureViewModel
+import com.violinjourney.app.feature.events.screen.EventViewModel
 import com.violinjourney.app.feature.home.HomeViewModel
 import com.violinjourney.app.feature.journey.StopViewModel
 import com.violinjourney.app.feature.repertoire.RepertoireViewModel
@@ -60,6 +61,8 @@ object Routes {
     const val BACKUP = "backup"
     const val RESTORE = "restore"
     const val RESTORE_PATTERN = "$RESTORE?${RestoreViewModel.ARG_URI}={${RestoreViewModel.ARG_URI}}"
+    const val EVENT = "event"
+    const val EVENT_PATTERN = "$EVENT/{${EventViewModel.ARG_EVENT_ID}}"
 
     fun session(sessionId: Long): String = "$SESSION/$sessionId"
 
@@ -67,6 +70,9 @@ object Routes {
     fun sound(sessionId: Long?): String = "$SOUND?${SoundViewModel.ARG_SESSION_ID}=${sessionId ?: SoundViewModel.EVERYONE}"
 
     fun piece(pieceId: Long): String = "$PIECE/$pieceId"
+
+    /** The screen of an event (spec 3.35, 3.36.9): from a row of the sheet of the day and of the reminder on «Занятия». */
+    fun event(eventId: Long): String = "$EVENT/$eventId"
 
     fun capture(pieceId: Long): String = "$CAPTURE/$pieceId"
 

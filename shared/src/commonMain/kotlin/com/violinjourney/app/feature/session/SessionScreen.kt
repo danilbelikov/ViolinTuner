@@ -162,7 +162,7 @@ fun SessionScreen(
     val loaded = state as? SessionState.Loaded
     val title = when {
         loaded == null -> ""
-        else -> sessionTitle(loaded.content.title, loaded.content.pieceTitle, loaded.content.startedAtEpochMs, zone)
+        else -> sessionTitle(loaded.content.title, loaded.content.pieceTitle, loaded.content.startedAtEpochMs, zone, loaded.content.event)
     }
     // The video over the whole screen is a state of this screen, not another one (spec 3.19):
     // the sound does not stop, and the way back is to where the scroll was.

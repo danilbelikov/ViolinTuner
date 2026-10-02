@@ -27,12 +27,12 @@ import com.violinjourney.app.core.domain.sound.FakeSoundRepository
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundPresets
 import com.violinjourney.app.core.domain.sound.SoundSettings
+import com.violinjourney.app.core.recording.MediaImport
 import com.violinjourney.app.core.recording.TakePipeline
 import com.violinjourney.app.core.recording.testTakePipeline
 import com.violinjourney.app.core.recording.video.AnalysisSpeed
 import com.violinjourney.app.core.recording.video.FakeFileTakeAnalyzer
 import com.violinjourney.app.core.recording.video.FakeVideoFiles
-import com.violinjourney.app.core.recording.video.VideoImport
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
 import com.violinjourney.app.core.settings.FakeSettingsRepository
 import com.violinjourney.app.core.settings.SettingsConfigSource
@@ -849,10 +849,10 @@ class PieceViewModelTest {
         val launch = effects.single() as PieceEffect.LaunchVideoCamera
         viewModel.onIntent(PieceIntent.VideoShotFinished(saved = true))
         advance(1_000)
-        assertTrue((viewModel.videoImport.value as VideoImport.Working).visible)
+        assertTrue((viewModel.videoImport.value as MediaImport.Working).visible)
 
         advance(1_500)
-        assertEquals(VideoImport.Idle, viewModel.videoImport.value)
+        assertEquals(MediaImport.Idle, viewModel.videoImport.value)
         val take = viewModel.state.value.takes.single()
         assertTrue(take.isNew)
         assertEquals(1, effects.size)
@@ -909,8 +909,8 @@ class PieceViewModelTest {
 
         otherScreen.onIntent(PieceIntent.VideoPicked("content://video/1"))
         advance(1_000)
-        assertTrue(otherScreen.videoImport.value is VideoImport.Working)
-        assertEquals(VideoImport.Idle, viewModel.videoImport.value)
+        assertTrue(otherScreen.videoImport.value is MediaImport.Working)
+        assertEquals(MediaImport.Idle, viewModel.videoImport.value)
     }
 
     @Test

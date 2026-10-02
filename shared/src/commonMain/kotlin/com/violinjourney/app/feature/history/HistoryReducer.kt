@@ -1,6 +1,7 @@
 package com.violinjourney.app.feature.history
 
 import com.violinjourney.app.core.domain.IntonationConfig
+import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.domain.session.RecordDays
 import com.violinjourney.app.core.domain.session.SessionSummary
 import kotlinx.datetime.LocalDate
@@ -23,6 +24,8 @@ object HistoryReducer {
         bestTakeIds: Set<Long> = emptySet(),
         /** The takes made under a backing (spec 3.32): their cards carry its sign. */
         underBackingIds: Set<Long> = emptySet(),
+        /** The events of the recordings by the id of the event (spec 3.35, plan D11): a recording of one is named by it. */
+        recordEvents: Map<Long, SessionEvent> = emptyMap(),
     ): HistoryState {
         val days = RecordDays.daily(sessions, today, zone, config.historyChartDays)
         return HistoryState(
@@ -36,7 +39,10 @@ object HistoryReducer {
                 .filter { passes(filter, it) }
                 .sortedWith(compareByDescending<SessionSummary> { it.startedAtEpochMs }.thenByDescending { it.id })
                 .map {
-                    cardOf(it, today, zone, pieceTitle = it.pieceId?.let(pieceTitles::get), best = it.id in bestTakeIds, underBacking = it.id in underBackingIds)
+                    cardOf(
+                        it, today, zone, pieceTitle = it.pieceId?.let(pieceTitles::get), best = it.id in bestTakeIds, underBacking = it.id in underBackingIds,
+                        event = it.eventId?.let(recordEvents::get),
+                    )
                 },
         )
     }
@@ -48,18 +54,19 @@ object HistoryReducer {
         )
 
     /**
-     * The chips by kind (spec 3.36.5), from what a recording stores — its piece and its video: a take is bound to a piece (a video
-     * take too); a video is one whether its file is there or lost; from Live is bound to nothing and has no video.
+     * The chips by kind (spec 3.36.5, 3.36.9), from what a recording stores — its piece, its event and its video: a take is bound to a
+     * piece (a video take too); a video is one whether its file is there or lost, and whoever's it is — of a piece, of an event; from Live
+     * is bound to nothing and has no video. The sound of an event is only under «Все».
      */
     private fun passes(filter: HistoryFilter, session: SessionSummary): Boolean =
         when (filter) {
             HistoryFilter.ALL -> true
             HistoryFilter.TAKES -> session.pieceId != null
             HistoryFilter.VIDEO -> session.videoPath != null
-            HistoryFilter.LIVE -> session.pieceId == null && session.videoPath == null
+            HistoryFilter.LIVE -> session.pieceId == null && session.videoPath == null && session.eventId == null
         }
 
-    /** Also the card of the "Записи этого дня" list on the practice screen and of a take on the screen of its piece. */
+    /** Also the card of the "Записи этого дня" list on the practice screen, of a take on the screen of its piece and of a recording on the screen of its event. */
     fun cardOf(
         session: SessionSummary,
         today: LocalDate,
@@ -67,6 +74,8 @@ object HistoryReducer {
         pieceTitle: String? = null,
         best: Boolean = false,
         underBacking: Boolean = false,
+        /** The event of the recording (spec 3.35): it names a recording without a name of its own. */
+        event: SessionEvent? = null,
     ): HistoryCard =
         HistoryCard(
             id = session.id,
@@ -81,5 +90,6 @@ object HistoryReducer {
             hasVideo = session.videoPath != null,
             best = best,
             underBacking = underBacking,
+            event = event,
         )
 }

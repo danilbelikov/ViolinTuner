@@ -4,6 +4,10 @@ import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.backing.BackingOutput
 import com.violinjourney.app.core.domain.backing.FakeBackingRepository
 import com.violinjourney.app.core.domain.backing.TakeBacking
+import com.violinjourney.app.core.domain.events.BuiltInKind
+import com.violinjourney.app.core.domain.events.FakeEventRepository
+import com.violinjourney.app.core.domain.events.KindRef
+import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
@@ -29,6 +33,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -71,6 +76,7 @@ class HistoryViewModelTest {
 
     private var files = Files()
     private val backings = FakeBackingRepository()
+    private val events = FakeEventRepository()
 
     /** What the view model asked to delete, call by call: the picked ones and one card of «Удалить…» go the same way. */
     private val deletes = mutableListOf<List<Long>>()
@@ -87,7 +93,7 @@ class HistoryViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private suspend fun save(daysAgo: Long, cents: Double = 1.0, pieceId: Long? = null, videoPath: String? = null): Long {
+    private suspend fun save(daysAgo: Long, cents: Double = 1.0, pieceId: Long? = null, videoPath: String? = null, eventId: Long? = null): Long {
         val samples = List(60) { SessionSample(69, cents) }
         val analysis = SessionAnalyzer.analyze(samples, config)
         return repository.save(
@@ -95,13 +101,13 @@ class HistoryViewModelTest {
                 startedAtEpochMs = (now - (daysAgo * 86_400).seconds).toEpochMilliseconds(), durationMs = 3_000, config = config,
                 samples = samples, metrics = analysis.metrics!!,
                 previewZones = SessionAnalyzer.previewZones(analysis.segments, config), audioPath = null, pieceId = pieceId,
-                videoPath = videoPath,
+                videoPath = videoPath, eventId = eventId,
             ),
         )
     }
 
     private fun TestScope.viewModel(): HistoryViewModel {
-        val viewModel = HistoryViewModel(watched, repertoire, config, clock, files, backings, background = StandardTestDispatcher(testScheduler))
+        val viewModel = HistoryViewModel(watched, repertoire, config, clock, files, backings, events, background = StandardTestDispatcher(testScheduler))
         backgroundScope.launch { viewModel.state.collect {} }
         return viewModel
     }
@@ -118,6 +124,27 @@ class HistoryViewModelTest {
         assertEquals(listOf(LocalDate(2026, 9, 17), LocalDate(2026, 9, 7)), state.cards.map { it.date })
         assertEquals(1, state.days.last().count)
         assertEquals(2, state.days.sumOf { it.count })
+    }
+
+    @Test
+    fun `a recording of an event carries its event, follows it when it is renamed, and is no recording of Live`() = runTest {
+        // spec 3.35, 3.36.9: named by the event until it is given a name of its own; «С Live» — without an event
+        val concert = SessionEvent(4, "Осенний концерт", LocalDate(2026, 9, 17), KindRef.BuiltIn(BuiltInKind.PERFORMANCE), null)
+        events.recordEvents.value = mapOf(4L to concert)
+        val recording = save(daysAgo = 0, eventId = 4)
+        val free = save(daysAgo = 1)
+        val viewModel = viewModel()
+        runCurrent()
+        assertEquals(concert, viewModel.state.value.cards.single { it.id == recording }.event)
+        assertNull(viewModel.state.value.cards.single { it.id == free }.event)
+
+        events.recordEvents.value = mapOf(4L to concert.copy(title = "Академический концерт"))
+        runCurrent()
+        assertEquals("Академический концерт", viewModel.state.value.cards.single { it.id == recording }.event?.title)
+
+        viewModel.onIntent(HistoryIntent.FilterSelected(HistoryFilter.LIVE))
+        runCurrent()
+        assertEquals(listOf(free), viewModel.state.value.cards.map { it.id })
     }
 
     @Test

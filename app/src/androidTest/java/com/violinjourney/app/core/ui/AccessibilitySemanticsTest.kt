@@ -1,5 +1,24 @@
 package com.violinjourney.app.core.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.test.assertWidthIsAtLeast
+import com.violinjourney.app.core.domain.repertoire.PieceSection
+import com.violinjourney.app.core.domain.repertoire.SectionRef
+import com.violinjourney.app.feature.events.screen.EventReducer
+import com.violinjourney.app.feature.events.screen.EventScreen
+import com.violinjourney.app.feature.events.screen.EventSheet
+import com.violinjourney.app.feature.events.screen.EventSheetCard
+import com.violinjourney.app.feature.live.block.PickerPiece
+import com.violinjourney.app.feature.live.block.PickerSection
+import com.violinjourney.app.feature.live.block.TodayMark
+import com.violinjourney.app.feature.repertoire.piece.TakeState
+import com.violinjourney.app.shared.resources.card_menu
+import com.violinjourney.app.shared.resources.event_kind_performance
+import com.violinjourney.app.shared.resources.session_back
 import android.view.View
 import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.test.hasContentDescription
@@ -285,7 +304,8 @@ import kotlinx.datetime.toInstant
  * paragraph each on their title, their buttons still buttons, «Трофеи, 2 из 10» and the nearest one «следующий», the field «Имя»;
  * the strip of the introduction, the cards of the tolerance, «Настройки» and their «Данные» (R8); the passport of a copy as one phrase,
  * the headers of a copy and a restore and the titles of their outcomes as headings, the line of phases as the step of now (stage 122);
- * a day with events, the heading of a month to come, the legend of the kinds and the rows of the reminder (stage 97).
+ * a day with events, the heading of a month to come, the legend of the kinds and the rows of the reminder (stage 97); the screen of an
+ * event — its chip by the name of its kind, «назад» and «Ещё» of its bar buttons of 48, its choice of the programme checkboxes (98a).
  */
 @RunWith(AndroidJUnit4::class)
 class AccessibilitySemanticsTest {
@@ -656,10 +676,66 @@ class AccessibilitySemanticsTest {
             ViolinTheme { ReminderCard(reminder, compact = false, lying = false, onMore = {}) }
         }
         compose.waitForIdle()
-        compose.onNodeWithContentDescription(going).assertExists()
-        compose.onNodeWithContentDescription(tomorrow).assertExists()
+        // a row is one sentence and, since stage 98, a button: it opens the screen of its event (spec 3.36.9)
+        compose.onNodeWithContentDescription(going).assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button)).assertHasClickAction()
+        compose.onNodeWithContentDescription(tomorrow).assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button)).assertHasClickAction()
         compose.onNodeWithContentDescription(more).assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button)).assertHasClickAction()
         compose.onAllNodesWithText("Анна Сергеевна", substring = true).assertCountEquals(0)
+    }
+
+    /**
+     * The screen of an event (spec 3.36.9), read in the merged tree: the chip is read by the name of the kind, «Выступление»; «назад» and «Ещё»
+     * of the bar are buttons of 48; the choice of the programme is a list of checkboxes, each its title and composer, «отмечено» or not —
+     * a choice of several, not the radio buttons of «Что играем» (spec 3.36.9: «отметка в выборе программы — флажок»).
+     */
+    @Test
+    fun theScreenOfAnEventSaysItsKindByNameAndChoosesItsProgrammeByCheckboxes() {
+        val config = EventsConfig()
+        val zone = TimeZone.of("Europe/Moscow")
+        val today = LocalDate(2026, 10, 24)
+        val concert = CalendarEvent(
+            1, KindRef.BuiltIn(BuiltInKind.PERFORMANCE), today, 18 * 60 + 30, 90, title = "Осенний концерт", place = "", notes = "", seriesId = null,
+            detached = false, createdAtEpochMs = 0,
+        )
+        val state = EventReducer.loadedOf(
+            event = concert, kinds = KindRules.all(emptyList(), config), series = emptyList(), programIds = emptyList(), pieces = emptyList(),
+            groups = emptyList(), sessions = emptyList(), recordEvent = null, today = today, zone = zone, config = config, notesCollapsedLines = 6,
+        )
+        val sections = listOf(
+            PickerSection(
+                SectionRef.BuiltIn(PieceSection.PIECES), name = null, doneToday = 0,
+                pieces = listOf(PickerPiece(3, "Концерт ля минор, 1 ч.", "А. Вивальди", TodayMark.None), PickerPiece(4, "Гавот", "Ф. Госсек", TodayMark.None)),
+            ),
+        )
+        var kind = ""
+        var back = ""
+        var more = ""
+        compose.setContent {
+            kind = stringResource(Res.string.event_kind_performance)
+            back = stringResource(Res.string.session_back)
+            more = stringResource(Res.string.card_menu)
+            ViolinTheme {
+                Column {
+                    Box(Modifier.height(320.dp)) { EventScreen(state, remember { mutableStateOf(TakeState.idle(micPermission = true, bars = 14)) }, onIntent = {}) }
+                    EventSheetCard(state.copy(sheet = EventSheet.Program(sections, checked = listOf(3))))
+                }
+            }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription(kind).assertExists()
+        for (label in listOf(back, more)) {
+            compose.onNodeWithContentDescription(label)
+                .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+                .assertWidthIsAtLeast(48.dp)
+                .assertHeightIsAtLeast(48.dp)
+        }
+        compose.onNodeWithContentDescription("Концерт ля минор, 1 ч., А. Вивальди")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Checkbox))
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.ToggleableState, ToggleableState.On))
+            .assertHasClickAction()
+        compose.onNodeWithContentDescription("Гавот, Ф. Госсек")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Checkbox))
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.ToggleableState, ToggleableState.Off))
     }
 
     /** September 2026 as the calendar gets it: 24 days of practice for 17 h 27 min, today the 27th, the 28th to come. */

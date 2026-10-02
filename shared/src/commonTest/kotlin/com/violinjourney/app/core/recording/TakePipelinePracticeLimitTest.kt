@@ -82,7 +82,7 @@ class TakePipelinePracticeLimitTest {
         )
         backgroundScope.launch { takes.watchPractice() }
         backgroundScope.launch {
-            takes.run(IntonationConfig(), pieceId = null, targetMode = { TargetMode.Chromatic }, unavailable = Unit) { _, _ -> }.collect {}
+            takes.run(IntonationConfig(), owner = null, targetMode = { TargetMode.Chromatic }, unavailable = Unit) { _, _ -> }.collect {}
         }
 
         // one long A4: while it sounds, it is not yet a counted note

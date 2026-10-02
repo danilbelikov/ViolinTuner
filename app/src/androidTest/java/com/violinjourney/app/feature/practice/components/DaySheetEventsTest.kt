@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasText
@@ -17,6 +18,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -146,6 +148,17 @@ class DaySheetEventsTest {
         // the words of a row are not read apart: a reader hears the row
         assertEquals(0, compose.onAllNodes(hasText("Анна Сергеевна", substring = true)).fetchSemanticsNodes().size)
         assertTrue("no line of a day to come", gone(words.later))
+    }
+
+    /** A row of an event is a button, the whole row: it opens the screen of the event (spec 3.36.9, stage 98) — of a day to come too. */
+    @Test
+    fun aRowOfAnEventOpensItsScreen() {
+        show()
+        compose.onNodeWithContentDescription(words.lesson).assertHasClickAction().performClick()
+        day = tomorrow
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription(words.strings).assertHasClickAction().performClick()
+        assertEquals(listOf<PracticeIntent>(PracticeIntent.DayEventClicked(1), PracticeIntent.DayEventClicked(4)), intents)
     }
 
     /**

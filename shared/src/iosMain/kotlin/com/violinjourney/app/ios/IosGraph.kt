@@ -59,6 +59,7 @@ import com.violinjourney.app.core.recording.DecodingFileTakeAnalyzer
 import com.violinjourney.app.core.recording.IosPcmFileOpener
 import com.violinjourney.app.core.recording.RecordingWatch
 import com.violinjourney.app.core.recording.TakePipeline
+import com.violinjourney.app.core.recording.audio.AudioTakeImporter
 import com.violinjourney.app.core.recording.video.AnalysisSpeed
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
 import com.violinjourney.app.core.settings.DataStoreBackupPrefs
@@ -170,6 +171,13 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
         practice = runningPractice, practiceConfig = practiceConfig, repertoireConfig = repertoireConfig,
         intonationDefaults = intonationConfig, clock = clock, elapsed = elapsed, speed = analysisSpeed,
         dispatcher = Dispatchers.Default, analytics = analytics,
+    )
+
+    /** «Звук из файла» of an event (spec 3.35, 5.28): one for the app, as the importer of videos. */
+    val audioImporter = AudioTakeImporter(
+        files = IosPickedSounds(io), analyzer = fileAnalyzer, sessions = sessions, configSource = configSource,
+        repertoireConfig = repertoireConfig, intonationDefaults = intonationConfig, clock = clock, elapsed = elapsed, speed = analysisSpeed,
+        io = io, dispatcher = Dispatchers.Default, analytics = analytics,
     )
 
     val playerFactory = SessionPlayerFactory { scope -> IosSessionPlayer(scope, soundConfig, backingConfig) }

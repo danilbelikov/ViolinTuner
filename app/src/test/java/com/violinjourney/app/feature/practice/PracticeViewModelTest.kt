@@ -3,6 +3,7 @@ package com.violinjourney.app.feature.practice
 import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.data.profile.AvatarFiles
 import com.violinjourney.app.core.data.profile.FakeAvatarFiles
+import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.backing.NoBackings
 import com.violinjourney.app.core.domain.events.BuiltInKind
 import com.violinjourney.app.core.domain.events.CalendarEvent
@@ -11,6 +12,7 @@ import com.violinjourney.app.core.domain.events.EventsConfig
 import com.violinjourney.app.core.domain.events.KindRef
 import com.violinjourney.app.core.domain.events.KindSign
 import com.violinjourney.app.core.domain.events.ReminderDay
+import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.domain.events.Running
 import com.violinjourney.app.core.domain.events.StoredKind
 import com.violinjourney.app.core.domain.events.FakeEventRepository
@@ -37,6 +39,9 @@ import com.violinjourney.app.core.domain.progress.FakeProfileRepository
 import com.violinjourney.app.core.domain.progress.FakeTrophyRepository
 import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
+import com.violinjourney.app.core.domain.session.NewSession
+import com.violinjourney.app.core.domain.session.SessionAnalyzer
+import com.violinjourney.app.core.domain.session.SessionSample
 import com.violinjourney.app.core.domain.journey.FakeJourneyRepository
 import com.violinjourney.app.core.domain.journey.TaktEarning
 import com.violinjourney.app.core.domain.venue.FollowTheRoad
@@ -678,6 +683,52 @@ class PracticeViewModelTest {
         viewModel.onIntent(PracticeIntent.DayHidden)
         runCurrent()
         assertEquals(1, viewModel.state.value.gift?.hours)
+    }
+
+    @Test
+    fun `an event of the sheet of the day opens its screen and the sheet comes back with the screen, as for a record`() = runTest {
+        val (viewModel, effects) = viewModel()
+        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 16)))
+        runCurrent()
+        viewModel.onIntent(PracticeIntent.DayEventClicked(5))
+        runCurrent()
+        assertEquals(listOf(PracticeEffect.OpenEvent(5)), effects)
+        assertTrue("the sheet steps aside while the event is on the screen", viewModel.state.value.sheetsAway)
+        assertEquals(PracticeSheet.Day(LocalDate(2026, 9, 16)), viewModel.state.value.sheet)
+
+        viewModel.onIntent(PracticeIntent.Resumed)
+        runCurrent()
+        assertFalse(viewModel.state.value.sheetsAway)
+        assertEquals("«назад» from the event: the same sheet", PracticeSheet.Day(LocalDate(2026, 9, 16)), viewModel.state.value.sheet)
+    }
+
+    @Test
+    fun `a row of the reminder opens the screen of its event and leaves the sheets alone`() = runTest {
+        val (viewModel, effects) = viewModel()
+        viewModel.onIntent(PracticeIntent.ReminderEventClicked(5))
+        runCurrent()
+        assertEquals(listOf(PracticeEffect.OpenEvent(5)), effects)
+        assertNull(viewModel.state.value.sheet)
+        assertFalse(viewModel.state.value.sheetsAway)
+    }
+
+    @Test
+    fun `the records of the sheet of the day are named by their events`() = runTest {
+        val event = SessionEvent(3, "Осенний концерт", today, KindRef.BuiltIn(BuiltInKind.PERFORMANCE), null)
+        events.recordEvents.value = mapOf(3L to event)
+        val samples = List(60) { SessionSample(69, 1.0) }
+        val analysis = SessionAnalyzer.analyze(samples, IntonationConfig())
+        sessions.save(
+            NewSession(
+                startedAtEpochMs = clock.nowMs - MS_PER_HOUR, durationMs = 3_000, config = IntonationConfig(), samples = samples,
+                metrics = analysis.metrics!!, previewZones = SessionAnalyzer.previewZones(analysis.segments, IntonationConfig()), audioPath = "a.m4a",
+                eventId = 3,
+            ),
+        )
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.DaySelected(today))
+        runCurrent()
+        assertEquals(event, viewModel.state.value.selected!!.sessions.single().event)
     }
 
     @Test

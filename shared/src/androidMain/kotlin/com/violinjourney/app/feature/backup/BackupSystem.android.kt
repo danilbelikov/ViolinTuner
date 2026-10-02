@@ -5,7 +5,6 @@ import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.SystemClock
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -40,7 +39,7 @@ actual fun rememberBackupSystem(onPlacePicked: (uri: String?) -> Unit, onCopyPic
     val placePicked by rememberUpdatedState(onPlacePicked)
     val copyPicked by rememberUpdatedState(onCopyPicked)
     // One window per press: the activity of a picker answers a cancel too, with null. The chooser and the browser do not answer.
-    val gate = remember { SystemWindowGate(now = SystemClock::elapsedRealtime) }
+    val gate = rememberSystemWindowGate()
     val place = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(ZIP_TYPE), gate.answering<Uri> { uri -> placePicked(uri?.toString()) })
     val copy = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument(), gate.answering<Uri> { uri -> copyPicked(uri?.toString()) })
     return remember(context) {

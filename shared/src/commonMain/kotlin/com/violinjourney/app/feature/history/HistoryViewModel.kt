@@ -6,6 +6,7 @@ import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.backing.BackingRepository
 import com.violinjourney.app.core.domain.backing.takesUnderBacking
+import com.violinjourney.app.core.domain.events.EventRepository
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.io.sizeBytes
@@ -34,6 +35,8 @@ open class HistoryViewModel(
     private val clock: WallClock,
     private val audioFiles: SessionAudioFiles,
     private val backings: BackingRepository,
+    /** The events of the recordings (spec 3.35): a recording of one is named by it until it is given a name of its own. */
+    private val events: EventRepository,
     /** Where the list is built: off the main thread — sorting, dates and the sizes of the videos grow with the records. */
     private val background: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
@@ -49,14 +52,14 @@ open class HistoryViewModel(
 
     // "Today" is read on every change, so a list left open over midnight is right again as
     // soon as anything changes; the screen is rebuilt on every return to it anyway.
-    // The list itself, without the picking: built off the main thread, and only when the records, the pieces, the filter
-    // or the backings change — a tap in the selection mode does not build it again.
+    // The list itself, without the picking: built off the main thread, and only when the records, the pieces, the filter,
+    // the backings or the events of the records change — a tap in the selection mode does not build it again.
     private val listed: Flow<HistoryState> = flow {
         // The sizes of the videos by file name, asked of the file system once while the list is watched: a video never
         // changes under its name. One map per collection — its steps run one after another.
         val videoSizes = HashMap<String, Long>()
         emitAll(
-            combine(repository.sessions, repertoire.pieces, filter, backings.takesUnderBacking) { sessions, pieces, chosen, underBacking ->
+            combine(repository.sessions, repertoire.pieces, filter, backings.takesUnderBacking, events.recordEvents) { sessions, pieces, chosen, underBacking, recordEvents ->
                 // Nothing recorded at all shows no chips (spec 3.36.5): the chip is «Все» again, its default, so the first recording
                 // to come does not stand hidden under a chip that could not be seen. A chip with nothing under it keeps its choice.
                 val filter = if (sessions.isEmpty()) HistoryFilter.ALL else chosen
@@ -66,6 +69,7 @@ open class HistoryViewModel(
                     pieceTitles = pieces.associate { it.id to it.title },
                     bestTakeIds = pieces.mapNotNull { it.bestTakeId }.toSet(),
                     underBackingIds = underBacking,
+                    recordEvents = recordEvents,
                 )
                 // The dialog that deletes names the weight of what goes (spec 3.19): videos are few, and a length is cheap to ask.
                 // A file that is gone is not remembered: it may come back with a restored copy.

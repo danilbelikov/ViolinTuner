@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
@@ -107,6 +108,13 @@ sealed interface ListRowEnd {
 
     /** A check in the accent on the chosen one of a list of choices; the whole row chooses. */
     data class Check(val checked: Boolean) : ListRowEnd
+
+    /**
+     * A word in the accent, a text button of 48 ([AppButtonStyle.Text]) — «Разрешить доступ» of «Записать звук» without the microphone
+     * (spec 3.36.9): the row itself is not pressed then, only the word. It stands beside the words while they keep their lines, else
+     * under them at the end of the row; the caption — the reason — is never cut.
+     */
+    data class TextAction(val label: String, val onClick: () -> Unit) : ListRowEnd
 }
 
 /**
@@ -159,6 +167,8 @@ fun ListRow(
         // nothing to toggle while it is not known: no switch, no press
         is ListRowEnd.Toggle -> end.checked?.let { checked -> Modifier.toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = { onClick() }) } ?: Modifier
         is ListRowEnd.Check -> Modifier.selectable(selected = end.checked, enabled = enabled, role = Role.RadioButton, onClick = onClick)
+        // only the word at the end is pressed
+        is ListRowEnd.TextAction -> Modifier
         else -> Modifier.clickable(enabled = enabled, role = Role.Button, onClick = onClick)
     }
     // the ground and the caption stay whole: only what names and marks the row is dimmed
@@ -195,32 +205,77 @@ fun ListRow(
             leading != null -> Box(dim) { leading() }
             icon != null -> AppIcon(icon, contentDescription = null, modifier = dim, tint = lead)
         }
-        Column(Modifier.weight(1f)) {
-            Text(
-                text = text,
-                modifier = dim,
-                color = words,
-                autoSize = if (singleLine) null else WordsFit,
-                maxLines = if (singleLine) 1 else Int.MAX_VALUE,
-                overflow = if (singleLine) TextOverflow.Ellipsis else TextOverflow.Clip,
-                style = wordsStyle,
-            )
-            if (caption != null) {
+        val wordsColumn: @Composable (Modifier) -> Unit = { columnModifier ->
+            Column(columnModifier) {
                 Text(
-                    // an empty caption holds the place of its line: a no-break space is a line of the same height, and it is silent
-                    text = caption.ifEmpty { HELD_LINE },
-                    modifier = if (caption.isEmpty()) Modifier.clearAndSetSemantics {} else Modifier,
-                    color = colors.onSurfaceVariant,
-                    autoSize = CaptionFit,
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = CAPTION_SP.sp, lineHeight = 17.5.sp, fontFeatureSettings = TABULAR_FIGURES),
+                    text = text,
+                    modifier = dim,
+                    color = words,
+                    autoSize = if (singleLine) null else WordsFit,
+                    maxLines = if (singleLine) 1 else Int.MAX_VALUE,
+                    overflow = if (singleLine) TextOverflow.Ellipsis else TextOverflow.Clip,
+                    style = wordsStyle,
                 )
-            }
-            if (below != null) {
-                Spacer(Modifier.height(BelowCaption))
-                below()
+                if (caption != null) {
+                    Text(
+                        // an empty caption holds the place of its line: a no-break space is a line of the same height, and it is silent
+                        text = caption.ifEmpty { HELD_LINE },
+                        modifier = if (caption.isEmpty()) Modifier.clearAndSetSemantics {} else Modifier,
+                        color = colors.onSurfaceVariant,
+                        autoSize = CaptionFit,
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = CAPTION_SP.sp, lineHeight = 17.5.sp, fontFeatureSettings = TABULAR_FIGURES),
+                    )
+                }
+                if (below != null) {
+                    Spacer(Modifier.height(BelowCaption))
+                    below()
+                }
             }
         }
-        RowEnd(if (accent && end == ListRowEnd.Chevron) ListRowEnd.None else end, dim, words, giveWay)
+        if (end is ListRowEnd.TextAction) {
+            WordsAndAction(
+                words = { wordsColumn(Modifier) },
+                action = { AppButton(end.label, onClick = end.onClick, modifier = dim, style = AppButtonStyle.Text) },
+                modifier = Modifier.weight(1f),
+            )
+        } else {
+            wordsColumn(Modifier.weight(1f))
+            RowEnd(if (accent && end == ListRowEnd.Chevron) ListRowEnd.None else end, dim, words, giveWay)
+        }
+    }
+}
+
+/**
+ * The words of a row and the word at its end ([ListRowEnd.TextAction]): side by side while the words stand beside it on no more lines
+ * than they would across the whole row — the caption, the reason, is never cut (spec 3.36.9: up to two lines); otherwise the word goes
+ * under them, at the end of the row, and the reason takes the whole width. On a phone upright that is under: «Разрешить доступ» beside
+ * «Чтобы записать звук, нужен доступ к микрофону.» would leave it a third of the row. Decided by the intrinsic heights, measured once.
+ */
+@Composable
+private fun WordsAndAction(words: @Composable () -> Unit, action: @Composable () -> Unit, modifier: Modifier = Modifier) {
+    Layout(contents = listOf(words, action), modifier = modifier) { (wordsMeasurables, actionMeasurables), constraints ->
+        val wordsPart = wordsMeasurables.single()
+        val actionPart = actionMeasurables.single()
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val full = loose.maxWidth
+        val gap = RowGap.roundToPx()
+        val actionWidth = actionPart.maxIntrinsicWidth(loose.maxHeight).coerceAtMost(full)
+        val besideWidth = (full - actionWidth - gap).coerceAtLeast(0)
+        val beside = besideWidth > 0 && wordsPart.minIntrinsicHeight(besideWidth) <= wordsPart.minIntrinsicHeight(full)
+        val placedWords = wordsPart.measure(loose.copy(maxWidth = if (beside) besideWidth else full))
+        val placedAction = actionPart.measure(loose)
+        if (beside) {
+            val height = maxOf(placedWords.height, placedAction.height)
+            layout(full, height) {
+                placedWords.placeRelative(0, (height - placedWords.height) / 2)
+                placedAction.placeRelative(full - placedAction.width, (height - placedAction.height) / 2)
+            }
+        } else {
+            layout(full, placedWords.height + placedAction.height) {
+                placedWords.placeRelative(0, 0)
+                placedAction.placeRelative(full - placedAction.width, placedWords.height)
+            }
+        }
     }
 }
 
@@ -275,6 +330,8 @@ private fun RowEnd(end: ListRowEnd, modifier: Modifier, words: Color, giveWay: M
         } else {
             Spacer(Modifier.size(IconSizes.Standalone))
         }
+        // laid out with the words ([WordsAndAction])
+        is ListRowEnd.TextAction -> Unit
     }
 }
 

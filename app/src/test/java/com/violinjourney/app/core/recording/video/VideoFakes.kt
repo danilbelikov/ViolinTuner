@@ -33,7 +33,10 @@ class FakeVideoFiles : VideoFiles {
     /** The container the camera writes: `.mov` on an iPhone. Adopted files keep it, as `IosVideoFiles.adopt` does. */
     var cameraExtension = ".mp4"
 
-    override fun newCameraFile() = File("/cache/camera/shot-${next++}$cameraExtension")
+    /** Where the camera writes: a bare path by default; a real folder for a test that wants the shot on a disk. */
+    var cameraFolder = File("/cache/camera")
+
+    override fun newCameraFile() = File(cameraFolder, "shot-${next++}$cameraExtension")
     override fun adopt(cameraFile: File): File? {
         adoptThrows?.let { throw it }
         return if (adoptFails) null else File("/files/sessions/video-${next++}.${cameraFile.extension}")

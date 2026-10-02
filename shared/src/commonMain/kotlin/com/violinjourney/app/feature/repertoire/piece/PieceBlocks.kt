@@ -96,6 +96,11 @@ internal val QuietGroupTop = 18.dp
  * The title of a block (5.29 R4): 15 sp / 800, 22 above it, 10 under it, a heading for TalkBack. [beside] stands right after the
  * words («Дубли 6»), [end] at the right edge, 13 sp / 600 in the second level («4 стр.», «G3 – G6»); a button at the end ([action],
  * «Выбрать») keeps the words where they would stand without it.
+ *
+ * [actionWhole] — the [action] is measured first and keeps its words whole, and the title takes what is left, cut with an ellipsis where
+ * it is longer: «+ Добавить» beside «Что играли» of the screen of an event — «Was gespielt wurde» and «Hinzufügen» on 360 at the font
+ * 1.3 would break «Hinzufügen» by the letter otherwise (spec 3.36.9; review of stage 98a). Where both fit, nothing moves. False — the
+ * title is measured first, as on the screen of a piece.
  */
 @Composable
 internal fun BlockTitle(
@@ -104,9 +109,12 @@ internal fun BlockTitle(
     beside: String? = null,
     end: String? = null,
     action: (@Composable () -> Unit)? = null,
+    actionWhole: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
     val small = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES)
+    // the button first: a child without a weight is measured before the one with it
+    val buttonFirst = actionWhole && action != null
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -116,14 +124,14 @@ internal fun BlockTitle(
     ) {
         Text(
             text,
-            modifier = Modifier.semantics { heading() },
+            modifier = (if (buttonFirst) Modifier.weight(1f) else Modifier).semantics { heading() },
             color = colors.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp, lineHeight = 20.sp, fontWeight = FontWeight.ExtraBold),
         )
         if (beside != null) Text(beside, color = colors.onSurfaceVariant, maxLines = 1, style = small)
-        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
+        Box(if (buttonFirst) Modifier else Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
             when {
                 action != null -> Box(Modifier.offset(x = 12.dp)) { action() }
                 end != null -> Text(end, color = colors.onSurfaceVariant, maxLines = 1, style = small)

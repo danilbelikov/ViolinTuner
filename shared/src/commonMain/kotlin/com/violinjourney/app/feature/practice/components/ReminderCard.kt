@@ -106,12 +106,19 @@ private data class ReminderMetrics(val paddingV: Dp, val paddingH: Dp, val gap: 
  * «· идёт» for one going on; a rule between the rows. Two rows are seen; the third and further are «ещё 2» with the mini signs of their
  * kinds — it opens the sheet of the day of the first of them ([onMore]). [compact] — lying and in a window lower than 700 (360 × 640,
  * [ReminderFit]): one event, its first line alone, and «ещё N» a target of its own on the right behind a rule, the gap of the row
- * between the words and the rule. No button «закрыть»: the card goes by
- * itself when its event is over. The rows open nothing until the screen of an event is there (stage 98). [lying] — the fields and the
+ * between the words and the rule. No button «закрыть»: the card goes by itself when its event is over. A row opens the screen of its
+ * event ([onOpen]), the chevron at its end — but for the row of the compact card with «ещё N» beside it. [lying] — the fields and the
  * gaps of the left column of landscape.
  */
 @Composable
-fun ReminderCard(reminder: Reminder, compact: Boolean, lying: Boolean, onMore: (LocalDate) -> Unit, modifier: Modifier = Modifier) {
+fun ReminderCard(
+    reminder: Reminder,
+    compact: Boolean,
+    lying: Boolean,
+    onMore: (LocalDate) -> Unit,
+    modifier: Modifier = Modifier,
+    onOpen: (eventId: Long) -> Unit = {},
+) {
     val metrics = if (lying) ReminderMetrics.Lying else ReminderMetrics.Upright
     val shape = RoundedCornerShape(EventsDimens.ReminderCorner)
     val card = modifier.fillMaxWidth().clip(shape).background(MaterialTheme.colorScheme.surfaceContainer)
@@ -120,7 +127,7 @@ fun ReminderCard(reminder: Reminder, compact: Boolean, lying: Boolean, onMore: (
         Column(card.padding(horizontal = metrics.paddingH, vertical = metrics.paddingV)) {
             reminder.visible(compact = false).forEachIndexed { index, row ->
                 if (index > 0) Rule(Modifier.fillMaxWidth().height(EventsDimens.ReminderRule))
-                ReminderRowView(row, compact = false, gap = metrics.gap)
+                ReminderRowView(row, compact = false, gap = metrics.gap, chevron = true, onClick = { onOpen(row.eventId) })
             }
             if (hidden.isNotEmpty()) {
                 Rule(Modifier.fillMaxWidth().height(EventsDimens.ReminderRule))
@@ -136,7 +143,8 @@ fun ReminderCard(reminder: Reminder, compact: Boolean, lying: Boolean, onMore: (
                 .padding(start = metrics.paddingH, top = metrics.paddingV, bottom = metrics.paddingV, end = if (hidden.isEmpty()) metrics.paddingH else 0.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            ReminderRowView(first, compact = true, gap = metrics.gap, modifier = Modifier.weight(1f))
+            // one event: the chevron of the row; more: the target of «ещё N» stands in its place
+            ReminderRowView(first, compact = true, gap = metrics.gap, chevron = hidden.isEmpty(), onClick = { onOpen(first.eventId) }, modifier = Modifier.weight(1f))
             if (hidden.isNotEmpty()) {
                 // the words keep the gap of the row from the rule, as from the plate (events-views.html, 2: 12, lying 10)
                 Spacer(Modifier.width(metrics.gap))
@@ -154,13 +162,13 @@ private fun Rule(modifier: Modifier) {
 }
 
 /**
- * One event of the card: the sign of its kind on its plate of 32, the first line — the day, the start and the name — and in the full
- * card the second one. A reader hears one sentence: «Завтра в 17:00 урок, Анна Сергеевна», «…, идёт до 17:45». The sentence is the
- * whole row, its fields of 8 too — a node set inside them would be the words alone, 40 high where the row is 56: the frame of the
- * reader would stand off the row, and the touch of stage 98 would be less than 48.
+ * One event of the card: the sign of its kind on its plate of 32, the first line — the day, the start and the name — in the full card
+ * the second one, and the [chevron] of 24. A reader hears one sentence: «Завтра в 17:00 урок, Анна Сергеевна», «…, идёт до 17:45». The
+ * sentence is the whole row, its fields of 8 too — a node set inside them would be the words alone, 40 high where the row is 56: the
+ * frame of the reader would stand off the row, and its touch ([onClick], the screen of the event) would be less than 48.
  */
 @Composable
-private fun ReminderRowView(row: ReminderRow, compact: Boolean, gap: Dp, modifier: Modifier = Modifier) {
+private fun ReminderRowView(row: ReminderRow, compact: Boolean, gap: Dp, chevron: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val name = eventWordOf(row.name)
     val first = firstLineOf(row, name)
@@ -169,6 +177,7 @@ private fun ReminderRowView(row: ReminderRow, compact: Boolean, gap: Dp, modifie
     Row(
         modifier = modifier
             .heightIn(min = EventsDimens.ReminderRowMin)
+            .clickable(role = Role.Button, onClick = onClick)
             .clearAndSetSemantics { contentDescription = description }
             .padding(vertical = EventsDimens.ReminderRowPadding),
         verticalAlignment = Alignment.CenterVertically,
@@ -199,6 +208,10 @@ private fun ReminderRowView(row: ReminderRow, compact: Boolean, gap: Dp, modifie
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = EventsDimens.ReminderSecond, lineHeight = EventsDimens.ReminderSecondHeight),
                 )
             }
+        }
+        if (chevron) {
+            Spacer(Modifier.width(gap))
+            AppIcon(AppIcons.ChevronRight, contentDescription = null, size = EventsDimens.EventChevron, tint = ViolinTheme.textTertiary)
         }
     }
 }

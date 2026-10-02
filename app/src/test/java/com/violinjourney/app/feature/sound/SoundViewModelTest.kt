@@ -6,6 +6,10 @@ import com.violinjourney.app.core.audio.playback.FakeSessionWaveforms
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.backing.BackingConfig
+import com.violinjourney.app.core.domain.events.BuiltInKind
+import com.violinjourney.app.core.domain.events.FakeEventRepository
+import com.violinjourney.app.core.domain.events.KindRef
+import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
@@ -56,6 +60,7 @@ class SoundViewModelTest {
     private val config = SoundConfig()
     private val sound = FakeSoundRepository(config)
     private val sessions = FakeSessionRepository()
+    private val events = FakeEventRepository()
     private val repertoire = FakeRepertoireRepository()
     private val player = FakeSessionPlayer()
     private val waveforms = FakeSessionWaveforms()
@@ -79,7 +84,7 @@ class SoundViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private suspend fun recording(audio: String?, startedAt: Long = 1_000, pieceId: Long? = null): Long {
+    private suspend fun recording(audio: String?, startedAt: Long = 1_000, pieceId: Long? = null, eventId: Long? = null): Long {
         val intonation = IntonationConfig()
         val samples = List(40) { SessionSample(69, 1.0) }
         val analysis = SessionAnalyzer.analyze(samples, intonation)
@@ -87,6 +92,7 @@ class SoundViewModelTest {
             NewSession(
                 startedAtEpochMs = startedAt, durationMs = 2_000, config = intonation, samples = samples, metrics = analysis.metrics!!,
                 previewZones = SessionAnalyzer.previewZones(analysis.segments, intonation), audioPath = audio, pieceId = pieceId,
+                eventId = eventId,
             ),
         )
     }
@@ -108,7 +114,7 @@ class SoundViewModelTest {
         val viewModel = SoundViewModel(
             SavedStateHandle(mapOf(SoundViewModel.ARG_SESSION_ID to (sessionId ?: SoundViewModel.EVERYONE))),
             sound, sessions, repertoire, audioFiles, { player }, waveforms, config, backings, backingPcm, backingConfig,
-            clock = clock, io = StandardTestDispatcher(testScheduler),
+            clock = clock, events = events, io = StandardTestDispatcher(testScheduler),
         )
         val effects = mutableListOf<SoundEffect>()
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
@@ -133,6 +139,23 @@ class SoundViewModelTest {
         assertEquals(listOf(File("take.m4a")), player.loaded)
         assertEquals(hall, player.sounds.last())
         assertEquals(120, state.waveform!!.size)
+    }
+
+    @Test
+    fun `a recording of an event is named by it in the header and on the cards of «Слушать на»`() = runTest {
+        // spec 3.35: «Осенний концерт · 26 сентября» until it is given a name of its own
+        val concert = SessionEvent(4, "Осенний концерт", LocalDate(2026, 9, 26), KindRef.BuiltIn(BuiltInKind.PERFORMANCE), null)
+        events.recordEvents.value = mapOf(4L to concert)
+        recording("older.m4a", startedAt = 1_000)
+        val id = recording("concert.mp3", startedAt = 2_000, eventId = 4)
+        val (one, _) = screen(id)
+        assertEquals(concert, one.state.value.recording!!.event)
+
+        val (everyone, _) = screen(null)
+        val state = everyone.state.value
+        assertEquals("heard on the newest recording — the concert's", concert, state.recording!!.event)
+        assertEquals(concert, state.recordings.single { it.id == id }.event)
+        assertNull(state.recordings.single { it.id != id }.event)
     }
 
     @Test
@@ -627,7 +650,7 @@ class SoundViewModelTest {
         val viewModel = SoundViewModel(
             SavedStateHandle(mapOf(SoundViewModel.ARG_SESSION_ID to id)),
             sound, sessions, repertoire, AudioFiles, { player }, waveforms, config, backings, backingPcm, BackingConfig(),
-            clock = clock, io = StandardTestDispatcher(testScheduler),
+            clock = clock, events = events, io = StandardTestDispatcher(testScheduler),
         )
         val states = mutableListOf<SoundState>()
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect { states += it } }

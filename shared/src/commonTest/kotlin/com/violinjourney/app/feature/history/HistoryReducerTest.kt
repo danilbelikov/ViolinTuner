@@ -2,6 +2,9 @@ package com.violinjourney.app.feature.history
 
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.Zone
+import com.violinjourney.app.core.domain.events.BuiltInKind
+import com.violinjourney.app.core.domain.events.KindRef
+import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.domain.session.SessionSummary
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -182,5 +185,29 @@ class HistoryReducerTest {
         val sessions = listOf(take.copy(pieceId = 7), take.copy(id = 2), take.copy(id = 3, pieceId = 404))
         val state = HistoryReducer.stateOf(sessions, HistoryFilter.ALL, today, moscow, config, pieceTitles = mapOf(7L to "Менуэт"))
         assertEquals(mapOf(1L to "Менуэт", 2L to null, 3L to null), state.cards.associate { it.id to it.pieceTitle })
+    }
+
+    // The recordings of events (spec 3.36.9, plan D36): the sound of a lesson only under «Все», its video under «Видео» too.
+    private val lessonSound = session(21, "2026-09-16T17:50:00", 70).copy(audioPath = "lesson.m4a", eventId = 3)
+    private val lessonVideo = session(22, "2026-09-16T17:40:00", 70).copy(audioPath = "lesson.mp4", videoPath = "lesson.mp4", eventId = 3)
+    private val lesson = SessionEvent(3, title = "", date = LocalDate(2026, 9, 16), kind = KindRef.BuiltIn(BuiltInKind.LESSON), ownName = null)
+
+    @Test
+    fun `the sound of an event is not «С Live» - only «Все» shows it - and its video is a video`() {
+        val list = kinds + lessonSound + lessonVideo
+        assertEquals(listOf(11L), state(HistoryFilter.LIVE, list = list).cards.map { it.id })
+        assertEquals(listOf(22L, 13L), state(HistoryFilter.VIDEO, list = list).cards.map { it.id })
+        assertEquals(listOf(12L, 13L), state(HistoryFilter.TAKES, list = list).cards.map { it.id }, "a recording of an event is no take")
+        assertEquals(listOf(11L, 21L, 22L, 12L, 13L), state(HistoryFilter.ALL, list = list).cards.map { it.id })
+    }
+
+    @Test
+    fun `a recording of an event carries its event - one with a name of its own or of an event gone keeps its title`() {
+        val renamed = lessonSound.copy(id = 23, title = "Этюд на уроке")
+        // the event deleted: the name it wore is written into the recording and the link is gone (spec 3.35)
+        val orphan = lessonSound.copy(id = 24, title = "Урок · 9 сентября", eventId = null)
+        val cards = HistoryReducer.stateOf(listOf(lessonSound, renamed, orphan), HistoryFilter.ALL, today, moscow, config, recordEvents = mapOf(3L to lesson)).cards
+        assertEquals(mapOf(21L to lesson, 23L to lesson, 24L to null), cards.associate { it.id to it.event })
+        assertEquals(mapOf(21L to null, 23L to "Этюд на уроке", 24L to "Урок · 9 сентября"), cards.associate { it.id to it.title })
     }
 }

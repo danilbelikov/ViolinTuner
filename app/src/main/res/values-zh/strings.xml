@@ -404,6 +404,7 @@
     <string name="record_tile_record">录音</string>
     <string name="record_tile_only_video">视频</string>
     <string name="record_tile_no_sound">无声</string>
+    <string name="record_tile_sound">音频</string>
     <string name="history_empty_title">你的录音会出现在这里</string>
     <string name="history_empty_text">用 Live 的录音按钮录下演奏，或在曲目页面录制——录完会有分析：哪些音稳，哪些音跑。</string>
     <string name="history_open_live">打开 Live</string>
@@ -503,6 +504,83 @@
     <string name="event_reminder_more_description_one">还有 %1$d 个日程：%2$s</string>
     <string name="event_reminder_more_description_few">还有 %1$d 个日程：%2$s</string>
     <string name="event_reminder_more_description_many">还有 %1$d 个日程：%2$s</string>
+    <string name="event_program">曲目单</string>
+    <string name="event_program_done">完成 · %1$d</string>
+    <string name="event_program_empty_title">曲库还是空的</string>
+    <string name="event_program_empty_text_program">先添加曲目、音阶和练习曲，再在这里勾选音乐会上要演奏的内容。</string>
+    <string name="event_program_empty_text_played">先添加曲目、音阶和练习曲，再在这里勾选练过的内容。</string>
+    <string name="event_notes_ask_lesson">布置了什么？</string>
+    <string name="event_notes_ask_before">几点集合，谁来伴奏？</string>
+    <string name="event_notes_ask_after">进行得怎么样？</string>
+    <string name="event_program_empty">你要演奏什么？</string>
+    <string name="event_add_to_program">添加到曲目单</string>
+    <string name="event_records_from">%1$s 起可添加录音</string>
+    <string name="event_can_add">可以添加</string>
+    <string name="event_can_add_note">笔记</string>
+    <string name="event_can_add_note_caption">发生了什么，要记住什么</string>
+    <string name="event_can_add_program">曲目单</string>
+    <string name="event_can_add_from_repertoire">从曲库中选</string>
+    <string name="event_can_add_record">录音</string>
+    <string name="event_can_add_record_caption">音频或视频</string>
+    <string name="event_not_found">找不到日程</string>
+    <string name="event_program_remove">移除“%1$s”</string>
+    <string name="event_repeat_until_end">%1$s，至 %2$s</string>
+    <string name="event_add_record">添加录音</string>
+    <string name="event_add_file">从文件导入音频</string>
+    <string name="event_add_file_caption">mp3、m4a、wav…</string>
+    <string name="event_add_mic">录音</string>
+    <string name="event_add_mic_caption">盲录，之后再分析</string>
+    <string name="event_add_camera_caption">系统相机</string>
+    <string name="event_mic_reason">录音需要麦克风权限。</string>
+    <string name="event_recording_description">正在录音，%1$s</string>
+    <string name="file_copying">正在添加文件…</string>
+    <string name="file_error_too_long">文件超过 60 分钟，无法分析</string>
+    <string name="file_error_cannot_open">无法打开文件</string>
+    <string name="file_error_no_sound">文件中没有声音</string>
+    <string name="file_error_no_notes">文件中没有找到音符——录音未添加</string>
+    <string name="event_video_error_no_notes">视频中没有找到音符——录音未添加</string>
+    <string name="event_series_delete_q_lesson">删除 %1$s 的课？</string>
+    <string name="event_series_delete_q_rehearsal">删除 %1$s 的排练？</string>
+    <string name="event_series_delete_q_event">删除 %1$s 的日程？</string>
+    <string name="event_series_this_lesson">仅此节课</string>
+    <string name="event_series_this_rehearsal">仅此次排练</string>
+    <string name="event_series_this_event">仅此日程</string>
+    <string name="event_series_following_lesson">此节及之后的课</string>
+    <string name="event_series_following_rehearsal">此次及之后的排练</string>
+    <string name="event_series_following_event">此日程及之后的</string>
+    <string name="event_series_from_date">自 %1$s 起</string>
+    <string name="event_series_past_short_lesson">过去的课不会改变。</string>
+    <string name="event_series_past_short_rehearsal">过去的排练不会改变。</string>
+    <string name="event_series_past_short_event">过去的日程不会改变。</string>
+    <string name="event_delete_text_program">笔记和曲目单将被删除。录音会保留在“录音”中。</string>
+    <string name="event_delete_text_played">笔记和“练过的内容”将被删除。录音会保留在“录音”中。</string>
+    <string-array name="event_repeat_weekly_on">
+        <item>每周一</item>
+        <item>每周二</item>
+        <item>每周三</item>
+        <item>每周四</item>
+        <item>每周五</item>
+        <item>每周六</item>
+        <item>每周日</item>
+    </string-array>
+    <string-array name="event_repeat_biweekly_on">
+        <item>每两周的周一</item>
+        <item>每两周的周二</item>
+        <item>每两周的周三</item>
+        <item>每两周的周四</item>
+        <item>每两周的周五</item>
+        <item>每两周的周六</item>
+        <item>每两周的周日</item>
+    </string-array>
+    <string-array name="event_rest_on_weekdays">
+        <item>其余在周一</item>
+        <item>其余在周二</item>
+        <item>其余在周三</item>
+        <item>其余在周四</item>
+        <item>其余在周五</item>
+        <item>其余在周六</item>
+        <item>其余在周日</item>
+    </string-array>
     <string name="practice_step_down">减 %1$d 分钟</string>
     <string name="practice_step_up">加 %1$d 分钟</string>
     <string name="practice_save">保存</string>

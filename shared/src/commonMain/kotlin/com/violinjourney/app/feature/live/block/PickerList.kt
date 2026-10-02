@@ -12,7 +12,11 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -20,6 +24,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -32,6 +38,7 @@ import com.violinjourney.app.core.ui.components.SectionLabel
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
+import com.violinjourney.app.core.ui.icons.drawCheckMark
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.repertoire.sections.sectionName
 import com.violinjourney.app.shared.resources.Res
@@ -62,12 +69,23 @@ private val Capsule = RoundedCornerShape(percent = 50)
 private const val TABULAR_FIGURES = "tnum"
 
 /**
+ * How the rows of a list of choice are chosen (spec 3.36.9, «Выбор программы»): one of them, as «Что играем» picks the element it plays
+ * (R6), or several at once, as the programme of an event — each row a box with its own mark, [Multi.checked] those that are marked.
+ */
+sealed interface PickerSelection {
+    data object Single : PickerSelection
+
+    data class Multi(val checked: Set<Long>) : PickerSelection
+}
+
+/**
  * The rows of a list of choice from the repertoire (spec 3.36.6, 5.29 R6) — a common part, not only Live's: «Что играем» picks one
- * element on it (R6), the programme of an event several (R9, spec 3.35). The [sections] in the order they come, each under its label
- * with «сегодня N» at the right ([PickerSectionHead]); a section without elements is left out. A row ([PickerRow]) is chosen when
- * [isSelected] says so and calls [onPick] when pressed — unless not [pickable] (in «Что играем» the element whose block runs); at its
- * end stands [trailing], the pill of today by default ([TodayPill]). The order is theirs: marks never move anything. The caller gives
- * the list its sides — 8, so that the rows' ground reaches 12 past the words, and the words stand 20 in, under the labels.
+ * element on it (R6), the programme of an event several (R9, spec 3.35, [selection] `Multi`). The [sections] in the order they come,
+ * each under its label with «сегодня N» at the right ([PickerSectionHead]); a section without elements is left out. A row ([PickerRow])
+ * is chosen when [isSelected] says so — in `Multi`, when its id is among the marked ones — and calls [onPick] when pressed, unless not
+ * [pickable] (in «Что играем» the element whose block runs); at its end stands [trailing], the pill of today by default ([TodayPill]),
+ * or in `Multi` the circle of its mark ([CheckCircle]). The order is theirs: marks never move anything. The caller gives the list its
+ * sides — 8, so that the rows' ground reaches 12 past the words, and the words stand 20 in, under the labels.
  */
 fun LazyListScope.pickerSections(
     sections: List<PickerSection>,
@@ -75,16 +93,21 @@ fun LazyListScope.pickerSections(
     onPick: (PickerPiece) -> Unit,
     pickable: (PickerPiece) -> Boolean = { it.today != TodayMark.Running },
     trailing: @Composable (PickerPiece) -> Unit = { TodayPill(it.today) },
+    selection: PickerSelection = PickerSelection.Single,
 ) {
     sections.filter { it.pieces.isNotEmpty() }.forEach { section ->
         item(key = "head-" + section.ref, contentType = HEAD) { PickerSectionHead(section) }
         items(section.pieces, key = { it.id }, contentType = { PIECE }) { piece ->
             PickerRow(
                 piece = piece,
-                selected = isSelected(piece),
+                selected = when (selection) {
+                    PickerSelection.Single -> isSelected(piece)
+                    is PickerSelection.Multi -> piece.id in selection.checked
+                },
                 enabled = pickable(piece),
                 onClick = { onPick(piece) },
                 trailing = { trailing(piece) },
+                selection = selection,
             )
         }
     }
@@ -130,7 +153,9 @@ fun PickerSectionHead(section: PickerSection, modifier: Modifier = Modifier) {
  * A row of the list (spec 3.36.6, 5.29 R6): 56 at the least, 8 / 12 of padding, corner 14; the title in one line with an ellipsis
  * (16 sp / 700), the composer under it (13 sp), [trailing] at the end. The chosen one — the soft accent inside an outline of the
  * accent of 1.5. A radio button for TalkBack, «выбрано» when chosen, read as one phrase of its parts: the title, the composer, today.
- * Not [enabled] — it is not pressed (the element whose block runs, spec 3.28).
+ * Not [enabled] — it is not pressed (the element whose block runs, spec 3.28). In a [selection] of several (`Multi`, the programme of an
+ * event, spec 3.36.9) the row is not filled: it is a checkbox, its mark the circle at its end ([CheckCircle]) — «Концерт ля минор, 1 ч.,
+ * А. Вивальди, отмечено».
  */
 @Composable
 fun PickerRow(
@@ -140,16 +165,24 @@ fun PickerRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     trailing: @Composable () -> Unit = { TodayPill(piece.today) },
+    selection: PickerSelection = PickerSelection.Single,
 ) {
     val colors = MaterialTheme.colorScheme
     val said = listOfNotNull(piece.title, piece.composer, todaySaid(piece.today)).joinToString(", ")
+    val several = selection is PickerSelection.Multi
     Row(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = RowMinHeight)
             .clip(RowShape)
-            .then(if (selected) Modifier.background(ViolinTheme.accentSoft).border(SelectedEdge, colors.primary, RowShape) else Modifier)
-            .selectable(selected = selected, enabled = enabled, role = Role.RadioButton, onClick = onClick)
+            .then(if (selected && !several) Modifier.background(ViolinTheme.accentSoft).border(SelectedEdge, colors.primary, RowShape) else Modifier)
+            .then(
+                if (several) {
+                    Modifier.toggleable(value = selected, enabled = enabled, role = Role.Checkbox, onValueChange = { onClick() })
+                } else {
+                    Modifier.selectable(selected = selected, enabled = enabled, role = Role.RadioButton, onClick = onClick)
+                },
+            )
             .semantics { contentDescription = said }
             .padding(horizontal = RowPaddingSide, vertical = RowPaddingVertical),
         verticalAlignment = Alignment.CenterVertically,
@@ -174,9 +207,36 @@ fun PickerRow(
                 )
             }
         }
-        trailing()
+        if (several) CheckCircle(selected) else trailing()
     }
 }
+
+/**
+ * The mark of a row of a choice of several (spec 3.36.9, 5.29 R9 «Выбор программы»): a circle of 28 — empty, an outline of 2 in the
+ * third level of text (4.7 : 1 on the sheet); marked, the accent with a check of 18 in onPrimary, its line 2.6. The choice is seen by
+ * its shape, not only its colour (principle 5). Silent: the row is the checkbox.
+ */
+@Composable
+fun CheckCircle(checked: Boolean, modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
+    val outline = ViolinTheme.textTertiary
+    Box(
+        modifier = modifier
+            .size(CheckSize)
+            .then(if (checked) Modifier.background(colors.primary, CircleShape) else Modifier.border(CheckEdge, outline, CircleShape)),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (checked) {
+            val mark = colors.onPrimary
+            Spacer(Modifier.size(CheckMark).drawBehind { drawCheckMark(mark, Offset.Zero, size.minDimension, CheckLine.toPx()) })
+        }
+    }
+}
+
+private val CheckSize = 28.dp
+private val CheckEdge = 2.dp
+private val CheckMark = 18.dp
+private val CheckLine = 2.6.dp
 
 /** What TalkBack says of today: «сыгран сегодня, 15 минут», «сегодня 7 минут», «идёт»; nothing for an element not played. */
 @Composable
