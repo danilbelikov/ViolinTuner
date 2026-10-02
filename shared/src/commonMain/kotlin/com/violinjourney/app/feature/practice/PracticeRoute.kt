@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
@@ -34,7 +35,15 @@ fun PracticeRoute(
     viewModel: PracticeViewModel,
     homeLookViewModel: HomeLookViewModel,
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
+    // The reminder is reckoned anew when «Занятия» open (spec 3.36.9) — here, before the first frame reads the state: the state held
+    // while the screen was away would show the card of an event over meanwhile, and fade it out on the open screen. Back to the front
+    // from the background, the same before the frame (ON_START comes first).
+    val opened = remember(viewModel) {
+        viewModel.onIntent(PracticeIntent.Opened)
+        viewModel.state
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.onIntent(PracticeIntent.Opened) }
+    val state by opened.collectAsStateWithLifecycle()
     val journey by viewModel.journeyWindow.collectAsStateWithLifecycle()
     // a state, not a value: read by the timer alone, so a tick of the practice clock recomposes only the timer
     val timer = viewModel.timer.collectAsStateWithLifecycle()

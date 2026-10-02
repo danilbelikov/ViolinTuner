@@ -133,6 +133,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                         avatarFiles = graph.avatarFiles, progressConfig = graph.progressConfig, journey = graph.journey,
                         venues = graph.venues, blocks = graph.blockStore, journeyConfig = graph.journeyConfig,
                         finishAsk = graph.finishAsk, analytics = graph.analytics, backings = graph.backings, events = graph.events,
+                        eventsConfig = graph.eventsConfig,
                     )
                 },
                 homeLookViewModel = viewModel { HomeLookViewModel(graph.home) },

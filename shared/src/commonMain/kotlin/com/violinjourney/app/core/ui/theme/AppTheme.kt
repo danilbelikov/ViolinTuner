@@ -20,6 +20,7 @@ fun ViolinAppTheme(fontFamily: FontFamily, content: @Composable () -> Unit) {
         LocalVideoColors provides DarkVideoColors,
         LocalBackupColors provides DarkBackupColors,
         LocalExerciseColors provides DarkExerciseColors,
+        LocalEventsColors provides DarkEventsColors,
     ) {
         ViolinBaseTheme(fontFamily = fontFamily, content = content)
     }
@@ -55,6 +56,10 @@ object ViolinTheme {
 
     val exerciseColors: ExerciseColors
         @Composable @ReadOnlyComposable get() = LocalExerciseColors.current
+
+    /** The eight colours of the kinds of events (spec 3.36.9, 5.29 R9), by the number a kind keeps. */
+    val eventsColors: EventsColors
+        @Composable @ReadOnlyComposable get() = LocalEventsColors.current
 
     /** The controls of Live in the style of the room (spec 3.27). */
     val venueColors: VenueColors

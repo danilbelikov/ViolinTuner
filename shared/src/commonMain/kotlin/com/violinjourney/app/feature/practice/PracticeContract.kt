@@ -1,5 +1,11 @@
 package com.violinjourney.app.feature.practice
 
+import com.violinjourney.app.core.domain.events.EventKind
+import com.violinjourney.app.core.domain.events.EventName
+import com.violinjourney.app.core.domain.events.KindLook
+import com.violinjourney.app.core.domain.events.KindRef
+import com.violinjourney.app.core.domain.events.Reminder
+import com.violinjourney.app.core.domain.events.Repeat
 import com.violinjourney.app.core.domain.practice.PracticeBlocks
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.violinjourney.app.core.domain.practice.PracticeRecap
@@ -28,18 +34,61 @@ data class CalendarCell(
     val isToday: Boolean,
     /** The day whose sheet is open — the sheet of the day or «Время за день» over it (spec 3.36.2); none the rest of the time. */
     val isSelected: Boolean,
-    /** Not selectable until the events of R9: nothing to open yet. */
+    /** A day to come (spec 3.36.9): no fill, its number dimmed, its marks in full; it is selected and opens its sheet as any day. */
     val isFuture: Boolean,
+    /** The marks of its first events in the order of the day (spec 3.36.9, 5.28: three at most): the look of each one's kind. */
+    val marks: List<KindLook> = emptyList(),
+    /** A fourth event and further: «+» after the marks. */
+    val more: Boolean = false,
+    /** Every event of the day, in its order, as TalkBack names it in the description of the day: «урок в 17:00». */
+    val events: List<CellEvent> = emptyList(),
+    /**
+     * The day answers a touch (spec 3.36.9, 5.29 R9): false — a day of the sheet «Повторять до» before the first event of the repeat
+     * (0.38, no touch). Every day of «Занятия» is enabled.
+     */
+    val enabled: Boolean = true,
 )
 
-/** The day of the sheet of the day (spec 3.36.2): its date, its time and its records. */
+/** An event of a day as the description of its cell says it (spec 3.36.9): the word of its kind and its start — none for «весь день». */
+data class CellEvent(val kind: KindRef, val ownName: String?, val startMinutes: Int?)
+
+/**
+ * The day of the sheet of the day (spec 3.36.2, 3.36.9): its date, its time and its records, and its events. A day to come has no
+ * time and no records — only its events, under «Время появится, когда день наступит.».
+ */
 data class SelectedDay(
     val date: LocalDate,
     val isToday: Boolean,
     val totalMs: Long,
     /** Sessions recorded on that day, newest first. */
     val sessions: List<HistoryCard>,
+    /** The day after today: the chip «завтра» by its date. */
+    val isTomorrow: Boolean = false,
+    /** A day to come: its time does not exist yet, and is not edited (spec 3.35). */
+    val isFuture: Boolean = false,
+    /** Its events in the order of the day (spec 5.28): «весь день» first, then by start. */
+    val events: List<DayEvent> = emptyList(),
 )
+
+/**
+ * A row of «События» of the sheet of the day (spec 3.36.9): the sign of its kind on its plate, «17:00–17:45 · Урок» — the start and
+ * the end ([endMinutes], a minute of the day it ends on), only the start without a length, only the name for «весь день» — and under
+ * it the teacher or the place and the repeat.
+ */
+data class DayEvent(
+    val eventId: Long,
+    val look: KindLook,
+    val name: EventName,
+    /** Null — «весь день». */
+    val startMinutes: Int?,
+    /** Null without a length (and for «весь день»). */
+    val endMinutes: Int?,
+    val place: String,
+    /** The repeat the event belongs to; [Repeat.NONE] for a single one. */
+    val repeat: Repeat,
+) {
+    val allDay: Boolean get() = startMinutes == null
+}
 
 /** One tile of the trophies of «Мой путь»; [index] — the place of the mark among the marks of the config, for its name. */
 data class TrophyBadge(val hours: Int, val given: Boolean, val index: Int)
@@ -173,8 +222,8 @@ sealed interface PracticeSheet {
     data class Recap(val recap: PracticeRecap) : PracticeSheet
 
     /**
-     * The sheet of a day tapped in the calendar (spec 3.36.2): its time with «Изменить» / «Добавить» and its records; the day is
-     * [PracticeState.selected]. Only a day up to today opens one.
+     * The sheet of a day tapped in the calendar (spec 3.36.2, 3.36.9): its time with «Изменить» / «Добавить», its events and its
+     * records; the day is [PracticeState.selected]. A day to come opens one too — its events, without a time.
      */
     data class Day(val date: LocalDate) : PracticeSheet
 
@@ -241,7 +290,7 @@ data class PracticeState(
     val todayMs: Long,
     val summary: PracticeSummary,
     val month: YearMonth,
-    /** The calendar never goes past the current month. */
+    /** Forward to max(the current month + 12, the month of the farthest event) (spec 5.28, 3.36.9); no further. */
     val canGoForward: Boolean,
     /** Monday-first grid of whole weeks. */
     val cells: List<CalendarCell?>,
@@ -275,6 +324,25 @@ data class PracticeState(
      * with it grows only once the recap and the gift after it have gone (spec 3.16, 3.18, 3.31).
      */
     val recapPending: Boolean = false,
+    /**
+     * The card of the events of tomorrow and of today not over yet (spec 3.35, 3.36.9), worked out for the moment of the last tick of
+     * its clock; null — no event in its window, no card at all. The full card or the compact one is the screen's choice.
+     */
+    val reminder: Reminder? = null,
+    /**
+     * How many times [reminder] changed where the screen did not see it come or go (spec 3.36.9, «Движение»: the fade of 300 ms is for
+     * a change on the open screen only) — while the screen was away, or by the reckoning at its opening ([PracticeReducer.withReminderOf]).
+     * The screen takes a card new to it by this count at once, without the fade, and fits the window of the home to it once.
+     */
+    val reminderEpoch: Int = 0,
+    /** The kinds the events of the month shown are of, in the order of the form (spec 3.36.9): the legend under the grid. */
+    val legend: List<EventKind> = emptyList(),
+    /** No event in the app at all (spec 3.36.9): the hint stands where the legend would. */
+    val eventsHint: Boolean = false,
+    /** The events of the month shown: «17 событий» under the name of a month to come. */
+    val monthEvents: Int = 0,
+    /** The month shown is later than this one (spec 3.36.9): its line counts events, not time. */
+    val monthIsFuture: Boolean = false,
 ) {
     /** A practice runs. */
     val running: Boolean get() = runningSince != null
@@ -322,8 +390,11 @@ sealed interface PracticeIntent {
     /** A swipe down, a tap beside it or «назад»: the sheet goes, the practice runs on — never a «Не сохранять». */
     data object SummaryHidden : PracticeIntent
 
-    /** A day of the calendar: its sheet opens (spec 3.36.2) — a day up to today, over no other sheet. */
-    data class DaySelected(val date: LocalDate) : PracticeIntent
+    /**
+     * A day of the calendar: its sheet opens (spec 3.36.2, 3.36.9) — any day, a day to come too, over no other sheet. [moveMonth] — the
+     * calendar comes to its month too («ещё N» of the reminder: tomorrow may be in the next month, and the ring «выбран» is seen).
+     */
+    data class DaySelected(val date: LocalDate, val moveMonth: Boolean = false) : PracticeIntent
 
     /** The sheet of the day swiped down, tapped beside or closed with «назад»: only hidden. */
     data object DayHidden : PracticeIntent
@@ -331,11 +402,22 @@ sealed interface PracticeIntent {
     /** The screen is on top again — back from a record, from the settings: the sheet of the day that stepped aside for a record rises. */
     data object Resumed : PracticeIntent
 
+    /**
+     * «Занятия» open — the route enters the composition — or come back to the front (spec 3.36.9: «Пересчёт — при открытии «Занятий»»):
+     * the reminder of the state held for the return is reckoned for this moment, before the first frame reads it.
+     */
+    data object Opened : PracticeIntent
+
+    /** The month before; back on the current one the calendar follows today again. */
     data object MonthBack : PracticeIntent
 
+    /** The month after, up to max(the current one + 12, the month of the farthest event) (spec 5.28); back on the current one it follows today. */
     data object MonthForward : PracticeIntent
 
-    /** «Изменить» / «Добавить» of the sheet of the day: «Время за день» takes its place. Heard only over the sheet of the day. */
+    /**
+     * «Изменить» / «Добавить» of the sheet of the day: «Время за день» takes its place. Heard only over the sheet of a day up to today:
+     * the time of a day to come is not edited (spec 3.35).
+     */
     data object EditTimeClicked : PracticeIntent
 
     /** Stepper of «Время за день»: +1 or −1 step. */

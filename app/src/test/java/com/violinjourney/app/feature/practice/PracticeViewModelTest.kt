@@ -4,6 +4,15 @@ import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.data.profile.AvatarFiles
 import com.violinjourney.app.core.data.profile.FakeAvatarFiles
 import com.violinjourney.app.core.domain.backing.NoBackings
+import com.violinjourney.app.core.domain.events.BuiltInKind
+import com.violinjourney.app.core.domain.events.CalendarEvent
+import com.violinjourney.app.core.domain.events.EventRepository
+import com.violinjourney.app.core.domain.events.EventsConfig
+import com.violinjourney.app.core.domain.events.KindRef
+import com.violinjourney.app.core.domain.events.KindSign
+import com.violinjourney.app.core.domain.events.ReminderDay
+import com.violinjourney.app.core.domain.events.Running
+import com.violinjourney.app.core.domain.events.StoredKind
 import com.violinjourney.app.core.domain.events.FakeEventRepository
 import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.practice.testPracticeFinisher
@@ -39,6 +48,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -50,6 +62,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
@@ -97,11 +110,12 @@ class PracticeViewModelTest {
         repertoire: RepertoireRepository = FakeRepertoireRepository(),
         blocks: BlockStore = NoBlocks,
         watchState: Boolean = true,
+        events: EventRepository = this@PracticeViewModelTest.events,
     ): Pair<PracticeViewModel, MutableList<PracticeEffect>> {
         val viewModel = PracticeViewModel(
             repository, store, finisher, sessions, config, repertoire, clock,
             trophies, profiles, avatarFiles, ProgressConfig(), journey, blocks = blocks, finishAsk = finishAsk, venues = Venues(FollowTheRoad, journey),
-            journeyConfig = JourneyConfig(), analytics = NoOpAnalytics(), backings = NoBackings, events = events,
+            journeyConfig = JourneyConfig(), analytics = NoOpAnalytics(), backings = NoBackings, events = events, eventsConfig = EventsConfig(),
         )
         val effects = mutableListOf<PracticeEffect>()
         if (watchState) backgroundScope.launch { viewModel.state.collect {} }
@@ -118,6 +132,10 @@ class PracticeViewModelTest {
         assertEquals(PracticeSheet.Path, viewModel.state.value.sheet)
     }
 
+    /** A lesson — or an event of [kind] — on [date] at [start] (minutes from midnight; null — «весь день») for [duration] minutes. */
+    private fun event(id: Long, date: LocalDate, start: Int? = null, duration: Int? = null, kind: BuiltInKind = BuiltInKind.LESSON) =
+        CalendarEvent(id, KindRef.BuiltIn(kind), date, start, duration, title = "", place = "", notes = "", seriesId = null, detached = false, createdAtEpochMs = id)
+
     /** Moves the wall clock and the virtual time together, a second at a time, like real time does. */
     private fun TestScope.pass(ms: Long) {
         runCurrent()
@@ -129,6 +147,17 @@ class PracticeViewModelTest {
             runCurrent() // a tick due exactly now runs against the clock of this moment
             left -= slice
         }
+        runCurrent()
+    }
+
+    /**
+     * Moves the wall clock and the virtual time together in one step, for long spans: what sleeps until a moment inside the span wakes
+     * on the clock of its end — right for a span that ends at the moment a test is about (a midnight, the 1st of a month).
+     */
+    private fun TestScope.jump(ms: Long) {
+        runCurrent()
+        clock.nowMs += ms
+        advanceTimeBy(ms)
         runCurrent()
     }
 
@@ -403,12 +432,10 @@ class PracticeViewModelTest {
         assertNull("the ask is forgotten, not repeated", viewModel.state.value.sheet)
     }
 
+    /** Forward to max(the current month + 12, the month of the farthest event) (spec 5.28, 3.36.9; was: never past the current one). */
     @Test
-    fun `months move back and never past the current one`() = runTest {
+    fun `months move back and forward up to twelve months ahead and further to the farthest event`() = runTest {
         val (viewModel, _) = viewModel()
-        viewModel.onIntent(PracticeIntent.MonthForward)
-        runCurrent()
-        assertEquals(YearMonth(2026, 9), viewModel.state.value.month)
         viewModel.onIntent(PracticeIntent.MonthBack)
         viewModel.onIntent(PracticeIntent.MonthBack)
         runCurrent()
@@ -417,15 +444,62 @@ class PracticeViewModelTest {
         viewModel.onIntent(PracticeIntent.MonthForward)
         runCurrent()
         assertEquals(YearMonth(2026, 8), viewModel.state.value.month)
+
+        repeat(14) { viewModel.onIntent(PracticeIntent.MonthForward) }
+        runCurrent()
+        assertEquals("a year ahead and no further", YearMonth(2027, 9), viewModel.state.value.month)
+        assertFalse(viewModel.state.value.canGoForward)
+
+        // an event further on takes the calendar to its month, and no further
+        events.events.value = listOf(event(1, LocalDate(2027, 11, 5), start = 17 * 60, duration = 45))
+        runCurrent()
+        assertTrue(viewModel.state.value.canGoForward)
+        repeat(3) { viewModel.onIntent(PracticeIntent.MonthForward) }
+        runCurrent()
+        assertEquals(YearMonth(2027, 11), viewModel.state.value.month)
+        assertFalse(viewModel.state.value.canGoForward)
+        assertEquals(1, viewModel.state.value.monthEvents)
+        assertTrue(viewModel.state.value.monthIsFuture)
+    }
+
+    /**
+     * Back on the current month by either arrow, the calendar follows today again (spec 3.36.9): over midnight of the 30th it goes to the
+     * new month by itself, as in R2 — not only when it came back by «вперёд».
+     */
+    @Test
+    fun `back on the current month by either arrow the calendar follows today again`() = runTest {
+        val lastMinuteOfSeptember = Instant.parse("2026-09-30T20:59:00Z").toEpochMilliseconds() // 23:59 in Moscow
+        for ((first, second) in listOf(PracticeIntent.MonthForward to PracticeIntent.MonthBack, PracticeIntent.MonthBack to PracticeIntent.MonthForward)) {
+            clock.nowMs = lastMinuteOfSeptember
+            val (viewModel, _) = viewModel()
+            viewModel.onIntent(first)
+            viewModel.onIntent(second)
+            runCurrent()
+            assertEquals(YearMonth(2026, 9), viewModel.state.value.month)
+            pass(60_000)
+            assertEquals("came back by $second: the calendar follows today into October", YearMonth(2026, 10), viewModel.state.value.month)
+        }
     }
 
     @Test
-    fun `a tapped day opens its sheet and a day to come opens nothing`() = runTest {
+    fun `a tapped day opens its sheet and a day to come opens its sheet too`() = runTest {
         val (viewModel, _) = viewModel()
+        events.events.value = listOf(event(1, LocalDate(2026, 9, 18), start = 17 * 60, duration = 45))
         viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 18)))
         runCurrent()
-        assertNull("tomorrow has nothing to open until R9", viewModel.state.value.sheet)
-        assertNull(viewModel.state.value.selected)
+        // spec 3.36.9: a day to come is selected and opens its sheet — its events, no time (it was not selectable before R9)
+        assertEquals(PracticeSheet.Day(LocalDate(2026, 9, 18)), viewModel.state.value.sheet)
+        val tomorrow = viewModel.state.value.selected!!
+        assertTrue(tomorrow.isFuture && tomorrow.isTomorrow)
+        assertEquals(0L, tomorrow.totalMs)
+        assertEquals(listOf(1L), tomorrow.events.map { it.eventId })
+        assertTrue(viewModel.state.value.cells.filterNotNull().single { it.date == LocalDate(2026, 9, 18) }.isSelected)
+        // the time of a day to come is not edited (spec 3.35): «Изменить» opens nothing over its sheet
+        viewModel.onIntent(PracticeIntent.EditTimeClicked)
+        runCurrent()
+        assertEquals(PracticeSheet.Day(LocalDate(2026, 9, 18)), viewModel.state.value.sheet)
+        viewModel.onIntent(PracticeIntent.DayHidden)
+        runCurrent()
 
         viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 3)))
         runCurrent()
@@ -1186,7 +1260,7 @@ class PracticeViewModelTest {
         assertEquals(LocalDate(2026, 10, 1), state.cells.filterNotNull().single { it.isToday }.date)
         assertNull("no day is selected by itself", state.selected)
         assertEquals(YearMonth(2026, 10), state.month)
-        assertFalse(state.canGoForward)
+        assertTrue("a year ahead is open (spec 5.28)", state.canGoForward)
     }
 
     @Test
@@ -1204,13 +1278,17 @@ class PracticeViewModelTest {
         assertEquals(LocalDate(2026, 9, 18), state.cells.filterNotNull().single { it.isToday }.date)
     }
 
+    /**
+     * The date can go back under an open sheet — a zone crossed westward over midnight, a clock set back by hand. The sheet of a day that is
+     * now to come lives on as such a day's sheet (spec 3.36.9; until R9 the model closed it); «Время за день» over it gives its place back
+     * to it, as «Отмена» would: the time of a day to come is not edited (spec 3.35). Nothing is stuck: the gift comes once the sheet goes.
+     */
     @Test
-    fun `a sheet of a day the date went back under closes in the model - the gift comes and the screen opens sheets again`() = runTest {
+    fun `the sheet of a day the date went back under lives on - only «Время за день» over it gives its place back`() = runTest {
         val (viewModel, _) = viewModel(watchState = false)
         var screen = backgroundScope.launch { viewModel.state.collect {} }
 
-        // the screen in the background long enough for its state to stop, and the date goes back meanwhile — a zone crossed
-        // westward over midnight, a clock set back by hand: the screen comes back to a sheet of a day to come
+        // the screen in the background long enough for its state to stop, and the date goes back meanwhile
         fun awayWhileTheDateGoesBack() {
             screen.cancel()
             pass(10_000)
@@ -1230,25 +1308,319 @@ class PracticeViewModelTest {
         val yesterday = LocalDate(2026, 9, 16)
         val back = viewModel.state.value
         assertEquals(yesterday, back.today)
-        assertNull("a day to come has no sheet: the model closes it as a hide would", back.sheet)
-        assertNull(back.selected)
-        assertTrue(back.cells.filterNotNull().none { it.isSelected })
-        assertEquals("nothing holds the gift any more", 1, back.gift?.hours)
+        assertEquals("the sheet of a day to come lives on", PracticeSheet.Day(today), back.sheet)
+        assertTrue(back.selected!!.isFuture && back.selected!!.isTomorrow)
+        assertNull("the gift still waits for it", back.gift)
+        viewModel.onIntent(PracticeIntent.DayHidden)
+        runCurrent()
+        assertNull(viewModel.state.value.sheet)
+        assertEquals("nothing holds the gift any more", 1, viewModel.state.value.gift?.hours)
         viewModel.onIntent(PracticeIntent.GiftAccepted(1))
         runCurrent()
 
-        // not stuck: a day opens its sheet again; «Время за день» over it closes with it when the date goes back once more
+        // «Время за день» of a day that is to come now gives its place back to the sheet of that day
         viewModel.onIntent(PracticeIntent.DaySelected(yesterday))
         viewModel.onIntent(PracticeIntent.EditTimeClicked)
         runCurrent()
         assertEquals(yesterday, (viewModel.state.value.sheet as PracticeSheet.EditTime).date)
         awayWhileTheDateGoesBack()
         assertEquals(LocalDate(2026, 9, 15), viewModel.state.value.today)
-        assertNull("«Время за день» and the sheet of the day under it", viewModel.state.value.sheet)
+        assertEquals(PracticeSheet.Day(yesterday), viewModel.state.value.sheet)
+        assertTrue(viewModel.state.value.selected!!.isFuture)
         viewModel.onIntent(PracticeIntent.EditTimeCancelled)
+        viewModel.onIntent(PracticeIntent.EditTimeClicked)
         runCurrent()
-        assertNull("a late «Отмена» brings back no sheet", viewModel.state.value.sheet)
+        assertEquals("a late «Отмена» changes nothing, and «Изменить» of a day to come opens nothing", PracticeSheet.Day(yesterday), viewModel.state.value.sheet)
+        viewModel.onIntent(PracticeIntent.DayHidden)
+        runCurrent()
         openPath(viewModel)
+    }
+
+    /** «ещё N» of the reminder (spec 3.36.9): the sheet of the day of the first event it stands for, and the calendar comes to its month. */
+    @Test
+    fun `a day selected with its month brings the calendar to that month`() = runTest {
+        clock.nowMs = Instant.parse("2026-09-30T15:00:00Z").toEpochMilliseconds() // 18:00 in Moscow, the 30th
+        val (viewModel, _) = viewModel()
+        val tomorrow = LocalDate(2026, 10, 1)
+        events.events.value = (1L..3L).map { event(it, tomorrow, start = (9 + it.toInt()) * 60, duration = 45) }
+        runCurrent()
+        assertEquals(YearMonth(2026, 9), viewModel.state.value.month)
+        val reminder = viewModel.state.value.reminder!!
+        assertEquals(tomorrow, reminder.firstHiddenDate(compact = false))
+
+        viewModel.onIntent(PracticeIntent.DaySelected(tomorrow, moveMonth = true))
+        runCurrent()
+        val state = viewModel.state.value
+        assertEquals(PracticeSheet.Day(tomorrow), state.sheet)
+        assertEquals("tomorrow is in the next month", YearMonth(2026, 10), state.month)
+        assertTrue(state.cells.filterNotNull().single { it.date == tomorrow }.isSelected)
+        assertEquals(3, state.selected!!.events.size)
+        viewModel.onIntent(PracticeIntent.DayHidden)
+        viewModel.onIntent(PracticeIntent.MonthBack)
+        runCurrent()
+        assertEquals(YearMonth(2026, 9), viewModel.state.value.month)
+
+        // a day of the current month moves nothing; one tapped in the calendar keeps the month shown
+        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 30), moveMonth = true))
+        runCurrent()
+        assertEquals(YearMonth(2026, 9), viewModel.state.value.month)
+        viewModel.onIntent(PracticeIntent.DayHidden)
+        viewModel.onIntent(PracticeIntent.DaySelected(tomorrow))
+        runCurrent()
+        assertEquals(PracticeSheet.Day(tomorrow), viewModel.state.value.sheet)
+        assertEquals(YearMonth(2026, 9), viewModel.state.value.month)
+    }
+
+    /**
+     * The reminder is worked out again at the start and the end of the events it holds and at midnight (spec 3.36.9, plan D9), from the
+     * moment of its clock: «идёт, до 17:45» comes at 17:00, the card goes at 17:45 — while the screen is open, by itself.
+     */
+    @Test
+    fun `the reminder changes at the start and the end of its event by itself`() = runTest {
+        clock.nowMs = Instant.parse("2026-09-17T13:30:00Z").toEpochMilliseconds() // 16:30 in Moscow
+        events.events.value = listOf(event(1, today, start = 17 * 60, duration = 45))
+        val (viewModel, _) = viewModel()
+        val before = viewModel.state.value.reminder!!.rows.single()
+        assertEquals(ReminderDay.TODAY, before.day)
+        assertNull("not begun", before.running)
+        val epoch = viewModel.state.value.reminderEpoch
+
+        pass(30 * 60_000L - 1_000)
+        assertNull("16:59:59", viewModel.state.value.reminder!!.rows.single().running)
+        pass(1_000)
+        assertEquals(Running.Until(LocalDateTime(2026, 9, 17, 17, 45)), viewModel.state.value.reminder!!.rows.single().running)
+        pass(45 * 60_000L - 1_000)
+        assertNotNull("17:44:59: still there", viewModel.state.value.reminder)
+        pass(1_000)
+        assertNull("over at 17:45: the card goes by itself", viewModel.state.value.reminder)
+        // seen on the open screen: the card fades out (spec 3.36.9, «Движение») — no change counted as unseen
+        assertEquals(epoch, viewModel.state.value.reminderEpoch)
+    }
+
+    /**
+     * A card of an event that ended while the screen was away (spec 3.36.9: «Пересчёт — при открытии «Занятий»», the fade of 300 ms only
+     * on the open screen; the review of stage 97): nothing is worked out in the background — the state is held as it was — but the
+     * route reckons the reminder as the screen opens, before its first frame reads the state: that frame has no card any more, so the
+     * screen does not open on «идёт, до 17:45» to fade it out and move the window of the home after it; and the change counts as
+     * unseen, so the screen takes it at once. The state worked out anew when the screen watches again has nothing new.
+     */
+    @Test
+    fun `a card over while the screen was away is gone in the first state of its return`() = runTest {
+        clock.nowMs = Instant.parse("2026-09-17T14:30:00Z").toEpochMilliseconds() // 17:30 in Moscow
+        events.events.value = listOf(event(1, today, start = 17 * 60, duration = 45))
+        val (viewModel, _) = viewModel(watchState = false)
+        var screen = backgroundScope.launch { viewModel.state.collect {} }
+        runCurrent()
+        assertEquals(Running.Until(LocalDateTime(2026, 9, 17, 17, 45)), viewModel.state.value.reminder!!.rows.single().running)
+        val epoch = viewModel.state.value.reminderEpoch
+
+        // away until 18:00 — long past the stop of the state 5 s after the screen went; the lesson ends at 17:45 meanwhile
+        screen.cancel()
+        pass(30 * 60_000L)
+        assertNotNull("held as it was: nothing is worked out while the screen is away", viewModel.state.value.reminder)
+        viewModel.onIntent(PracticeIntent.Opened)
+        val held = viewModel.state.value
+        assertNull("the first frame of the return has no card of a lesson over", held.reminder)
+        assertEquals("a change the screen did not see", epoch + 1, held.reminderEpoch)
+
+        screen = backgroundScope.launch { viewModel.state.collect {} }
+        runCurrent()
+        assertNull(viewModel.state.value.reminder)
+        assertEquals("worked out anew: the same — nothing new", epoch + 1, viewModel.state.value.reminderEpoch)
+        assertFalse(viewModel.state.value.loading)
+    }
+
+    /** The other way (the review of stage 97): tomorrow's lesson comes into the card at midnight while the screen is away — it is there in the first frame of the return, taken at once. */
+    @Test
+    fun `a card that came while the screen was away is there in the first state of its return`() = runTest {
+        clock.nowMs = Instant.parse("2026-09-16T20:59:00Z").toEpochMilliseconds() // 23:59 on the 16th in Moscow
+        events.events.value = listOf(event(1, LocalDate(2026, 9, 18), start = 17 * 60, duration = 45))
+        val (viewModel, _) = viewModel(watchState = false)
+        var screen = backgroundScope.launch { viewModel.state.collect {} }
+        runCurrent()
+        assertNull("two days before its lesson: no card", viewModel.state.value.reminder)
+        val epoch = viewModel.state.value.reminderEpoch
+
+        screen.cancel()
+        pass(10 * 60_000L)
+        viewModel.onIntent(PracticeIntent.Opened)
+        val held = viewModel.state.value
+        assertEquals("from 00:00 of the day before", ReminderDay.TOMORROW, held.reminder!!.rows.single().day)
+        assertEquals(epoch + 1, held.reminderEpoch)
+
+        screen = backgroundScope.launch { viewModel.state.collect {} }
+        runCurrent()
+        assertEquals(ReminderDay.TOMORROW, viewModel.state.value.reminder!!.rows.single().day)
+        assertEquals(epoch + 1, viewModel.state.value.reminderEpoch)
+    }
+
+    /**
+     * The state is worked out for 5 s after the screen went (as `stateIn(WhileSubscribed)` did): a card over in those seconds is a change
+     * the screen did not see either, taken at once when it is back.
+     */
+    @Test
+    fun `a card over in the seconds after the screen went is taken at once too`() = runTest {
+        clock.nowMs = Instant.parse("2026-09-17T14:44:58Z").toEpochMilliseconds() // 17:44:58 in Moscow
+        events.events.value = listOf(event(1, today, start = 17 * 60, duration = 45))
+        val (viewModel, _) = viewModel(watchState = false)
+        val screen = backgroundScope.launch { viewModel.state.collect {} }
+        runCurrent()
+        assertNotNull(viewModel.state.value.reminder)
+        val epoch = viewModel.state.value.reminderEpoch
+
+        screen.cancel()
+        pass(3_000)
+        assertNull("17:45:01: over", viewModel.state.value.reminder)
+        assertEquals("seen by no one", epoch + 1, viewModel.state.value.reminderEpoch)
+    }
+
+    /**
+     * The first state worked out when the screen watches again is a reckoning at the opening of «Занятия» too (spec 3.36.9): a change of
+     * the reminder it brings is taken at once, as one [PracticeIntent.Opened] finds. Here nothing reckoned the held card — the screen
+     * collects the state without opening — and the clock was set an hour forward meanwhile.
+     */
+    @Test
+    fun `what the first state at the opening changes is taken at once`() = runTest {
+        clock.nowMs = Instant.parse("2026-09-17T14:30:00Z").toEpochMilliseconds() // 17:30 in Moscow
+        events.events.value = listOf(event(1, today, start = 17 * 60, duration = 45))
+        val (viewModel, _) = viewModel(watchState = false)
+        var screen = backgroundScope.launch { viewModel.state.collect {} }
+        runCurrent()
+        val epoch = viewModel.state.value.reminderEpoch
+
+        screen.cancel()
+        pass(10_000)
+        clock.nowMs += MS_PER_HOUR
+        assertNotNull("the card held as it was", viewModel.state.value.reminder)
+        screen = backgroundScope.launch { viewModel.state.collect {} }
+        runCurrent()
+        assertNull("18:30 by the clock: over", viewModel.state.value.reminder)
+        assertEquals("taken at once", epoch + 1, viewModel.state.value.reminderEpoch)
+    }
+
+    /**
+     * The pill waits on the state for the gift to be answered (spec 3.31) and so keeps it worked out after the screen went; a change of
+     * the reminder then is still one the screen did not see — taken at once on the return (the review of stage 97).
+     */
+    @Test
+    fun `a card that changes while only the pill waits on the state is taken at once too`() = runTest {
+        clock.nowMs = Instant.parse("2026-09-17T13:00:00Z").toEpochMilliseconds() // 16:00 in Moscow
+        events.events.value = listOf(event(1, today, start = 17 * 60 + 10, duration = 45))
+        journey.start(clock.millis())
+        val (viewModel, _) = viewModel(watchState = false)
+        val screen = backgroundScope.launch { viewModel.state.collect {} }
+        backgroundScope.launch { viewModel.journeyWindow.collect {} }
+        viewModel.onIntent(PracticeIntent.StartClicked)
+        pass(62 * MS_PER_MINUTE)
+        viewModel.onIntent(PracticeIntent.StopClicked)
+        viewModel.onIntent(PracticeIntent.SummarySaved)
+        trophies.award(1, today) // the hour the practice has just crossed
+        runCurrent()
+        viewModel.onIntent(PracticeIntent.RecapClosed)
+        runCurrent()
+        try {
+            assertEquals("the gift holds the pill", 1, viewModel.state.value.gift?.hours)
+            assertNull("17:02: not begun", viewModel.state.value.reminder!!.rows.single().running)
+            val epoch = viewModel.state.value.reminderEpoch
+
+            // the screen goes; the pill still waits on the state, which stays worked out
+            screen.cancel()
+            pass(10 * MS_PER_MINUTE)
+            assertNotNull("17:12: begun", viewModel.state.value.reminder!!.rows.single().running)
+            assertEquals("begun out of sight", epoch + 1, viewModel.state.value.reminderEpoch)
+        } finally {
+            // the gift answered, the pill stops waiting — whatever failed above: a state worked out for ever would keep the test from
+            // ending (its days pass on the virtual clock one midnight after another)
+            viewModel.onIntent(PracticeIntent.GiftAccepted(1))
+            pass(JourneyMotion.EARNED_PILL_MS + 1)
+        }
+    }
+
+    /**
+     * A month put in place that becomes the current one by itself follows today again (spec 3.36.9; the review of stage 97): on the 30th
+     * «ещё 1» of a lesson on the 1st puts the calendar on October, and so does the arrow forward; after midnight October is the current
+     * month, and on the 1st of November the calendar is on November by itself, as in R2 — not held on October as a month put by hand.
+     */
+    @Test
+    fun `a month put in place that becomes the current one follows today again`() = runTest {
+        val first = LocalDate(2026, 10, 1)
+        val ways: List<List<PracticeIntent>> = listOf(
+            listOf(PracticeIntent.DaySelected(first, moveMonth = true), PracticeIntent.DayHidden),
+            listOf(PracticeIntent.MonthForward),
+        )
+        for (way in ways) {
+            clock.nowMs = Instant.parse("2026-09-30T15:00:00Z").toEpochMilliseconds() // 18:00 on the 30th in Moscow
+            events.events.value = (1L..3L).map { event(it, first, start = (9 + it.toInt()) * 60, duration = 45) }
+            val (viewModel, _) = viewModel()
+            way.forEach(viewModel::onIntent)
+            runCurrent()
+            assertEquals("$way", YearMonth(2026, 10), viewModel.state.value.month)
+
+            jump(6 * MS_PER_HOUR)
+            assertEquals(first, viewModel.state.value.today)
+            assertEquals(YearMonth(2026, 10), viewModel.state.value.month)
+            jump(31 * 24 * MS_PER_HOUR)
+            val november = viewModel.state.value
+            assertEquals(LocalDate(2026, 11, 1), november.today)
+            assertEquals("$way: the calendar follows today into November", YearMonth(2026, 11), november.month)
+            assertTrue(november.cells.filterNotNull().single { it.date == LocalDate(2026, 11, 1) }.isToday)
+        }
+    }
+
+    /**
+     * The legend follows the order of the form (spec 3.36.9): the built-in kinds, then those of one's own by the alphabet of the interface
+     * — not in the order they were made in, the order the storage gives them (the review of stage 97).
+     */
+    @Test
+    fun `the legend has the built-in kinds and then ones own by the alphabet`() = runTest {
+        // «Оркестр» was made before «Мастер-класс»
+        events.storedKinds.value = listOf(StoredKind.Own(9, "Оркестр", 1, KindSign.ARC, 1), StoredKind.Own(10, "Мастер-класс", 4, KindSign.BOLT, 2))
+        events.events.value = listOf(
+            CalendarEvent(1, KindRef.Custom(9), LocalDate(2026, 9, 20), 11 * 60, 120, "", "", "", null, detached = false, createdAtEpochMs = 1),
+            CalendarEvent(2, KindRef.Custom(10), LocalDate(2026, 9, 21), 14 * 60, null, "", "", "", null, detached = false, createdAtEpochMs = 2),
+            event(3, LocalDate(2026, 9, 22), start = 17 * 60, duration = 45),
+        )
+        val (viewModel, _) = viewModel()
+        assertEquals(
+            listOf(KindRef.BuiltIn(BuiltInKind.LESSON), KindRef.Custom(10), KindRef.Custom(9)),
+            viewModel.state.value.legend.map { it.ref },
+        )
+    }
+
+    /** Midnight with the sheet of tomorrow open (spec 3.36.9): it becomes the sheet of today — time and «Изменить», no «завтра». */
+    @Test
+    fun `at midnight the sheet of tomorrow becomes the sheet of today`() = runTest {
+        clock.nowMs = Instant.parse("2026-09-17T20:59:30Z").toEpochMilliseconds() // 23:59:30 in Moscow
+        val (viewModel, _) = viewModel()
+        val tomorrow = LocalDate(2026, 9, 18)
+        viewModel.onIntent(PracticeIntent.DaySelected(tomorrow))
+        runCurrent()
+        assertTrue(viewModel.state.value.selected!!.let { it.isTomorrow && it.isFuture })
+        pass(60_000)
+        val day = viewModel.state.value.selected!!
+        assertEquals(tomorrow, day.date)
+        assertTrue(day.isToday)
+        assertFalse(day.isFuture || day.isTomorrow)
+        viewModel.onIntent(PracticeIntent.EditTimeClicked)
+        runCurrent()
+        assertEquals("its time can be edited now", tomorrow, (viewModel.state.value.sheet as PracticeSheet.EditTime).date)
+        viewModel.onIntent(PracticeIntent.EditTimeCancelled)
+        viewModel.onIntent(PracticeIntent.DayHidden)
+        runCurrent()
+    }
+
+    /** The reminder comes with «Сегодня» (spec 3.36.9, «Загрузка»): until the events are read the screen stays loading. */
+    @Test
+    fun `the first state waits for the events`() = runTest {
+        val read = MutableStateFlow(false)
+        val slow = object : EventRepository by events {
+            override val events: Flow<List<CalendarEvent>> = read.filter { it }.flatMapLatest { this@PracticeViewModelTest.events.events }
+        }
+        val (viewModel, _) = viewModel(events = slow)
+        assertTrue("the events are not read yet", viewModel.state.value.loading)
+        read.value = true
+        runCurrent()
+        assertFalse(viewModel.state.value.loading)
     }
 
     @Test

@@ -21,7 +21,11 @@ sealed interface Running {
     data object Open : Running
 }
 
-/** One row of the reminder: what its two lines and its sign are made of. [running] — null when it has not begun, and for «весь день». */
+/**
+ * One row of the reminder: what its two lines and its sign are made of. [running] — null when it has not begun, and for «весь день».
+ * [kind] — the kind it is of, a kind of one's own that is gone read as «Другое», with [ownName]: «ещё N» names the kind of each event it
+ * stands for (plan D8), a titled one too.
+ */
 data class ReminderRow(
     val eventId: Long,
     val date: LocalDate,
@@ -31,6 +35,8 @@ data class ReminderRow(
     val name: EventName,
     val place: String,
     val running: Running?,
+    val kind: KindRef,
+    val ownName: String?,
 )
 
 /**
@@ -69,10 +75,11 @@ object EventReminder {
                     event.durationMinutes == null -> Running.Open
                     else -> Running.Until(EventRules.endOf(event, config))
                 }
+                val kind = KindRules.resolve(event.kind, kinds)
                 ReminderRow(
                     eventId = event.id, date = event.date, day = day, startMinutes = event.startMinutes,
                     look = KindRules.lookOf(event.kind, kinds, config), name = EventName.of(event.title, event.kind, kinds),
-                    place = event.place, running = running,
+                    place = event.place, running = running, kind = kind, ownName = kinds.firstOrNull { it.ref == kind }?.ownName,
                 )
             }
         return if (rows.isEmpty()) null else Reminder(rows, config.reminderRows, config.compactReminderRows)

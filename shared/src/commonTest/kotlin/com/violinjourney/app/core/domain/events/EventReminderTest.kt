@@ -89,6 +89,23 @@ class EventReminderTest {
         assertNull(assertNotNull(reminder(events.take(1), moment(tuesday, 12))).firstHiddenDate(compact = false), "one event — no «ещё»")
     }
 
+    /**
+     * «ещё N» names the kind of each event it stands for (plan D8): a row knows its kind whatever its title — a kind of one's own with its
+     * name as written, one that is gone as «Другое» without a name, a built-in one without a name.
+     */
+    @Test
+    fun `a row knows its kind and the name of a kind of ones own`() {
+        val events = listOf(
+            event(1, tuesday, at(14), 90, kind = KindRef.Custom(9), title = "Сводная репетиция"),
+            event(2, tuesday, at(17), 45, kind = KindRef.Custom(77)),
+            event(3, tuesday, at(19), 60, kind = PERFORMANCE, title = "Осенний концерт"),
+        )
+        val rows = assertNotNull(reminder(events, moment(monday, 12))).rows
+        assertEquals(listOf(KindRef.Custom(9), OTHER, PERFORMANCE), rows.map { it.kind }, "a titled event of «Оркестр» is of «Оркестр»")
+        assertEquals(listOf("Оркестр", null, null), rows.map { it.ownName })
+        assertEquals(EventName.Titled("Сводная репетиция"), rows[0].name, "its title, not the name of its kind, is what its row says")
+    }
+
     @Test
     fun `the card is reckoned again at the start and the end of its events and at midnight`() {
         val lesson = event(1, tuesday, at(17), 45)

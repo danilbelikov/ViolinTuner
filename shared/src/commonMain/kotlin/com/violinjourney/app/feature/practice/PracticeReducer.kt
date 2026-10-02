@@ -1,5 +1,15 @@
 package com.violinjourney.app.feature.practice
 
+import com.violinjourney.app.core.domain.events.CalendarEvent
+import com.violinjourney.app.core.domain.events.CalendarMarks
+import com.violinjourney.app.core.domain.events.EventKind
+import com.violinjourney.app.core.domain.events.EventName
+import com.violinjourney.app.core.domain.events.EventReminder
+import com.violinjourney.app.core.domain.events.EventRules
+import com.violinjourney.app.core.domain.events.EventSeries
+import com.violinjourney.app.core.domain.events.EventsConfig
+import com.violinjourney.app.core.domain.events.KindRules
+import com.violinjourney.app.core.domain.events.Repeat
 import com.violinjourney.app.core.domain.repertoire.Piece
 import com.violinjourney.app.core.domain.practice.BlockRules
 import com.violinjourney.app.core.domain.practice.PracticeBlocks
@@ -16,9 +26,12 @@ import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.feature.history.HistoryReducer
 import kotlin.math.roundToInt
 import kotlin.time.Instant
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.yearMonth
 
@@ -30,10 +43,7 @@ object PracticeReducer {
         /** The day the running practice began on; null while none runs. */
         runningSince: LocalDate?,
         month: YearMonth,
-        /**
-         * The day whose sheet is open (the sheet of the day or «Время за день» over it); null — none is selected. Never later than
-         * [today]: a day to come has no sheet, and the view model closes one the date went back under — one rule, in one place.
-         */
+        /** The day whose sheet is open (the sheet of the day or «Время за день» over it); null — none is selected. Any day: one to come too. */
         selectedDate: LocalDate?,
         sheet: PracticeSheet?,
         today: LocalDate,
@@ -51,8 +61,19 @@ object PracticeReducer {
         recapPending: Boolean = false,
         /** A record opened from the sheet of the day is on the screen: the sheets step aside until it is back. */
         sheetsAway: Boolean = false,
+        /** The events of the calendar (spec 3.35): the marks of the cells, the events of the day, the legend, the reminder. */
+        events: List<CalendarEvent> = emptyList(),
+        /** Every kind — the built-in four and those of one's own — in the order of the form ([KindRules.ordered]): the legend follows it. */
+        kinds: List<EventKind> = emptyList(),
+        /** The repeats: the row of an event of one says «каждую неделю». */
+        series: List<EventSeries> = emptyList(),
+        /** The moment the reminder is worked out for — the last tick of its clock (spec 3.36.9: midnight, the starts and ends of its events). */
+        now: Instant = today.atStartOfDayIn(zone),
+        eventsConfig: EventsConfig = EventsConfig(),
     ): PracticeState {
         val totals = PracticeStats.dayTotals(entries)
+        val days = events.groupBy { it.date }.mapValues { (_, ofDay) -> ofDay.sortedWith(CalendarMarks.DAY_ORDER) }
+        val repeats = series.associate { it.id to it.repeat }
         val totalMs = Progress.totalMs(entries)
         val hasHistory = totals.values.any { it > 0 }
         val pieceTitles = pieces.associate { it.id to it.title }
@@ -71,10 +92,12 @@ object PracticeReducer {
                 monthDays = PracticeStats.monthDays(totals, month),
             ),
             month = month,
-            canGoForward = month < today.yearMonth,
+            canGoForward = month < EventRules.calendarLastMonth(today, events, eventsConfig),
             cells = PracticeStats.calendarCells(month).map { date ->
                 date?.let {
                     val total = totals[it] ?: 0L
+                    val ofDay = days[it].orEmpty()
+                    val marks = CalendarMarks.marksOf(ofDay, kinds, eventsConfig)
                     CalendarCell(
                         date = it,
                         totalMs = total,
@@ -82,22 +105,34 @@ object PracticeReducer {
                         isToday = it == today,
                         isSelected = it == selectedDate,
                         isFuture = it > today,
+                        marks = marks.looks,
+                        more = marks.more,
+                        events = ofDay.map { event -> cellEventOf(event, kinds) },
                     )
                 }
             },
             selected = selectedDate?.let { date ->
+                // a day to come has no time and no records yet: only its events (spec 3.36.9)
+                val future = date > today
                 SelectedDay(
                     date = date,
                     isToday = date == today,
-                    totalMs = totals[date] ?: 0L,
-                    sessions = sessions
-                        .filter { Instant.fromEpochMilliseconds(it.startedAtEpochMs).toLocalDateTime(zone).date == date }
-                        .sortedWith(compareByDescending<SessionSummary> { it.startedAtEpochMs }.thenByDescending { it.id })
-                        .map {
-                            HistoryReducer.cardOf(
-                                it, today, zone, pieceTitle = it.pieceId?.let(pieceTitles::get), best = it.id in bestTakeIds, underBacking = it.id in underBackingIds,
-                            )
-                        },
+                    totalMs = if (future) 0L else totals[date] ?: 0L,
+                    sessions = if (future) {
+                        emptyList()
+                    } else {
+                        sessions
+                            .filter { Instant.fromEpochMilliseconds(it.startedAtEpochMs).toLocalDateTime(zone).date == date }
+                            .sortedWith(compareByDescending<SessionSummary> { it.startedAtEpochMs }.thenByDescending { it.id })
+                            .map {
+                                HistoryReducer.cardOf(
+                                    it, today, zone, pieceTitle = it.pieceId?.let(pieceTitles::get), best = it.id in bestTakeIds, underBacking = it.id in underBackingIds,
+                                )
+                            }
+                    },
+                    isTomorrow = date == today.plus(1, DateTimeUnit.DAY),
+                    isFuture = future,
+                    events = days[date].orEmpty().map { dayEventOf(it, kinds, repeats, eventsConfig) },
                 )
             },
             header = ProgressReducer.headerOf(totalMs, trophies, profile.name, avatarPath, progressConfig),
@@ -108,8 +143,41 @@ object PracticeReducer {
             stepMinutes = config.editStepMinutes,
             weekFloorMinutes = weekFloorOf(config),
             recapPending = recapPending,
+            reminder = EventReminder.of(events, kinds, now, zone, eventsConfig),
+            legend = CalendarMarks.kindsOfMonth(events, month, kinds),
+            eventsHint = events.isEmpty(),
+            monthEvents = CalendarMarks.monthCount(events, month),
+            monthIsFuture = month > today.yearMonth,
         )
     }
+
+    /**
+     * [next] — a state worked out anew, or the held one with its reminder reckoned anew — carrying the count of the changes of the
+     * reminder the screen did not see from [held], the state the screen holds (spec 3.36.9, «Движение»): one more when the reminder of
+     * [next] is not the one held and the screen did not see it change — [seen] false: reckoned while the screen was away, or at its
+     * opening. On the open screen a card comes and goes by a fade of 300 ms; one that came or went out of sight is simply there, or not.
+     */
+    fun withReminderOf(next: PracticeState, held: PracticeState, seen: Boolean): PracticeState {
+        val epoch = if (!seen && next.reminder != held.reminder) held.reminderEpoch + 1 else held.reminderEpoch
+        return if (next.reminderEpoch == epoch) next else next.copy(reminderEpoch = epoch)
+    }
+
+    /** The kind of [event] as the description of its cell names it: a kind of one's own that is gone is «Другое» (spec 3.35). */
+    private fun cellEventOf(event: CalendarEvent, kinds: List<EventKind>): CellEvent {
+        val kind = KindRules.resolve(event.kind, kinds)
+        return CellEvent(kind, ownName = kinds.firstOrNull { it.ref == kind }?.ownName, startMinutes = event.startMinutes)
+    }
+
+    /** A row of «События»: the end is the minute of the day it ends on — 23:30 and 1 h 30 min end at 01:00 (spec 5.28). */
+    private fun dayEventOf(event: CalendarEvent, kinds: List<EventKind>, repeats: Map<Long, Repeat>, config: EventsConfig) = DayEvent(
+        eventId = event.id,
+        look = KindRules.lookOf(event.kind, kinds, config),
+        name = EventName.of(event.title, event.kind, kinds),
+        startMinutes = event.startMinutes,
+        endMinutes = event.startMinutes?.let { start -> event.durationMinutes?.let { (start + it) % EventRules.MINUTES_PER_DAY } },
+        place = event.place,
+        repeat = event.seriesId?.let(repeats::get) ?: Repeat.NONE,
+    )
 
     /** The block of the running practice under «Занятие идёт»: minutes left, or «готово» once it reached its goal. */
     fun runningBlockOf(running: RunningPractice?, blocks: PracticeBlocks?, titles: Map<Long, String>, nowEpochMs: Long): RunningBlockLine? {

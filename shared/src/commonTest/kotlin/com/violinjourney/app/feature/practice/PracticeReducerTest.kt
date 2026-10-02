@@ -2,6 +2,26 @@ package com.violinjourney.app.feature.practice
 
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.Zone
+import com.violinjourney.app.core.domain.events.BuiltInKind
+import com.violinjourney.app.core.domain.events.CalendarEvent
+import com.violinjourney.app.core.domain.events.EventKind
+import com.violinjourney.app.core.domain.events.EventName
+import com.violinjourney.app.core.domain.events.EventSeries
+import com.violinjourney.app.core.domain.events.EventsConfig
+import com.violinjourney.app.core.domain.events.KindLook
+import com.violinjourney.app.core.domain.events.KindRef
+import com.violinjourney.app.core.domain.events.KindRules
+import com.violinjourney.app.core.domain.events.KindSign
+import com.violinjourney.app.core.domain.events.ReminderDay
+import com.violinjourney.app.core.domain.events.Repeat
+import com.violinjourney.app.core.domain.events.StoredKind
+import com.violinjourney.app.core.domain.events.TestEvents.LESSON
+import com.violinjourney.app.core.domain.events.TestEvents.OTHER
+import com.violinjourney.app.core.domain.events.TestEvents.PERFORMANCE
+import com.violinjourney.app.core.domain.events.TestEvents.at as clock
+import com.violinjourney.app.core.domain.events.TestEvents.event
+import com.violinjourney.app.core.domain.events.TestEvents.moment
+import com.violinjourney.app.core.domain.events.TestEvents.series
 import com.violinjourney.app.core.domain.practice.PieceBlock
 import com.violinjourney.app.core.domain.practice.PracticeBlocks
 import com.violinjourney.app.core.domain.practice.PracticeConfig
@@ -15,12 +35,15 @@ import com.violinjourney.app.core.domain.session.SessionSummary
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlin.time.Instant
 import kotlinx.datetime.YearMonth
+import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toInstant
 
 class PracticeReducerTest {
@@ -28,6 +51,14 @@ class PracticeReducerTest {
     private val intonation = IntonationConfig()
     private val zone: TimeZone = TimeZone.of("Europe/Moscow")
     private val today: LocalDate = LocalDate(2026, 9, 17)
+    private val eventsConfig = EventsConfig()
+
+    /** The kinds of the mockups (events-kinds.html): the built-in four, «Оркестр» (Морская волна, полукруг), «Мастер-класс» (Лёд, молния). */
+    private val orchestra: KindRef = KindRef.Custom(9)
+    private val masterClass: KindRef = KindRef.Custom(10)
+    private val kinds: List<EventKind> = KindRules.all(
+        listOf(StoredKind.Own(9, "Оркестр", 1, KindSign.ARC, 1), StoredKind.Own(10, "Мастер-класс", 4, KindSign.BOLT, 2)), eventsConfig,
+    )
 
     private fun entry(day: Int, minutes: Int) = PracticeEntry(
         date = LocalDate(2026, 9, day), startedAtEpochMs = 0, durationMs = minutes * MS_PER_MINUTE, manual = false,
@@ -48,9 +79,14 @@ class PracticeReducerTest {
         month: YearMonth = YearMonth(2026, 9),
         selected: LocalDate? = null,
         underBackingIds: Set<Long> = emptySet(),
+        events: List<CalendarEvent> = emptyList(),
+        kinds: List<EventKind> = this.kinds,
+        series: List<EventSeries> = emptyList(),
+        now: Instant = today.atStartOfDayIn(zone),
     ) = PracticeReducer.stateOf(
         entries, sessions, runningSince, month, selected, sheet = null, today, zone, config,
         trophies = emptyList(), profile = Profile.EMPTY, avatarPath = null, progressConfig = ProgressConfig(), underBackingIds = underBackingIds,
+        events = events, kinds = kinds, series = series, now = now, eventsConfig = eventsConfig,
     )
 
     @Test
@@ -194,11 +230,17 @@ class PracticeReducerTest {
         assertNull(state.selected)
     }
 
+    /** Forward to max(the current month + 12, the month of the farthest event) (spec 5.28, 3.36.9; was: not past the current month). */
     @Test
-    fun `the calendar cannot go past the current month`() {
-        assertFalse(state().canGoForward)
+    fun `the calendar goes forward twelve months and further to the month of the farthest event`() {
+        assertTrue(state().canGoForward, "September 2026: a year ahead is open")
+        assertTrue(state(month = YearMonth(2027, 8)).canGoForward)
+        assertFalse(state(month = YearMonth(2027, 9)).canGoForward, "the current month + 12 is the last")
         assertTrue(state(month = YearMonth(2026, 8)).canGoForward)
         assertEquals(0L, state(month = YearMonth(2026, 8)).summary.monthMs)
+        val far = listOf(event(1, LocalDate(2027, 11, 5)))
+        assertTrue(state(month = YearMonth(2027, 9), events = far).canGoForward, "an event further on takes the calendar to its month")
+        assertFalse(state(month = YearMonth(2027, 11), events = far).canGoForward)
     }
 
     @Test
@@ -453,5 +495,165 @@ class PracticeReducerTest {
         assertNull(PracticeReducer.runningBlockOf(running, lesson.copy(current = null), titles, at(47)))
         assertNull(PracticeReducer.runningBlockOf(RunningPractice(lessonStart + 1, null), lesson, titles, at(47)))
         assertNull(PracticeReducer.runningBlockOf(running, lesson, titles - 4L, at(47)))
+    }
+
+    /** Saturday 12 September 2026 of the mockups (events-kinds.html, 4): four events — the whole day first, then by start. */
+    private val busy = LocalDate(2026, 9, 12)
+    private val busyDay = listOf(
+        event(4, busy, clock(17), 45, kind = LESSON, place = "Анна Сергеевна", seriesId = 1),
+        event(2, busy, clock(11), 120, kind = orchestra),
+        event(3, busy, clock(14), null, kind = masterClass, title = "Мастер-класс Когана"),
+        event(1, busy, kind = OTHER, title = "Замена струн"),
+    )
+
+    /**
+     * The marks of a cell (spec 3.36.9, 5.28): the looks of its first three events in the order of the day, «+» for a fourth, and every
+     * event as TalkBack names it — the word of its kind and its start; a day without events has none, as before them.
+     */
+    @Test
+    fun `a cell marks its first three events in the order of the day and a plus for more`() {
+        val state = state(events = busyDay + event(5, LocalDate(2026, 9, 14), clock(17), 45))
+        val cell = state.cells.filterNotNull().single { it.date == busy }
+        assertEquals(
+            listOf(KindLook(KindSign.OTHER, 7), KindLook(KindSign.ARC, 1), KindLook(KindSign.BOLT, 4)), cell.marks,
+            "«весь день» first, then 11:00 and 14:00; the lesson at 17:00 is the fourth",
+        )
+        assertTrue(cell.more)
+        assertEquals(
+            listOf(CellEvent(KindRef.OTHER, null, null), CellEvent(orchestra, "Оркестр", clock(11)), CellEvent(masterClass, "Мастер-класс", clock(14)), CellEvent(LESSON, null, clock(17))),
+            cell.events,
+        )
+        val one = state.cells.filterNotNull().single { it.date == LocalDate(2026, 9, 14) }
+        assertEquals(listOf(KindLook(KindSign.LESSON, 0)), one.marks)
+        assertFalse(one.more)
+        val none = state.cells.filterNotNull().single { it.date == LocalDate(2026, 9, 13) }
+        assertTrue(none.marks.isEmpty() && !none.more && none.events.isEmpty())
+        assertTrue(state.cells.filterNotNull().all { it.enabled }, "every day of «Занятия» answers a touch, one to come too")
+    }
+
+    @Test
+    fun `an event of a kind of ones own that is gone is marked and named as other`() {
+        val gone = KindRef.Custom(77)
+        val cell = state(events = listOf(event(1, busy, clock(9), kind = gone))).cells.filterNotNull().single { it.date == busy }
+        assertEquals(listOf(KindLook(KindSign.OTHER, 7)), cell.marks)
+        assertEquals(listOf(CellEvent(KindRef.OTHER, null, clock(9))), cell.events)
+    }
+
+    /**
+     * The sheet of a day with events (spec 3.36.9): its rows in the order of the day — the look, the name (the title, or the kind), the
+     * start and the end (a minute of the day it ends on), the place and the repeat; a past day keeps its time and records.
+     */
+    @Test
+    fun `the sheet of a day has its events in the order of the day`() {
+        val day = state(events = busyDay, series = listOf(series(1, LocalDate(2026, 9, 5), laidUntil = LocalDate(2026, 12, 5))), selected = busy).selected!!
+        assertFalse(day.isFuture)
+        assertEquals(listOf(1L, 2L, 3L, 4L), day.events.map { it.eventId })
+        val (strings, orchestraRow, master, lesson) = day.events
+        assertTrue(strings.allDay)
+        assertEquals(EventName.Titled("Замена струн"), strings.name)
+        assertNull(strings.endMinutes)
+        assertEquals(EventName.OfKind(orchestra, "Оркестр"), orchestraRow.name, "no title: the name of the kind")
+        assertEquals(clock(11) to clock(13), orchestraRow.startMinutes to orchestraRow.endMinutes)
+        assertEquals(clock(14) to null, master.startMinutes to master.endMinutes, "without a length: only the start")
+        assertEquals(KindLook(KindSign.BOLT, 4), master.look)
+        assertEquals("Анна Сергеевна", lesson.place)
+        assertEquals(Repeat.WEEKLY, lesson.repeat)
+        assertEquals(Repeat.NONE, master.repeat)
+        val late = state(events = listOf(event(9, busy, clock(23, 30), 90)), selected = busy).selected!!.events.single()
+        assertEquals(clock(1), late.endMinutes, "23:30 and an hour and a half end at 01:00 of the next day")
+    }
+
+    /**
+     * A day to come (spec 3.36.9): selected and its sheet opens — no time, no records, its events; tomorrow says so for its chip. The day
+     * has a practice and a record of its own here, as after a clock set back a day: its sheet shows neither (its time is not edited and
+     * does not exist yet, 3.35), while its cell keeps what is stored.
+     */
+    @Test
+    fun `a day to come has a sheet with its events and without time or records`() {
+        val tomorrow = LocalDate(2026, 9, 18)
+        val sessions = listOf(session(1, "2026-09-17T10:00:00"), session(2, "2026-09-18T10:00:00"))
+        val entries = listOf(entry(16, 50), entry(18, 40))
+        val state = state(entries = entries, sessions = sessions, events = listOf(event(1, tomorrow, clock(17), 45)), selected = tomorrow)
+        val day = state.selected!!
+        assertTrue(day.isFuture && day.isTomorrow && !day.isToday)
+        assertEquals(0L, day.totalMs, "the 40 minutes stored on the 18th are not the time of a day to come")
+        assertTrue(day.sessions.isEmpty(), "nor is its record of 10:00 one of its records")
+        assertEquals(listOf(1L), day.events.map { it.eventId })
+        val cell = state.cells.filterNotNull().single { it.date == tomorrow }
+        assertTrue(cell.isSelected && cell.isFuture)
+        assertEquals(40 * MS_PER_MINUTE, cell.totalMs, "what is stored is on the 18th")
+        assertFalse(state(selected = LocalDate(2026, 9, 19)).selected!!.isTomorrow)
+        assertFalse(state(selected = today).selected!!.isTomorrow)
+    }
+
+    /**
+     * The changes of the reminder the screen did not see are counted (spec 3.36.9, «Движение»): a card that came or went while the screen
+     * was away, or by the reckoning at its opening, is taken at once — only one that comes or goes on the open screen fades.
+     */
+    @Test
+    fun `a change of the reminder the screen did not see is counted and one it saw is not`() {
+        val lesson = event(1, LocalDate(2026, 9, 18), clock(17), 45)
+        val without = state(events = listOf(lesson), now = moment(LocalDate(2026, 9, 16), 23, 59))
+        val with = state(events = listOf(lesson), now = moment(today, 0, 0))
+        assertNull(without.reminder)
+        assertNotNull(with.reminder)
+        assertEquals(0, PracticeReducer.withReminderOf(with, without, seen = true).reminderEpoch, "come on the open screen: it fades in")
+        val unseen = PracticeReducer.withReminderOf(with, without, seen = false)
+        assertEquals(1, unseen.reminderEpoch, "come out of sight")
+        assertEquals(with.reminder, unseen.reminder)
+        assertEquals(1, PracticeReducer.withReminderOf(with, unseen, seen = false).reminderEpoch, "the same card again changes nothing")
+        assertEquals(2, PracticeReducer.withReminderOf(without, unseen, seen = false).reminderEpoch, "gone out of sight")
+        assertEquals(1, PracticeReducer.withReminderOf(without, unseen, seen = true).reminderEpoch, "gone on the open screen keeps the count")
+    }
+
+    /** Under the name of a month to come, the number of its events (spec 3.36.9): the current month and the past ones keep their time. */
+    @Test
+    fun `a month to come counts its events and the current one does not`() {
+        val november = listOf(event(1, LocalDate(2026, 11, 2)), event(2, LocalDate(2026, 11, 14)), event(3, LocalDate(2026, 11, 14)), event(4, LocalDate(2026, 12, 1)))
+        val ahead = state(month = YearMonth(2026, 11), events = november)
+        assertTrue(ahead.monthIsFuture)
+        assertEquals(3, ahead.monthEvents)
+        val now = state(events = november + event(5, LocalDate(2026, 9, 20)))
+        assertFalse(now.monthIsFuture)
+        assertEquals(1, now.monthEvents)
+        assertFalse(state(month = YearMonth(2026, 8), events = november).monthIsFuture)
+    }
+
+    /**
+     * Under the grid (spec 3.36.9): the kinds of the events of the month shown, each once, in the order of the form — the built-in ones,
+     * then those of one's own; the hint stands while the app has no event at all, and goes with the first one wherever it is.
+     */
+    @Test
+    fun `the legend is the kinds of the month in the order of the form and the hint is there only without any event`() {
+        val ordered = KindRules.ordered(kinds)
+        val state = state(events = busyDay + event(6, LocalDate(2026, 9, 21), kind = PERFORMANCE) + event(7, LocalDate(2026, 10, 3), kind = KindRef.BuiltIn(BuiltInKind.REHEARSAL)), kinds = ordered)
+        assertEquals(listOf(LESSON, PERFORMANCE, KindRef.OTHER, masterClass, orchestra), state.legend.map { it.ref })
+        assertFalse(state.eventsHint)
+        assertTrue(state(month = YearMonth(2026, 8), events = busyDay).legend.isEmpty(), "a month without events has nothing under its grid")
+        assertFalse(state(month = YearMonth(2026, 8), events = busyDay).eventsHint)
+        val none = state()
+        assertTrue(none.eventsHint)
+        assertTrue(none.legend.isEmpty())
+    }
+
+    /**
+     * The reminder (spec 3.35, 3.36.9, 5.28) is worked out for the moment of the last tick: tomorrow's lesson from 00:00 of today, two rows
+     * of the full card and one of the compact, «ещё N» for the rest — the screen chooses which card stands.
+     */
+    @Test
+    fun `the reminder is the events of its window at the moment of the tick`() {
+        val tomorrow = LocalDate(2026, 9, 18)
+        val lesson = event(1, tomorrow, clock(17), 45, place = "Анна Сергеевна")
+        assertNull(state(events = listOf(lesson), now = moment(LocalDate(2026, 9, 16), 23, 59)).reminder, "two days before: no card")
+        val card = assertNotNull(state(events = listOf(lesson), now = moment(today, 0, 0)).reminder)
+        assertEquals(ReminderDay.TOMORROW, card.rows.single().day)
+        val four = listOf(lesson, event(2, tomorrow, clock(11), kind = orchestra), event(3, tomorrow, clock(14), kind = masterClass), event(4, tomorrow))
+        val full = assertNotNull(state(events = four, now = moment(today, 18)).reminder)
+        assertEquals(listOf(4L, 2L), full.visible(compact = false).map { it.eventId }, "«весь день» first, then by start")
+        assertEquals(listOf(3L, 1L), full.hidden(compact = false).map { it.eventId })
+        assertEquals(listOf(4L), full.visible(compact = true).map { it.eventId })
+        assertEquals(3, full.hidden(compact = true).size)
+        assertEquals(tomorrow, full.firstHiddenDate(compact = true))
+        assertNull(state(events = listOf(lesson), now = moment(tomorrow, 17, 45)).reminder, "over: the card goes by itself")
     }
 }

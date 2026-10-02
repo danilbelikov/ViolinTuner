@@ -38,18 +38,21 @@ private class FixedWindow(private val size: IntSize) : WindowInfo {
  *   bottom zone pads the gesture bar of the emulator (24) inside a box that already stands for what the bars leave (stage 117);
  * - [told] is the window the screen is told it is in ([LocalWindowInfo]: the bars of the journey and the bottom zones read its size) —
  *   892 × 412 lying is some 360 high under its bars and keeps the zone of a window of 412;
- * - touch targets under 48 are not widened, so a test of a touch area can fail; [fontScale] is the system font; pictures stand still.
+ * - touch targets under 48 are not widened, so a test of a touch area can fail; [fontScale] is the system font; pictures stand still;
+ * - [density] — pixels a dp, the device's unless named: a phone of another density lays its dp out in other whole pixels (the
+ *   emulator and the owner's Pixel 10a are 2.625). Its pixels must still fit the screen of the device the test runs on.
  */
 @Composable
-fun TestWindow(size: DpSize, told: DpSize = size, fontScale: Float = 1f, content: @Composable () -> Unit) {
-    val density = LocalDensity.current
+fun TestWindow(size: DpSize, told: DpSize = size, fontScale: Float = 1f, density: Float? = null, content: @Composable () -> Unit) {
+    val device = LocalDensity.current
+    val pixels = Density(density ?: device.density, fontScale)
     val base = LocalViewConfiguration.current
     val noWidening = remember(base) { object : ViewConfiguration by base { override val minimumTouchTargetSize = DpSize.Zero } }
-    val window = with(density) { FixedWindow(IntSize(told.width.roundToPx(), told.height.roundToPx())) }
+    val window = with(pixels) { FixedWindow(IntSize(told.width.roundToPx(), told.height.roundToPx())) }
     CompositionLocalProvider(
         LocalWindowInfo provides window,
         LocalViewConfiguration provides noWidening,
-        LocalDensity provides Density(density.density, fontScale),
+        LocalDensity provides pixels,
         // a living picture would ask for frames all the time
         LocalReduceMotion provides true,
     ) {

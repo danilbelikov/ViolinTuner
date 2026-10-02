@@ -238,6 +238,82 @@ internal object IconPaths {
     /** The sign of the takt: a note whose stem turns off like a road (36c). */
     val TAKT = listOf("M15.5 15.5V9.5C15.5 6.5 18 5.5 19.5 4.2", "M18 3.2l2.2 1.4-1.4 2.2", "F M15.67 15.55C16.39 17.53 14.70 19.95 11.90 20.97C9.10 21.99 6.24 21.22 5.53 19.25C4.81 17.27 6.50 14.85 9.30 13.83C12.10 12.81 14.96 13.58 15.67 15.55Z")
 
+    // The signs of the kinds of events (spec 3.36.9, 5.29 R9): the `<symbol>`s `g-*` of redesign events-kinds.html, a rect and a circle
+    // written as paths, the filled keys of `g-keys` and dots of `g-arc` with F. The four of the built-in kinds are theirs alone; the
+    // twelve after them are those a kind of one's own may take (their keys in the base: book … arc).
+
+    /** «Урок»: open notes. */
+    val KIND_LESSON = listOf("M3 5.5h6a3 3 0 0 1 3 3V20a2.5 2.5 0 0 0-2.5-2.5H3zM21 5.5h-6a3 3 0 0 0-3 3V20a2.5 2.5 0 0 1 2.5-2.5H21z")
+
+    /** «Репетиция»: two people. */
+    val KIND_REHEARSAL = listOf(
+        "M7 5.5a2.5 2.5 0 1 1 0 5a2.5 2.5 0 1 1 0-5z",
+        "M17 5.5a2.5 2.5 0 1 1 0 5a2.5 2.5 0 1 1 0-5z",
+        "M2.5 19c0-3 2-5 4.5-5s4.5 2 4.5 5M12.5 19c0-3 2-5 4.5-5s4.5 2 4.5 5",
+    )
+
+    /** «Выступление»: the curtain. */
+    val KIND_PERFORMANCE = listOf("M3 3.5h18", "M4.5 3.5c0 7 2 11.5 6 16.5M19.5 3.5c0 7-2 11.5-6 16.5", "M4.5 8.5c2 1.5 4 1.5 5.5 0M19.5 8.5c-2 1.5-4 1.5-5.5 0")
+
+    /** «Другое»: a diamond. */
+    val KIND_OTHER = listOf("M12 3.5 20 12l-8 8.5L4 12z")
+
+    /** книга (book) */
+    val KIND_BOOK = listOf("M5 19.5v-15A2.5 2.5 0 0 1 7.5 2H19v20H7.5a2.5 2.5 0 0 1 0-5H19", "M10.5 2v7l2-1.4 2 1.4V2")
+
+    /** шапочка (hat) */
+    val KIND_HAT = listOf("M2.5 9 12 5l9.5 4-9.5 4zM6.5 11v5c3 2 8 2 11 0v-5M21.5 9v5")
+
+    /** клавиши (keys) */
+    val KIND_KEYS = listOf(
+        "M5.5 4.5h13a2.5 2.5 0 0 1 2.5 2.5v10a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17V7a2.5 2.5 0 0 1 2.5-2.5z",
+        "M9 13v6.5M15 13v6.5",
+        "F M8.4 4.5h1.2a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1H8.4a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1z",
+        "F M14.4 4.5h1.2a1 1 0 0 1 1 1V12a1 1 0 0 1-1 1h-1.2a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1z",
+    )
+
+    /** маски (mask) */
+    val KIND_MASK = listOf("M4 5h16v6a8 8 0 0 1-16 0z", "M8.5 10h2M13.5 10h2M9 15c2 1.5 4 1.5 6 0")
+
+    /** билет (ticket) */
+    val KIND_TICKET = listOf(
+        "M3 7.5A1.5 1.5 0 0 1 4.5 6h15A1.5 1.5 0 0 1 21 7.5v2.3a2.2 2.2 0 0 0 0 4.4v2.3a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 16.5v-2.3a2.2 2.2 0 0 0 0-4.4z",
+        "M15 8v1.2M15 11.4v1.2M15 14.8V16",
+    )
+
+    /** реплика (chat) */
+    val KIND_CHAT = listOf("M12 4.5c4.7 0 8.5 3 8.5 6.8S16.7 18 12 18c-1 0-2-.1-2.9-.4l-4.6 1.9 1.2-3.6c-1.4-1.2-2.2-2.8-2.2-4.6 0-3.8 3.8-6.8 8.5-6.8z")
+
+    /** сердце (heart) */
+    val KIND_HEART = listOf("M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3C14.7 3 13.5 3.5 12 5c-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7z")
+
+    /** луна (moon) */
+    val KIND_MOON = listOf("M12.5 3.2a6.8 6.8 0 0 0 8.3 8.3A9 9 0 1 1 12.5 3.2z")
+
+    /** лист (leaf) */
+    val KIND_LEAF = listOf("M4.5 19.5C4.5 10 10 4.5 19.5 4.5c0 9.5-5.5 15-15 15z", "M4.5 19.5 13 11")
+
+    /** молния (bolt) */
+    val KIND_BOLT = listOf("M13.5 2.5 5 13.5h6.5l-1 8 8.5-11h-6.5z")
+
+    /** бабочка (bowtie) */
+    val KIND_BOWTIE = listOf(
+        "M10 10.2 4.6 7.1A1 1 0 0 0 3 8v8a1 1 0 0 0 1.6.9l5.4-3.1M14 10.2l5.4-3.1A1 1 0 0 1 21 8v8a1 1 0 0 1-1.6.9L14 13.8",
+        "M11.3 9.5h1.4a1.3 1.3 0 0 1 1.3 1.3v2.4a1.3 1.3 0 0 1-1.3 1.3h-1.4a1.3 1.3 0 0 1-1.3-1.3v-2.4a1.3 1.3 0 0 1 1.3-1.3z",
+    )
+
+    /** полукруг (arc): an orchestra round its conductor */
+    val KIND_ARC = listOf(
+        "M3 19.5a9 9 0 0 1 18 0",
+        "F M4.2 12.7a2.3 2.3 0 1 1 0 4.6a2.3 2.3 0 1 1 0-4.6z",
+        "F M12 8.2a2.3 2.3 0 1 1 0 4.6a2.3 2.3 0 1 1 0-4.6z",
+        "F M19.8 12.7a2.3 2.3 0 1 1 0 4.6a2.3 2.3 0 1 1 0-4.6z",
+        "M12 16.8a1.4 1.4 0 1 1 0 2.8a1.4 1.4 0 1 1 0-2.8z",
+    )
+
+    /** «место»: the place of an event on its screen (`i-pin` of events-kinds.html, spec 3.36.9) */
+    val PIN = listOf("M12 21s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12z", "M12 6.5a2.5 2.5 0 1 1 0 5a2.5 2.5 0 1 1 0-5z")
+
     /** What a path of a tab icon does when its tab is selected. */
     enum class Selected { AS_IS, FILL, CUT }
 

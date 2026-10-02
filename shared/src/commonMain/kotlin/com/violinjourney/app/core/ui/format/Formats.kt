@@ -206,6 +206,72 @@ object Formats {
     fun monthTitle(month: YearMonth, currentYear: Int): String =
         if (month.year == currentYear) date(language.month, month.firstDay).replaceFirstChar { it.titlecase() } else monthAndYear(month)
 
+    /** «пн 5 окт.»: the short weekday, the day and the short month — the chip of the sheet «Дата» (spec 3.36.9). */
+    fun weekdayDate(date: LocalDate): String = weekdayInside(date(language.weekdayDate, date))
+
+    /** «Пн, 28 сент.»: the same with a comma, the first letter capital — the row of the date in the form of an event. */
+    fun weekdayCommaDate(date: LocalDate): String = date(language.weekdayCommaDate, date).replaceFirstChar { it.titlecase() }
+
+    /** «пн 19»: the short weekday and the day — the plate «что меняется» of a repeat. */
+    fun weekdayDay(date: LocalDate): String = weekdayInside(date(language.weekdayDay, date))
+
+    /** «сб 24 октября»: the short weekday, the day and the whole month. */
+    fun weekdayDayMonth(date: LocalDate): String = weekdayInside(date(language.weekdayDayMonth, date))
+
+    /** «окт»: the short month alone, without the language's dot — the tile of a date in «Выступления». */
+    fun shortMonth(date: LocalDate): String = date(language.shortMonth, date).trimEnd('.')
+
+    /** «понедельник, 28 сентября»: the whole weekday first — what TalkBack says of a date of the form (plan D46). */
+    fun weekdayFullDate(date: LocalDate): String = weekdayInside(date(language.weekdayFullDate, date))
+
+    /**
+     * A date that begins with its weekday, as it stands inside a sentence — a chip, a plate, a question: the weekday small where the
+     * language writes it small ([FormatLanguage.smallWeekday]), on both platforms alike — iOS would make a Russian one «Пн».
+     */
+    private fun weekdayInside(text: String): String = if (language.smallWeekday) text.replaceFirstChar { it.lowercase() } else text
+
+    /** «26 окт.»: the day and the short month as the language writes them, its dot kept ([dayAndShortMonth] drops it). */
+    fun shortDate(date: LocalDate): String = date(language.dayShortMonth, date)
+
+    /**
+     * Dates in a list (the answers of the sheet of a repeat, plan D31): of one month its name once — «19, 26 окт.», «19., 26. Okt.»,
+     * «Oct 19, 26», «10月19日、26日»; of several months each date whole — «26 окт., 2 нояб.».
+     */
+    fun dateList(dates: List<LocalDate>): String {
+        if (dates.isEmpty()) return ""
+        val separator = language.listSeparator
+        if (dates.any { it.month != dates.first().month || it.year != dates.first().year }) return dates.joinToString(separator) { shortDate(it) }
+        val days = dates.map { date(language.listedDay, it) }
+        return if (language.monthFirstList) {
+            (listOf(shortDate(dates.first())) + days.drop(1)).joinToString(separator)
+        } else {
+            (days.dropLast(1) + shortDate(dates.last())).joinToString(separator)
+        }
+    }
+
+    /**
+     * The time of an event from its minutes after midnight (spec 3.36.9): «17:00», «09:05» — the 24-hour clock in every language, as
+     * every clock of the app. A minute of the next day is read as of its own day: 25:00 is «01:00».
+     */
+    fun clockOf(minutes: Int): String {
+        val ofDay = minutes.mod(MINUTES_PER_DAY)
+        return "${two((ofDay / MINUTES_IN_HOUR).toLong())}:${two((ofDay % MINUTES_IN_HOUR).toLong())}"
+    }
+
+    /**
+     * A length on a chip of the form (spec 3.36.9, 5.28): the quick chips «30 мин · 45 мин · 1 ч · 1,5 ч» — an hour and a half, the one
+     * quick length that is neither minutes nor whole hours, in hours with a decimal — and every other length, one of one's own on its
+     * chip with the pencil too, in words, as [minutesInWords] says it: «2 ч», «2 ч 15 мин», «2 ч 30 мин».
+     */
+    fun quickDuration(minutes: Int): String =
+        if (minutes == HOUR_AND_A_HALF) hours(oneDecimal(minutes.toDouble() / MINUTES_IN_HOUR)) else minutesInWords(minutes * MS_PER_MINUTE)
+
+    private const val MINUTES_IN_HOUR = 60
+    private const val MINUTES_PER_DAY = 24 * MINUTES_IN_HOUR
+
+    /** The quick chip «1,5 ч» (5.28: 30 · 45 · 60 · 90). */
+    private const val HOUR_AND_A_HALF = 90
+
     /** "18:42" in the given zone. */
     fun timeOfDay(epochMs: Long, zone: TimeZone): String {
         val time = Instant.fromEpochMilliseconds(epochMs).toLocalDateTime(zone)

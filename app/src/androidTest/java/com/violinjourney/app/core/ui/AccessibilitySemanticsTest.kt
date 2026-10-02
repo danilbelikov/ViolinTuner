@@ -242,6 +242,39 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import com.violinjourney.app.core.domain.events.BuiltInKind
+import com.violinjourney.app.core.domain.events.CalendarEvent
+import com.violinjourney.app.core.domain.events.EventReminder
+import com.violinjourney.app.core.domain.events.EventsConfig
+import com.violinjourney.app.core.domain.events.KindLook
+import com.violinjourney.app.core.domain.events.KindRef
+import com.violinjourney.app.core.domain.events.KindRules
+import com.violinjourney.app.core.domain.events.KindSign
+import com.violinjourney.app.core.domain.events.StoredKind
+import com.violinjourney.app.feature.practice.CellEvent
+import com.violinjourney.app.feature.practice.components.ReminderCard
+import com.violinjourney.app.shared.resources.event_count_few
+import com.violinjourney.app.shared.resources.event_count_many
+import com.violinjourney.app.shared.resources.event_count_one
+import com.violinjourney.app.shared.resources.event_kind_lesson
+import com.violinjourney.app.shared.resources.event_kind_lesson_word
+import com.violinjourney.app.shared.resources.event_kind_performance_word
+import com.violinjourney.app.shared.resources.event_reminder_more_description_few
+import com.violinjourney.app.shared.resources.event_reminder_more_description_many
+import com.violinjourney.app.shared.resources.event_reminder_more_description_one
+import com.violinjourney.app.shared.resources.event_reminder_today_at_said
+import com.violinjourney.app.shared.resources.event_reminder_tomorrow_at_said
+import com.violinjourney.app.shared.resources.event_running_until_said
+import com.violinjourney.app.shared.resources.practice_day_event_all_day
+import com.violinjourney.app.shared.resources.practice_day_event_at
+import com.violinjourney.app.shared.resources.practice_day_events_description
+import com.violinjourney.app.shared.resources.practice_events_hint
+import com.violinjourney.app.shared.resources.practice_kinds_legend_description
+import androidx.compose.ui.test.assertHasClickAction
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.atTime
+import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 
 /**
  * What TalkBack and VoiceOver are told on the screens where the eye has more than the reader: the date of a card under
@@ -251,7 +284,8 @@ import org.junit.runner.RunWith
  * and «Записи», the stepper, «Что играли» and the title of «Занятие не закончено» (spec 3.36.3); the recap and the gift as one
  * paragraph each on their title, their buttons still buttons, «Трофеи, 2 из 10» and the nearest one «следующий», the field «Имя»;
  * the strip of the introduction, the cards of the tolerance, «Настройки» and their «Данные» (R8); the passport of a copy as one phrase,
- * the headers of a copy and a restore and the titles of their outcomes as headings, the line of phases as the step of now (stage 122).
+ * the headers of a copy and a restore and the titles of their outcomes as headings, the line of phases as the step of now (stage 122);
+ * a day with events, the heading of a month to come, the legend of the kinds and the rows of the reminder (stage 97).
  */
 @RunWith(AndroidJUnit4::class)
 class AccessibilitySemanticsTest {
@@ -423,31 +457,33 @@ class AccessibilitySemanticsTest {
     }
 
     /**
-     * A day to come is not selectable until the events of R9 (spec 3.36.2); a cell is as high as its row, 52, and the whole of it is
-     * the touch. It is touched at its bottom corners: a circle of 40 alone would take a touch up to 48 around it (Compose widens a
-     * small target, the lesson of stage 101), and the top of the cell and its middle are within that — its corners are not.
+     * A day to come is selected and opens its sheet (spec 3.36.9; until R9 it was not selectable) and says its date without a time — it
+     * has none yet; a cell is as high as its row, 52, and the whole of it is the touch. It is touched at its bottom corners: a circle of
+     * 40 alone would take a touch up to 48 around it (Compose widens a small target, the lesson of stage 101), and the top of the cell
+     * and its middle are within that — its corners are not.
      */
     @Test
-    fun aFutureDayIsNotEnabledAndAPastDayIsTouchedAtTheCornersOfItsCell() {
+    fun aFutureDayIsSelectableAndADayIsTouchedAtTheCornersOfItsCell() {
         val picked = mutableListOf<LocalDate>()
         var future = ""
         var past = ""
         compose.setContent {
             val none = stringResource(Res.string.practice_day_none)
-            future = stringResource(Res.string.practice_day_description, Formats.dayWithWeekday(LocalDate(2026, 9, 28)), none)
+            future = Formats.dayWithWeekday(LocalDate(2026, 9, 28))
             past = stringResource(Res.string.practice_day_description, Formats.dayWithWeekday(LocalDate(2026, 9, 3)), none)
             ViolinTheme {
                 PracticeCalendar(
-                    YearMonth(2026, 9), septemberCells(), canGoForward = false, onMonthBack = {}, onMonthForward = {}, onDaySelected = { picked += it },
+                    YearMonth(2026, 9), septemberCells(), canGoForward = true, onMonthBack = {}, onMonthForward = {}, onDaySelected = { picked += it },
                     currentYear = 2026, monthMs = 0, monthDays = 0,
                 )
             }
         }
-        compose.onNodeWithContentDescription(future).assertIsNotEnabled()
+        val tomorrow = compose.onNodeWithContentDescription(future).assertIsEnabled().assertHeightIsAtLeast(52.dp)
+        tomorrow.performTouchInput { click(Offset(1f, height - 1f)) }
         val day = compose.onNodeWithContentDescription(past).assertIsEnabled().assertHeightIsAtLeast(52.dp)
         day.performTouchInput { click(Offset(1f, height - 1f)) }
         day.performTouchInput { click(Offset(width - 1f, height - 1f)) }
-        assertEquals(listOf(LocalDate(2026, 9, 3), LocalDate(2026, 9, 3)), picked)
+        assertEquals(listOf(LocalDate(2026, 9, 28), LocalDate(2026, 9, 3), LocalDate(2026, 9, 3)), picked)
     }
 
     /** The arrows of the month are named buttons to a reader, as the IconButton they were; the one that cannot go on is off. */
@@ -468,6 +504,162 @@ class AccessibilitySemanticsTest {
         val button = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button)
         compose.onNodeWithContentDescription(back).assert(button).assertIsEnabled()
         compose.onNodeWithContentDescription(forward).assert(button).assertIsNotEnabled()
+    }
+
+    /**
+     * A day with events (spec 3.36.9): its date and its time, then its events by the word of their kind and their start in the order of
+     * the day — «весь день» first (5.28): «13 сентября, воскресенье, 45 минут; выступление, весь день, урок в 17:00»; a day to come
+     * without its time. The marks say nothing apart.
+     */
+    @Test
+    fun aDayWithEventsSaysThemAfterItsTime() {
+        var past = ""
+        var future = ""
+        val lesson = KindRef.BuiltIn(BuiltInKind.LESSON)
+        val performance = KindRef.BuiltIn(BuiltInKind.PERFORMANCE)
+        val events = listOf(CellEvent(performance, null, null), CellEvent(lesson, null, 17 * 60))
+        val cells = septemberCells().map { cell ->
+            when (cell?.date?.day) {
+                13 -> cell!!.copy(totalMs = 45 * MS_PER_MINUTE, fillLevel = 3, events = events, marks = listOf(KindLook(KindSign.PERFORMANCE, 2), KindLook(KindSign.LESSON, 0)))
+                29 -> cell!!.copy(events = events.drop(1), marks = listOf(KindLook(KindSign.LESSON, 0)))
+                else -> cell
+            }
+        }
+        compose.setContent {
+            val said = stringResource(
+                Res.string.practice_pair_description,
+                stringResource(Res.string.practice_day_event_all_day, stringResource(Res.string.event_kind_performance_word)),
+                stringResource(Res.string.practice_day_event_at, stringResource(Res.string.event_kind_lesson_word), "17:00"),
+            )
+            val day = stringResource(Res.string.practice_day_description, Formats.dayWithWeekday(LocalDate(2026, 9, 13)), Formats.minutesInWords(45 * MS_PER_MINUTE))
+            past = stringResource(Res.string.practice_day_events_description, day, said)
+            future = stringResource(
+                Res.string.practice_day_events_description, Formats.dayWithWeekday(LocalDate(2026, 9, 29)),
+                stringResource(Res.string.practice_day_event_at, stringResource(Res.string.event_kind_lesson_word), "17:00"),
+            )
+            ViolinTheme {
+                PracticeCalendar(
+                    YearMonth(2026, 9), cells, canGoForward = true, onMonthBack = {}, onMonthForward = {}, onDaySelected = {},
+                    currentYear = 2026, monthMs = 0, monthDays = 0,
+                )
+            }
+        }
+        compose.onNodeWithContentDescription(past).assertIsEnabled()
+        compose.onNodeWithContentDescription(future).assertIsEnabled()
+    }
+
+    /**
+     * Under the name of a month to come (spec 3.36.9): one heading, «Ноябрь, 17 событий» — the count not read apart; a month to come
+     * without events is its name alone.
+     */
+    @Test
+    fun theHeadingOfAMonthToComeSaysItsEvents() {
+        val november = YearMonth(2026, 11)
+        var events by mutableStateOf(17)
+        var expected = ""
+        var count = ""
+        compose.setContent {
+            count = stringResource(Formats.plural(17, Res.string.event_count_one, Res.string.event_count_few, Res.string.event_count_many), 17)
+            expected = stringResource(Res.string.practice_pair_description, Formats.monthTitle(november, currentYear = 2026), count)
+            ViolinTheme {
+                PracticeCalendar(
+                    november, emptyList(), canGoForward = true, onMonthBack = {}, onMonthForward = {}, onDaySelected = {},
+                    currentYear = 2026, monthMs = 0, monthDays = 0, monthEvents = events, monthIsFuture = true,
+                )
+            }
+        }
+        compose.waitForIdle()
+        val header = compose.onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading)).fetchSemanticsNode().config
+        assertEquals(listOf(expected), header[SemanticsProperties.ContentDescription])
+        compose.onAllNodesWithText(count).assertCountEquals(0)
+
+        events = 0
+        compose.waitForIdle()
+        val bare = compose.onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading)).fetchSemanticsNode().config
+        assertEquals(listOf(Formats.monthTitle(november, currentYear = 2026)), bare[SemanticsProperties.ContentDescription])
+    }
+
+    /**
+     * The legend of the kinds of the month (spec 3.36.9): one description, «Виды месяца: урок, выступление, Оркестр» — the names of the
+     * kinds are not read one by one; the hint before the first event is read as its words.
+     */
+    @Test
+    fun theLegendIsOneDescriptionAndTheHintIsItsWords() {
+        val config = EventsConfig()
+        val kinds = KindRules.ordered(KindRules.all(listOf(StoredKind.Own(9, "Оркестр", 1, KindSign.ARC, 1)), config))
+        val legend = kinds.filter { it.ref == KindRef.BuiltIn(BuiltInKind.LESSON) || it.ref == KindRef.BuiltIn(BuiltInKind.PERFORMANCE) || it.ref == KindRef.Custom(9) }
+        var hint by mutableStateOf(false)
+        var expected = ""
+        var lessonName = ""
+        var hintWords = ""
+        compose.setContent {
+            val words = stringResource(
+                Res.string.practice_pair_description,
+                stringResource(Res.string.practice_pair_description, stringResource(Res.string.event_kind_lesson_word), stringResource(Res.string.event_kind_performance_word)),
+                "Оркестр",
+            )
+            expected = stringResource(Res.string.practice_kinds_legend_description, words)
+            lessonName = stringResource(Res.string.event_kind_lesson)
+            hintWords = stringResource(Res.string.practice_events_hint)
+            ViolinTheme {
+                PracticeCalendar(
+                    YearMonth(2026, 9), septemberCells(), canGoForward = true, onMonthBack = {}, onMonthForward = {}, onDaySelected = {},
+                    currentYear = 2026, monthMs = 0, monthDays = 0, legend = if (hint) emptyList() else legend, hint = hint,
+                )
+            }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription(expected).assertExists()
+        compose.onAllNodesWithText(lessonName).assertCountEquals(0)
+        hint = true
+        compose.waitForIdle()
+        compose.onNodeWithText(hintWords).assertExists()
+        compose.onAllNodesWithContentDescription(expected).assertCountEquals(0)
+    }
+
+    /**
+     * The reminder (spec 3.36.9): a row is one sentence — «Завтра в 17:00 урок, Анна Сергеевна», an event going on «…, идёт до 17:45» —
+     * and «ещё 2» a button that names the kinds of the events it stands for, «Ещё 2 события: мастер-класс, урок».
+     */
+    @Test
+    fun aRowOfTheReminderIsOneSentenceAndMoreIsAButtonThatNamesItsKinds() {
+        val config = EventsConfig()
+        val kinds = KindRules.all(listOf(StoredKind.Own(10, "мастер-класс", 4, KindSign.BOLT, 1)), config)
+        val zone = TimeZone.of("Europe/Moscow")
+        val today = LocalDate(2026, 9, 28)
+        fun event(id: Long, date: LocalDate, start: Int?, duration: Int?, kind: KindRef, place: String = "") =
+            CalendarEvent(id, kind, date, start, duration, title = "", place = place, notes = "", seriesId = null, detached = false, createdAtEpochMs = id)
+        val lesson = KindRef.BuiltIn(BuiltInKind.LESSON)
+        val events = listOf(
+            event(1, today, 17 * 60, 45, lesson, place = "Анна Сергеевна"),
+            event(2, today.plus(1, DateTimeUnit.DAY), 9 * 60, 30, lesson, place = "Анна Сергеевна"),
+            event(3, today.plus(1, DateTimeUnit.DAY), 11 * 60, null, KindRef.Custom(10)),
+            event(4, today.plus(1, DateTimeUnit.DAY), 17 * 60, 45, lesson),
+        )
+        // 17:20 on Monday: today's lesson is going on, tomorrow's three wait — two under «ещё 2»
+        val reminder = EventReminder.of(events, kinds, today.atTime(17, 20).toInstant(zone), zone, config)!!
+        var going = ""
+        var tomorrow = ""
+        var more = ""
+        compose.setContent {
+            val lessonWord = stringResource(Res.string.event_kind_lesson_word)
+            going = stringResource(
+                Res.string.practice_pair_description,
+                stringResource(Res.string.practice_pair_description, stringResource(Res.string.event_reminder_today_at_said, "17:00", lessonWord), "Анна Сергеевна"),
+                stringResource(Res.string.event_running_until_said, "17:45"),
+            )
+            tomorrow = stringResource(
+                Res.string.practice_pair_description, stringResource(Res.string.event_reminder_tomorrow_at_said, "09:00", lessonWord), "Анна Сергеевна",
+            )
+            val hidden = Formats.plural(2, Res.string.event_reminder_more_description_one, Res.string.event_reminder_more_description_few, Res.string.event_reminder_more_description_many)
+            more = stringResource(hidden, 2, stringResource(Res.string.practice_pair_description, "мастер-класс", lessonWord))
+            ViolinTheme { ReminderCard(reminder, compact = false, lying = false, onMore = {}) }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription(going).assertExists()
+        compose.onNodeWithContentDescription(tomorrow).assertExists()
+        compose.onNodeWithContentDescription(more).assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button)).assertHasClickAction()
+        compose.onAllNodesWithText("Анна Сергеевна", substring = true).assertCountEquals(0)
     }
 
     /** September 2026 as the calendar gets it: 24 days of practice for 17 h 27 min, today the 27th, the 28th to come. */

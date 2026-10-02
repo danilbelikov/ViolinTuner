@@ -98,6 +98,23 @@ internal val BackupSheets = Color(0xFFB7ACD9)
 internal val BackupAudio = Color(0xFF8A78C9)
 internal val BackupVideo = Color(0xFF5B43B8)
 
+// The kinds of events (spec 3.36.9, 5.29 R9; events-kinds.html, 1): eight colours in two tiers of lightness — the saturated four
+// over the light four — none of them a zone, a violet of the time of practice, the orange of the flame, the brass of «сделано»
+// or the coral of danger (the nearest to it is Пудра, ΔE2000 16.9). Each has the colour of its mark on the ground and of a sign
+// and a caption on its plate of 18 %: the saturated four a tone lighter there, the light four the colour itself.
+internal val KindBlue = Color(0xFF4D99E0)
+internal val KindBlueOnPlate = Color(0xFF58A4EC)
+internal val KindSea = Color(0xFF5E9D8E)
+internal val KindSeaOnPlate = Color(0xFF6CAB9C)
+internal val KindRose = Color(0xFFF266A5)
+internal val KindRoseOnPlate = Color(0xFFFB6EAD)
+internal val KindOrchid = Color(0xFFCF67E3)
+internal val KindOrchidOnPlate = Color(0xFFDC74F1)
+internal val KindIce = Color(0xFFA8DBFA)
+internal val KindTurquoise = Color(0xFF5FCFDA)
+internal val KindPowder = Color(0xFFFEB5CC)
+internal val KindLime = Color(0xFFD7F092)
+
 // Sections of the repertoire and the notation of scales (handoff `Упражнения`, `tokens`)
 internal val LearnReading = Color(0xFF4A3F6E)
 internal val LearnLearning = Color(0xFF8B74D9)

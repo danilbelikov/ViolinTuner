@@ -91,6 +91,25 @@ object AppIcons {
     val Tape: ImageVector by lazy { icon("Tape", IconPaths.TAPE) }
     val Takt: ImageVector by lazy { icon("Takt", IconPaths.TAKT) }
 
+    // the signs of the kinds of events (spec 3.36.9): the four built-in ones and the twelve of one's own; the place of an event
+    val KindLesson: ImageVector by lazy { icon("KindLesson", IconPaths.KIND_LESSON) }
+    val KindRehearsal: ImageVector by lazy { icon("KindRehearsal", IconPaths.KIND_REHEARSAL) }
+    val KindPerformance: ImageVector by lazy { icon("KindPerformance", IconPaths.KIND_PERFORMANCE) }
+    val KindOther: ImageVector by lazy { icon("KindOther", IconPaths.KIND_OTHER) }
+    val KindBook: ImageVector by lazy { icon("KindBook", IconPaths.KIND_BOOK) }
+    val KindHat: ImageVector by lazy { icon("KindHat", IconPaths.KIND_HAT) }
+    val KindKeys: ImageVector by lazy { icon("KindKeys", IconPaths.KIND_KEYS) }
+    val KindMask: ImageVector by lazy { icon("KindMask", IconPaths.KIND_MASK) }
+    val KindTicket: ImageVector by lazy { icon("KindTicket", IconPaths.KIND_TICKET) }
+    val KindChat: ImageVector by lazy { icon("KindChat", IconPaths.KIND_CHAT) }
+    val KindHeart: ImageVector by lazy { icon("KindHeart", IconPaths.KIND_HEART) }
+    val KindMoon: ImageVector by lazy { icon("KindMoon", IconPaths.KIND_MOON) }
+    val KindLeaf: ImageVector by lazy { icon("KindLeaf", IconPaths.KIND_LEAF) }
+    val KindBolt: ImageVector by lazy { icon("KindBolt", IconPaths.KIND_BOLT) }
+    val KindBowtie: ImageVector by lazy { icon("KindBowtie", IconPaths.KIND_BOWTIE) }
+    val KindArc: ImageVector by lazy { icon("KindArc", IconPaths.KIND_ARC) }
+    val Pin: ImageVector by lazy { icon("Pin", IconPaths.PIN) }
+
     val TabLive: TabIcon by lazy { tab("TabLive", IconPaths.TAB_LIVE) }
     val TabPractice: TabIcon by lazy { tab("TabPractice", IconPaths.TAB_PRACTICE) }
     val TabRepertoire: TabIcon by lazy { tab("TabRepertoire", IconPaths.TAB_REPERTOIRE) }
@@ -174,6 +193,23 @@ object AppIcons {
         "Backing" to { Backing },
         "Tape" to { Tape },
         "Takt" to { Takt },
+        "KindLesson" to { KindLesson },
+        "KindRehearsal" to { KindRehearsal },
+        "KindPerformance" to { KindPerformance },
+        "KindOther" to { KindOther },
+        "KindBook" to { KindBook },
+        "KindHat" to { KindHat },
+        "KindKeys" to { KindKeys },
+        "KindMask" to { KindMask },
+        "KindTicket" to { KindTicket },
+        "KindChat" to { KindChat },
+        "KindHeart" to { KindHeart },
+        "KindMoon" to { KindMoon },
+        "KindLeaf" to { KindLeaf },
+        "KindBolt" to { KindBolt },
+        "KindBowtie" to { KindBowtie },
+        "KindArc" to { KindArc },
+        "Pin" to { Pin },
     )
 
     /** Every icon of the bottom bar, for the same test. */

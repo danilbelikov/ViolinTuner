@@ -35,8 +35,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
@@ -44,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.ui.components.AppButton
 import com.violinjourney.app.core.ui.components.AppButtonStyle
 import com.violinjourney.app.core.ui.components.AppDock
+import com.violinjourney.app.core.domain.events.Reminder
 import com.violinjourney.app.core.ui.components.DockDefaults
 import com.violinjourney.app.core.ui.components.DockScope
 import com.violinjourney.app.core.ui.components.LocalDockInset
@@ -57,13 +61,17 @@ import com.violinjourney.app.feature.practice.components.FirstWeekCard
 import com.violinjourney.app.feature.practice.components.PathRow
 import com.violinjourney.app.feature.practice.components.PracticeSheetHost
 import com.violinjourney.app.feature.practice.components.PracticeCalendar
+import com.violinjourney.app.feature.practice.components.ReminderCard
+import com.violinjourney.app.feature.practice.components.ReminderFit
 import com.violinjourney.app.feature.practice.components.RunningCard
 import com.violinjourney.app.feature.practice.components.ShownNumbers
+import com.violinjourney.app.feature.practice.components.ShownReminder
 import com.violinjourney.app.feature.practice.components.StartPracticeButton
 import com.violinjourney.app.feature.practice.components.TodayCard
 import com.violinjourney.app.feature.practice.components.TodayMetrics
 import com.violinjourney.app.feature.practice.components.WeekCard
 import com.violinjourney.app.feature.practice.components.rememberShownNumbers
+import com.violinjourney.app.feature.practice.components.rememberShownReminder
 import com.violinjourney.app.feature.practice.components.settled
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.practice_stop
@@ -119,8 +127,10 @@ fun PracticeScreen(
     ) {
         if (maxWidth > maxHeight) {
             // the right column: what is left of the width after the left one and the field at the end
-            val windowLook = WindowLook.Beside(WindowFit.besideWidth(maxWidth - LandscapeLeftColumn - ScreenPadding))
-            LandscapeLayout(state, onIntent, window = { journeyCard(windowLook) }, flameSways, timer, photo)
+            val rightColumn = maxWidth - LandscapeLeftColumn - ScreenPadding
+            val windowLook = WindowLook.Beside(WindowFit.besideWidth(rightColumn))
+            val legendBeside = CalendarMetrics.Landscape.legendBeside(rightColumn)
+            LandscapeLayout(state, onIntent, window = { journeyCard(windowLook) }, flameSways, timer, photo, legendBeside)
         } else {
             PortraitLayout(state, onIntent, journeyCard, flameSways, timer, photo, height = maxHeight)
         }
@@ -157,6 +167,15 @@ private fun PortraitLayout(
     val still = remember(settled, today, floorMinutes) {
         @Composable { StillToday(settled, today, floorMinutes, metrics.today) }
     }
+    // the reminder: compact in a window lower than 700 (360 × 640, spec 3.36.9), and the window of the home is fitted to it as well
+    val compact = ReminderFit.compact(windowHeight(), lying = false)
+    val reminder = rememberShownReminder(state.reminder, loading = state.loading, unseen = state.reminderEpoch)
+    val reminderTwin = remember(reminder.value, compact) {
+        @Composable {
+            val shown = reminder.value
+            if (shown != null) StillReminder(shown, compact)
+        }
+    }
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         AppDock(
             dock = { MainAction(state, onIntent, flameSways) },
@@ -174,29 +193,36 @@ private fun PortraitLayout(
                     viewport = height - dockInset,
                     loading = state.loading,
                     path = { Path(state, onIntent, photo) },
-                    today = { TodayBlock(state, numbers, metrics.today, flameSways, timer, onIntent, plainWeek = false) },
+                    today = {
+                        TodayBlock(state, numbers, metrics.today, flameSways, timer, onIntent, plainWeek = false) {
+                            Reminder(reminder, compact, lying = false, onIntent)
+                        }
+                    },
                     still = still,
+                    reminder = reminderTwin,
                     window = journeyCard,
-                    calendar = { Calendar(state, numbers, metrics.calendar, onIntent) },
+                    calendar = { Calendar(state, numbers, metrics.calendar, onIntent, legendBeside = false) },
                 )
             }
         }
     }
 }
 
-private enum class BodySlot { Path, Today, Still, Under, Window, Calendar }
+private enum class BodySlot { Path, Today, Still, Reminder, Under, Window, Calendar }
 
 /**
  * The blocks of the portrait one under another, 12 apart, as a column would put them — but the window of the home learns in the
  * same pass how it stands (spec 3.36.2, «Маленький экран и крупный шрифт»): its picture takes what is left of the first screen
- * ([viewport]) under the top field, the path row and «Сегодня» and over what stands under the picture, 148 at most, and with less
- * than 72 left the window is a line ([WindowFit]). «Сегодня» is measured as the layout without a running practice has it —
+ * ([viewport]) under the top field, the path row, «Сегодня» and the reminder and over what stands under the picture, 148 at most, and
+ * with less than 72 left the window is a line ([WindowFit]). «Сегодня» is measured as the layout without a running practice has it —
  * [still], never placed — so beginning or ending a practice does not change the window: while one runs its window keeps its height
- * below the fold, and the card of the running practice growing and shrinking in its fade is never measured for it. What stands
- * under the picture — the line, taller when its call takes more lines, and the bar while the takts are short — is the window's own
- * [WindowLook.UnderPicture], measured and never placed, so the whole window fits the first screen. All of it is measured before the
- * window is composed, so the first frame does not show a picture of 148 to take it back. While the data is read — only the path
- * row, keeping its place.
+ * below the fold, and the card of the running practice growing and shrinking in its fade is never measured for it. The reminder too
+ * is a still twin ([reminder], spec 3.36.9): the card as it is shown — the one going out held until it has faded — measured and never
+ * placed, nothing when there is none; so the window gives way to the card that comes and takes its place back once the card is gone,
+ * each time once. What stands under the picture — the line, taller when its call takes more lines, and the bar while the takts are
+ * short — is the window's own [WindowLook.UnderPicture], measured and never placed, so the whole window fits the first screen. All of
+ * it is measured before the window is composed, so the first frame does not show a picture of 148 to take it back. While the data is
+ * read — only the path row, keeping its place.
  */
 @Composable
 private fun PortraitBody(
@@ -205,6 +231,7 @@ private fun PortraitBody(
     path: @Composable () -> Unit,
     today: @Composable () -> Unit,
     still: @Composable () -> Unit,
+    reminder: @Composable () -> Unit,
     window: @Composable (WindowLook) -> Unit,
     calendar: @Composable () -> Unit,
 ) {
@@ -226,7 +253,8 @@ private fun PortraitBody(
         placed += pathBlocks
         if (!loading) {
             val stillBlocks = subcompose(BodySlot.Still, still).map { it.measure(child) }
-            val above = (ScreenPadding.roundToPx() + stacked(pathBlocks) + stacked(stillBlocks)).toDp()
+            val reminderBlocks = subcompose(BodySlot.Reminder, reminder).map { it.measure(child) }
+            val above = (ScreenPadding.roundToPx() + stacked(pathBlocks) + stacked(stillBlocks) + stacked(reminderBlocks)).toDp()
             val under = subcompose(BodySlot.Under, underContent).sumOf { it.measure(child).height }.toDp()
             val look = WindowFit.picture(viewport, above, under)?.let { WindowLook.Picture(it) } ?: WindowLook.Line
             placed += subcompose(BodySlot.Today, today).map { it.measure(child) }
@@ -281,9 +309,10 @@ private fun StillToday(numbers: ShownNumbers, today: LocalDate, floorMinutes: In
 
 /**
  * Landscape (practice-extra.html, screen 1): the columns stay. The left one, 280 wide — «Сегодня» compact, or the running
- * practice and the bars of the week under it without a card — scrolls over the bottom zone with «Начать» / «Закончить» at the
- * bottom of the column, its fade short (over the button there are 236 dp on 892 × 412). The right one scrolls by itself: the path
- * row, the window of the home — a row of 96 with the picture on its left ([window]) — the calendar.
+ * practice and the bars of the week under it without a card, and the compact reminder under «Сегодня» or the timer (spec 3.36.9) —
+ * scrolls over the bottom zone with «Начать» / «Закончить» at the bottom of the column, its fade short (over the button there are 236
+ * dp on 892 × 412). The right one scrolls by itself: the path row, the window of the home — a row of 96 with the picture on its left
+ * ([window]) — the calendar, the legend of its kinds beside the grid where there is room for it ([legendBeside]).
  */
 @Composable
 private fun LandscapeLayout(
@@ -293,9 +322,12 @@ private fun LandscapeLayout(
     flameSways: MutableState<Boolean>,
     timer: () -> PracticeTimer?,
     photo: ImageBitmap?,
+    legendBeside: Boolean,
 ) {
     val metrics = Metrics.Landscape
     val numbers = rememberShownNumbers(state)
+    val reminder = rememberShownReminder(state.reminder, loading = state.loading, unseen = state.reminderEpoch)
+    val compact = ReminderFit.compact(windowHeight(), lying = true)
     Row(modifier = Modifier.fillMaxSize()) {
         AppDock(
             dock = { MainAction(state, onIntent, flameSways) },
@@ -310,7 +342,11 @@ private fun LandscapeLayout(
                     .padding(start = ScreenPadding, top = ScreenPadding, end = ScreenPadding, bottom = LocalDockInset.current + ScreenPadding),
                 verticalArrangement = Arrangement.spacedBy(BlockGap),
             ) {
-                if (!state.loading) TodayBlock(state, numbers, metrics.today, flameSways, timer, onIntent, plainWeek = true)
+                if (!state.loading) {
+                    TodayBlock(state, numbers, metrics.today, flameSways, timer, onIntent, plainWeek = true) {
+                        Reminder(reminder, compact = compact, lying = true, onIntent)
+                    }
+                }
             }
         }
         Column(
@@ -324,18 +360,18 @@ private fun LandscapeLayout(
             Path(state, onIntent, photo)
             if (!state.loading) {
                 window()
-                Calendar(state, numbers, metrics.calendar, onIntent)
+                Calendar(state, numbers, metrics.calendar, onIntent, legendBeside)
             }
         }
     }
 }
 
 /**
- * The month (spec 3.36.2): under the fold, below the window of the home; the time of the month rolls as the numbers of «Сегодня» do.
- * A tapped day opens its sheet.
+ * The month (spec 3.36.2, 3.36.9): under the fold, below the window of the home; the time of the month rolls as the numbers of
+ * «Сегодня» do. A tapped day opens its sheet — a day to come too; under the grid, or beside it, the legend of the kinds of its events.
  */
 @Composable
-private fun Calendar(state: PracticeState, numbers: ShownNumbers, metrics: CalendarMetrics, onIntent: (PracticeIntent) -> Unit) {
+private fun Calendar(state: PracticeState, numbers: ShownNumbers, metrics: CalendarMetrics, onIntent: (PracticeIntent) -> Unit, legendBeside: Boolean) {
     PracticeCalendar(
         month = state.month,
         cells = state.cells,
@@ -348,6 +384,11 @@ private fun Calendar(state: PracticeState, numbers: ShownNumbers, metrics: Calen
         monthDays = numbers.monthDays,
         rolledMonthMs = numbers.rolledMonthMs,
         metrics = metrics,
+        legend = state.legend,
+        hint = state.eventsHint,
+        monthEvents = state.monthEvents,
+        monthIsFuture = state.monthIsFuture,
+        legendBeside = legendBeside,
     )
 }
 
@@ -370,7 +411,8 @@ private fun Path(state: PracticeState, onIntent: (PracticeIntent) -> Unit, photo
 /**
  * «Сегодня», or the card of the running practice with the week under it, or the first run: the running practice and «Сегодня»
  * take each other's place with the short fade of 3.12. [plainWeek] — the week under the running practice without a card
- * (landscape).
+ * (landscape). The [reminder] stands in the block (spec 3.36.9): under «Сегодня» or the first run, and between the card of the running
+ * practice and the week — so it changes with them in their fade, and has no fade of its own at the start and the stop of a practice.
  */
 @Composable
 private fun TodayBlock(
@@ -381,6 +423,7 @@ private fun TodayBlock(
     timer: () -> PracticeTimer?,
     onIntent: (PracticeIntent) -> Unit,
     plainWeek: Boolean,
+    reminder: @Composable () -> Unit,
 ) {
     AnimatedContent(
         targetState = state.running,
@@ -402,14 +445,51 @@ private fun TodayBlock(
                         metrics = metrics,
                         onBackToLive = if (metrics.backToLive) ({ onIntent(PracticeIntent.BackToLiveClicked) }) else null,
                     )
+                    reminder()
                     WeekCard(numbers, state.today, state.weekFloorMinutes, hatch = state.runningToday, timer = timer, metrics = metrics, plain = plainWeek)
                 }
-                !numbers.hasHistory -> FirstWeekCard(numbers, state.today, state.weekFloorMinutes, metrics)
-                else -> TodayCard(numbers, state.today, state.weekFloorMinutes, metrics, onSway = { flameSways.value = it })
+                !numbers.hasHistory -> {
+                    FirstWeekCard(numbers, state.today, state.weekFloorMinutes, metrics)
+                    reminder()
+                }
+                else -> {
+                    TodayCard(numbers, state.today, state.weekFloorMinutes, metrics, onSway = { flameSways.value = it })
+                    reminder()
+                }
             }
         }
     }
 }
+
+/**
+ * The reminder as shown ([rememberShownReminder]): its strength read where it is drawn, so its fade does not recompose the block.
+ * «ещё N» opens the sheet of the day of the first event it stands for, and the calendar comes to its month (spec 3.36.9).
+ */
+@Composable
+private fun Reminder(shown: ShownReminder, compact: Boolean, lying: Boolean, onIntent: (PracticeIntent) -> Unit) {
+    val reminder = shown.value ?: return
+    ReminderCard(
+        reminder = reminder,
+        compact = compact,
+        lying = lying,
+        onMore = { date -> onIntent(PracticeIntent.DaySelected(date, moveMonth = true)) },
+        modifier = Modifier.graphicsLayer { alpha = shown.alpha() },
+    )
+}
+
+/** The reminder for the window of the home to be fitted to: the card as shown, composed only to be measured — still and silent. */
+@Composable
+private fun StillReminder(reminder: Reminder, compact: Boolean) {
+    CompositionLocalProvider(LocalReduceMotion provides true) {
+        Box(Modifier.fillMaxWidth().clearAndSetSemantics { }) {
+            ReminderCard(reminder, compact, lying = false, onMore = {})
+        }
+    }
+}
+
+/** The height of the window the app is in now, as the bottom zone reads it: the card of the reminder is chosen by it ([ReminderFit]). */
+@Composable
+private fun windowHeight(): Dp = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
 
 /**
  * The bottom zone of «Занятия» (spec 3.36.2): the living «Начать занятие», or «Закончить занятие» outlined with its flag in the

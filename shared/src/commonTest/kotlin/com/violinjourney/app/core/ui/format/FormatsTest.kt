@@ -134,4 +134,36 @@ class FormatsTest {
         assertEquals("214 МБ", Formats.fileSize(214L * 1024 * 1024))
         assertEquals("1,5 ГБ", Formats.fileSize(1536L * 1024 * 1024))
     }
+
+    /** The time of an event from its minutes after midnight (spec 3.36.9): the 24-hour clock in every language; a minute past midnight is of its day. */
+    @Test
+    fun `the clock of an event is twenty four hours and two digits`() {
+        assertEquals("00:00", Formats.clockOf(0))
+        assertEquals("00:05", Formats.clockOf(5))
+        assertEquals("17:15", Formats.clockOf(17 * 60 + 15))
+        assertEquals("23:59", Formats.clockOf(23 * 60 + 59))
+        assertEquals("01:00", Formats.clockOf(25 * 60), "the end of 23:30 and an hour and a half")
+        Formats.use(FormatLanguage.ENGLISH)
+        try {
+            assertEquals("17:15", Formats.clockOf(17 * 60 + 15), "no AM and PM: every clock of the app")
+        } finally {
+            Formats.use(FormatLanguage.RUSSIAN)
+        }
+    }
+
+    /**
+     * The chips of the length of an event (spec 3.36.9): the quick ones «30 мин · 45 мин · 1 ч · 1,5 ч»; a length of one's own on the
+     * chip with the pencil in words, as the sheet «Длительность» says it — «2 ч 30 мин» (events-form.html, 1 and 4), not «2,5 ч».
+     */
+    @Test
+    fun `a quick length is the words of the chips and a length of ones own is said in words`() {
+        assertEquals(listOf("30 мин", "45 мин", "1 ч", "1,5 ч"), listOf(30, 45, 60, 90).map(Formats::quickDuration))
+        assertEquals(listOf("2 ч 30 мин", "2 ч 15 мин", "2 ч", "3 ч 30 мин", "15 мин", "8 ч"), listOf(150, 135, 120, 210, 15, 480).map(Formats::quickDuration))
+        Formats.use(FormatLanguage.ENGLISH)
+        try {
+            assertEquals(listOf("30 min", "45 min", "1 h", "1.5 h", "2 h 30 min", "2 h 15 min"), listOf(30, 45, 60, 90, 150, 135).map(Formats::quickDuration))
+        } finally {
+            Formats.use(FormatLanguage.RUSSIAN)
+        }
+    }
 }

@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.domain.Zone
+import com.violinjourney.app.core.domain.events.CalendarEvent
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.violinjourney.app.core.domain.practice.PracticeEntry
@@ -36,6 +37,7 @@ import com.violinjourney.app.feature.practice.components.DaySheetContent
 import com.violinjourney.app.feature.practice.components.PathRow
 import com.violinjourney.app.feature.practice.components.PathSheetContent
 import com.violinjourney.app.feature.practice.components.PracticeCalendar
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
@@ -90,11 +92,24 @@ private object Sample {
         name: String = "Аня",
         sessions: List<SessionSummary> = this.sessions,
         month: YearMonth = YearMonth(2026, 9),
+        events: List<CalendarEvent> = emptyList(),
+        now: Instant = EventSample.moment(today, 18, 42),
     ): PracticeState = PracticeReducer.stateOf(
         entries = entries, sessions = sessions, runningSince = today.takeIf { running }, month = month,
         selectedDate = selected, sheet = sheet, today = today, zone = zone, config = PracticeConfig(),
         trophies = trophies, profile = Profile(name, avatarFile = null),
         avatarPath = null, progressConfig = ProgressConfig(),
+        events = events, kinds = EventSample.kinds, series = EventSample.series, now = now, eventsConfig = EventSample.config,
+    )
+
+    /** The events of September of the mockups: tomorrow's lesson at 17:00 makes the reminder (spec 3.36.9). */
+    val events: List<CalendarEvent> = EventSample.septemberEvents
+
+    /** Three more tomorrow — the orchestra, a master class and the strings all day: «ещё 3» of the compact card. */
+    val busyTomorrow: List<CalendarEvent> = events + listOf(
+        EventSample.event(LocalDate(2026, 9, 28), EventSample.orchestra, 11 * 60, 120),
+        EventSample.event(LocalDate(2026, 9, 28), EventSample.masterClass, 14 * 60, 90),
+        EventSample.event(LocalDate(2026, 9, 28), EventSample.other, title = "Замена струн"),
     )
 
     /** 24:18 of «D-dur · 2 октавы» with 6 minutes of its goal left. */
@@ -223,6 +238,38 @@ private fun GermanLargePreview() = Screen(Sample.state(), framed = true)
 @Preview(name = "Занятия · fr, 360", locale = "fr", device = "spec:width=360dp,height=640dp")
 @Composable
 private fun FrenchPreview() = Screen(Sample.state(running = true), Sample.timer, framed = true)
+
+@Preview(name = "Занятия · напоминание «Завтра в 17:00 — урок»: между «Сегодня» и окном дома", locale = "ru", device = "spec:width=412dp,height=892dp")
+@Composable
+private fun ReminderPreview() = Screen(Sample.state(events = Sample.events), framed = true)
+
+@Preview(name = "Занятия · занятие идёт: напоминание между таймером и неделей", locale = "ru", device = "spec:width=412dp,height=892dp")
+@Composable
+private fun ReminderRunningPreview() = Screen(Sample.state(running = true, events = Sample.events), Sample.timer, framed = true)
+
+@Preview(name = "Занятия · напоминание, «ещё 3»: две строки и «ещё»", locale = "ru", device = "spec:width=412dp,height=892dp")
+@Composable
+private fun ReminderMorePreview() = Screen(Sample.state(events = Sample.busyTomorrow), framed = true)
+
+@Preview(name = "Занятия · 360 × 640: компактное напоминание и «ещё 3», окно уступает", locale = "ru", device = "spec:width=360dp,height=640dp")
+@Composable
+private fun ReminderSmallPreview() = Screen(Sample.state(events = Sample.busyTomorrow), framed = true)
+
+@Preview(name = "Занятия · 360 × 640: компактное с одним событием", locale = "ru", device = "spec:width=360dp,height=640dp")
+@Composable
+private fun ReminderSmallOnePreview() = Screen(Sample.state(events = Sample.events), framed = true)
+
+@Preview(name = "Занятия · 360 × 640, de, шрифт 1,3: компактное", locale = "de", fontScale = 1.3f, device = "spec:width=360dp,height=640dp")
+@Composable
+private fun ReminderSmallGermanPreview() = Screen(Sample.state(events = Sample.busyTomorrow), framed = true)
+
+@Preview(name = "Занятия · landscape 892 × 412: компактное слева, легенда справа от сетки", locale = "ru", device = "spec:width=892dp,height=412dp")
+@Composable
+private fun ReminderLandscapePreview() = Screen(Sample.state(events = Sample.busyTomorrow), framed = true)
+
+@Preview(name = "Занятия · 640 × 360: компактное слева, легенда под сеткой", locale = "ru", device = "spec:width=640dp,height=360dp")
+@Composable
+private fun ReminderSmallLandscapePreview() = Screen(Sample.state(events = Sample.busyTomorrow), framed = true)
 
 // the sheet itself is a window, which a preview does not draw: the ring of the day under it is what is seen here
 @Preview(name = "Занятия · под листом дня: кольцо «выбран» у 24-го", widthDp = 412, heightDp = 892, locale = "ru")

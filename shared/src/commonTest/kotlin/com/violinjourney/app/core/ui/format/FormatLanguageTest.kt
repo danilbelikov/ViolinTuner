@@ -87,6 +87,96 @@ class FormatLanguageTest {
         use("ko"); assertEquals(listOf("many", "many", "many"), words(1, 2, 5))
     }
 
+    /** The dates of the events (spec 3.36.9, «Новые шаблоны дат») of one day in one language, as Android writes them — and iOS. */
+    private data class EventDates(
+        val tag: String,
+        val weekdayDate: String,
+        val weekdayCommaDate: String,
+        val weekdayDay: String,
+        val weekdayDayMonth: String,
+        val shortMonth: String,
+        val weekdayFullDate: String,
+    )
+
+    private fun assertEventDates(date: LocalDate, expected: List<EventDates>) {
+        assertEquals(FormatLanguage.ALL.map { it.tag }.toSet(), expected.map { it.tag }.toSet(), "every language of the app")
+        for (want in expected) {
+            use(want.tag)
+            val have = EventDates(
+                want.tag, Formats.weekdayDate(date), Formats.weekdayCommaDate(date), Formats.weekdayDay(date), Formats.weekdayDayMonth(date),
+                Formats.shortMonth(date), Formats.weekdayFullDate(date),
+            )
+            assertEquals(want, have, "${want.tag}, $date")
+        }
+    }
+
+    /**
+     * «пн 5 окт.» in a chip, «Пн, 28 сент.» in the row of the form, «пн 19» on the plate of a repeat, «сб 24 октября», «окт» on the tile
+     * of «Выступления», «понедельник, 28 сентября» for TalkBack (plan 6.6, D46): ja, zh and ko in their own order. A Russian weekday is
+     * small inside a sentence on both platforms — iOS by itself would make it «Пн» at the start.
+     */
+    @Test
+    fun `the dates of the events are written the way each language writes them`() {
+        assertEventDates(
+            LocalDate(2026, 9, 28),
+            listOf(
+                EventDates("ru", "пн 28 сент.", "Пн, 28 сент.", "пн 28", "пн 28 сентября", "сент", "понедельник, 28 сентября"),
+                EventDates("en", "Mon Sep 28", "Mon, Sep 28", "Mon 28", "Mon, September 28", "Sep", "Monday, September 28"),
+                EventDates("de", "Mo. 28. Sept.", "Mo., 28. Sept.", "Mo. 28.", "Mo., 28. September", "Sep", "Montag, 28. September"),
+                EventDates("fr", "lun. 28 sept.", "Lun. 28 sept.", "lun. 28", "lun. 28 septembre", "sept", "lundi 28 septembre"),
+                EventDates("es", "lun 28 sept", "Lun, 28 sept", "lun 28", "lun 28 de septiembre", "sept", "lunes, 28 de septiembre"),
+                EventDates("it", "lun 28 set", "Lun 28 set", "lun 28", "lun 28 settembre", "set", "lunedì 28 settembre"),
+                EventDates("pt", "seg., 28 de set.", "Seg., 28 de set.", "seg., 28", "seg., 28 de setembro", "set", "segunda-feira, 28 de setembro"),
+                EventDates("ko", "9월 28일 (월)", "9월 28일 (월)", "28일 (월)", "9월 28일 (월)", "9월", "9월 28일 월요일"),
+                EventDates("zh", "9月28日 周一", "9月28日 周一", "28日 周一", "9月28日 周一", "9月", "9月28日 星期一"),
+                EventDates("ja", "9月28日(月)", "9月28日(月)", "28日(月)", "9月28日(月)", "9月", "9月28日 月曜日"),
+            ),
+        )
+        assertEventDates(
+            LocalDate(2026, 10, 24),
+            listOf(
+                EventDates("ru", "сб 24 окт.", "Сб, 24 окт.", "сб 24", "сб 24 октября", "окт", "суббота, 24 октября"),
+                EventDates("en", "Sat Oct 24", "Sat, Oct 24", "Sat 24", "Sat, October 24", "Oct", "Saturday, October 24"),
+                EventDates("de", "Sa. 24. Okt.", "Sa., 24. Okt.", "Sa. 24.", "Sa., 24. Oktober", "Okt", "Samstag, 24. Oktober"),
+                EventDates("fr", "sam. 24 oct.", "Sam. 24 oct.", "sam. 24", "sam. 24 octobre", "oct", "samedi 24 octobre"),
+                EventDates("es", "sáb 24 oct", "Sáb, 24 oct", "sáb 24", "sáb 24 de octubre", "oct", "sábado, 24 de octubre"),
+                EventDates("it", "sab 24 ott", "Sab 24 ott", "sab 24", "sab 24 ottobre", "ott", "sabato 24 ottobre"),
+                EventDates("pt", "sáb., 24 de out.", "Sáb., 24 de out.", "sáb., 24", "sáb., 24 de outubro", "out", "sábado, 24 de outubro"),
+                EventDates("ko", "10월 24일 (토)", "10월 24일 (토)", "24일 (토)", "10월 24일 (토)", "10월", "10월 24일 토요일"),
+                EventDates("zh", "10月24日 周六", "10月24日 周六", "24日 周六", "10月24日 周六", "10月", "10月24日 星期六"),
+                EventDates("ja", "10月24日(土)", "10月24日(土)", "24日(土)", "10月24日(土)", "10月", "10月24日 土曜日"),
+            ),
+        )
+    }
+
+    /**
+     * The dates of the answers of the sheet of a repeat (plan D31): of one month its name once — after the last day, or before the first
+     * in English, Korean, Chinese and Japanese — and of two months each date whole; «、» between them in Chinese and Japanese.
+     */
+    @Test
+    fun `a list of dates names a month once and two months each`() {
+        val oneMonth = listOf(LocalDate(2026, 10, 19), LocalDate(2026, 10, 26))
+        val twoMonths = listOf(LocalDate(2026, 10, 26), LocalDate(2026, 11, 2))
+        val expected = mapOf(
+            "ru" to listOf("19, 26 окт.", "26 окт., 2 нояб.", "19 окт."),
+            "en" to listOf("Oct 19, 26", "Oct 26, Nov 2", "Oct 19"),
+            "de" to listOf("19., 26. Okt.", "26. Okt., 2. Nov.", "19. Okt."),
+            "fr" to listOf("19, 26 oct.", "26 oct., 2 nov.", "19 oct."),
+            "es" to listOf("19, 26 oct", "26 oct, 2 nov", "19 oct"),
+            "it" to listOf("19, 26 ott", "26 ott, 2 nov", "19 ott"),
+            "pt" to listOf("19, 26 out.", "26 out., 2 nov.", "19 out."),
+            "ko" to listOf("10월 19일, 26일", "10월 26일, 11월 2일", "10월 19일"),
+            "zh" to listOf("10月19日、26日", "10月26日、11月2日", "10月19日"),
+            "ja" to listOf("10月19日、26日", "10月26日、11月2日", "10月19日"),
+        )
+        assertEquals(FormatLanguage.ALL.map { it.tag }.toSet(), expected.keys, "every language of the app")
+        for ((tag, lists) in expected) {
+            use(tag)
+            assertEquals(lists, listOf(Formats.dateList(oneMonth), Formats.dateList(twoMonths), Formats.dateList(oneMonth.take(1))), tag)
+        }
+        assertEquals("", Formats.dateList(emptyList()))
+    }
+
     @Test
     fun `decimals and file sizes follow the language`() {
         assertEquals("7,3", Formats.oneDecimal(7.3))
