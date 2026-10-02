@@ -41,6 +41,8 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.width
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.testing.assertWholeOnOneLine
@@ -434,6 +436,125 @@ class SegmentedSwitchTest {
         }
     }
 
+    // ---- the tolerance of «Настройки» (spec 3.36.8, 5.29 R8): a word over «±N ц», one size for the three words
+
+    /**
+     * The tolerance's switch in [width] dp — the row of «Настройки» on 360 is 296 — at the [fontScale] (Android's curve: 14 sp at 1.3
+     * are 18.8 dp). [described] — with the words for TalkBack, as «Настройки» give them; without, the words stay nodes of their own to
+     * measure.
+     */
+    private fun showTolerance(names: List<String>, width: Int, fontScale: Float = 1f, described: Boolean = false) {
+        compose.setContent {
+            val base = LocalViewConfiguration.current
+            val density = LocalDensity.current
+            val noWidening = remember(base) { object : ViewConfiguration by base { override val minimumTouchTargetSize = DpSize.Zero } }
+            CompositionLocalProvider(LocalViewConfiguration provides noWidening, LocalDensity provides Density(density.density, fontScale)) {
+                ViolinTheme {
+                    SegmentedSwitch(
+                        labels = names,
+                        selectedIndex = selected,
+                        onSelect = { selected = it },
+                        modifier = Modifier.width(width.dp).testTag(TAG),
+                        description = GROUP.takeIf { described },
+                        strong = true,
+                        segmentDescriptions = SPOKEN.takeIf { described },
+                        sublabels = CENTS,
+                    )
+                }
+            }
+        }
+        compose.waitForIdle()
+    }
+
+    private fun sizeOf(word: String): Float = compose.onNodeWithText(word, useUnmergedTree = true).textLayout().layoutInput.style.fontSize.value
+
+    /** The word over its second line, both of one colour; 52 at the usual font; each word 14 sp where the thirds hold them. */
+    @Test
+    fun theSecondLineStandsUnderItsWordAndTheSwitchStaysFiftyTwo() {
+        selected = 1
+        showTolerance(RUSSIAN, width = 296)
+        compose.onNodeWithTag(TAG).assertHeightIsEqualTo(52.dp)
+        RUSSIAN.forEachIndexed { index, word ->
+            assertEquals("«$word» at 14 sp", 14f, sizeOf(word), 0.01f)
+            assertEquals("«${CENTS[index]}» at 12 sp", 12f, sizeOf(CENTS[index]), 0.01f)
+            val above = compose.onNodeWithText(word, useUnmergedTree = true).getUnclippedBoundsInRoot()
+            val under = compose.onNodeWithText(CENTS[index], useUnmergedTree = true).getUnclippedBoundsInRoot()
+            assertTrue("«${CENTS[index]}» under «$word»: $under, $above", under.top >= above.bottom - 0.5.dp)
+        }
+    }
+
+    /**
+     * fr «Intermédiaire» does not stand in a third of 296 at 14 sp (95 dp in 86): the three words step down together, one size, and stand
+     * whole, each on its line.
+     */
+    @Test
+    fun oneWordThatDoesNotStandTakesTheThreeWordsDownTogether() {
+        showTolerance(FRENCH_NAMES, width = 296)
+        val sizes = FRENCH_NAMES.map(::sizeOf)
+        assertTrue("one size for the three: $sizes", sizes.distinct().size == 1)
+        assertTrue("smaller than 14, not under 12: $sizes", sizes.first() < 14f && sizes.first() >= 12f)
+        FRENCH_NAMES.forEach { word -> assertWholeOnOneLine(compose.onNodeWithText(word, useUnmergedTree = true), word) }
+        CENTS.forEach { number -> assertEquals("«$number» stays 12 sp while the words do not go under it", 12f, sizeOf(number), 0.01f) }
+    }
+
+    /**
+     * fr at the font 1.3 on 360: «Intermédiaire» at 12 sp is 106 dp and its third leaves 86 — the thirds give way to the words, 12 sp,
+     * and no word is broken; the middle segment is wider than a third.
+     */
+    @Test
+    fun atALargeFontTheSegmentsShareTheRowByTheirWordsAndNoneBreaks() {
+        showTolerance(FRENCH_NAMES, width = 296, fontScale = LARGE_FONT)
+        FRENCH_NAMES.forEach { word ->
+            assertEquals("«$word» at 12 sp", 12f, sizeOf(word), 0.01f)
+            assertWholeOnOneLine(compose.onNodeWithText(word, useUnmergedTree = true), word)
+        }
+        CENTS.forEach { number -> assertEquals("«$number» at 12 sp", 12f, sizeOf(number), 0.01f) }
+        // the segment of «Intermédiaire» — the selectable node that holds it
+        val middle = compose.onNodeWithText(FRENCH_NAMES[1]).getUnclippedBoundsInRoot()
+        assertTrue("«${FRENCH_NAMES[1]}» takes more than a third of 296: ${middle.width}", middle.width > (296 / 3).dp)
+    }
+
+    /**
+     * ru on a narrow phone at the font 1.5 — the row of 320, 256: in 12 sp (18 dp) the three words want some 265 even shared by their
+     * words — they go on down together, one size under 12 sp, never under 12 dp drawn (5.29 R8: 11.5 or 11 sp — 17.25 or 16.5 dp), and
+     * each stands whole on its line; the number under each goes down with it, one size with its word — never larger (3.36.8: «слово и под
+     * ним число мельче»). The size drawn is the size of the style here: these lines have no auto size.
+     */
+    @Test
+    fun atTheFont1_5OnANarrowPhoneTheWordsGoUnder12spButNot12dpAndTheirNumbersWithThem() {
+        showTolerance(RUSSIAN, width = 256, fontScale = LARGER_FONT)
+        val sizes = RUSSIAN.map(::sizeOf)
+        assertTrue("one size for the three: $sizes", sizes.distinct().size == 1)
+        assertTrue("under 12 sp: $sizes", sizes.first() < 12f)
+        val drawn = with(Density(compose.density.density, LARGER_FONT)) { sizes.first().sp.toDp() }
+        assertTrue("not under 12 dp drawn: $drawn", drawn >= 12.dp - 0.01.dp)
+        RUSSIAN.forEach { word -> assertWholeOnOneLine(compose.onNodeWithText(word, useUnmergedTree = true), word) }
+        CENTS.forEachIndexed { index, number -> assertEquals("«$number» of the size of «${RUSSIAN[index]}»", sizes[index], sizeOf(number), 0.01f) }
+    }
+
+    /** At the font 1.3 the two lines keep to their line height (ExactLines): they stand in the pill of 44, the switch stays 52. */
+    @Test
+    fun atTheFont1_3TheTwoLinesStayInFiftyTwo() {
+        showTolerance(RUSSIAN, width = 296, fontScale = LARGE_FONT)
+        compose.onNodeWithTag(TAG).assertHeightIsEqualTo(52.dp)
+    }
+
+    /** As «Настройки» give it: each segment is its description — «Средний, плюс-минус 8 центов» — and the second line is not a node apart. */
+    @Test
+    fun eachSegmentOfTheToleranceIsReadByItsDescriptionAndItsSecondLineIsSilent() {
+        selected = 1
+        showTolerance(RUSSIAN, width = 296, described = true)
+        compose.onNodeWithContentDescription(SPOKEN[1])
+            .assertIsSelected()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
+        compose.onNodeWithContentDescription(SPOKEN[0]).assertIsNotSelected()
+        compose.onNodeWithContentDescription(GROUP).assertExists()
+        // in the merged tree, as TalkBack hears it: the unmerged one keeps the nodes a clearAndSetSemantics replaced
+        CENTS.forEach { compose.onAllNodesWithText(it).assertCountEquals(0) }
+        compose.onNodeWithContentDescription(SPOKEN[2]).performClick()
+        compose.runOnIdle { assertEquals(2, selected) }
+    }
+
     private companion object {
         const val TAG = "switch"
         val LABELS = listOf("Разбираю", "Учу", "В репертуаре")
@@ -446,5 +567,13 @@ class SegmentedSwitchTest {
         val AB_SIDES = listOf("A", "B")
         const val PREFIX_GAP = "\u2002"
         const val LARGE_FONT = 1.3f
+        const val LARGER_FONT = 1.5f
+
+        /** The tolerance of «Настройки»: the names, the second lines, what TalkBack says and the name of the group. */
+        val RUSSIAN = listOf("Новичок", "Средний", "Профи")
+        val FRENCH_NAMES = listOf("Débutant", "Intermédiaire", "Pro")
+        val CENTS = listOf("±12 ц", "±8 ц", "±3 ц")
+        val SPOKEN = listOf("Новичок, плюс-минус 12 центов", "Средний, плюс-минус 8 центов", "Профи, плюс-минус 3 цента")
+        const val GROUP = "Допуск, ширина зелёной зоны"
     }
 }

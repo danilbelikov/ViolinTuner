@@ -87,12 +87,16 @@
     <string name="tolerance_cents_spoken_many">плюс-минус %1$d центов</string>
     <string name="a4_option_description">%1$d герц</string>
 
+    <string name="settings_group_intonation">Интонация</string>
+    <string name="settings_group_records">Записи</string>
+    <string name="settings_group_app">Приложение</string>
     <string name="settings_a4_title">Эталон A4</string>
-    <string name="settings_a4_text">Частота ноты ля первой октавы, Гц. От неё считаются все ноты и струны.</string>
+    <string name="settings_a4_note">все ноты считаются от него</string>
     <string name="settings_tolerance_title">Допуск</string>
-    <string name="settings_tolerance_text">Ширина зелёной зоны: насколько близко к ноте считается «в строе».</string>
+    <string name="settings_tolerance_note">ширина зелёной зоны</string>
     <string name="settings_language">Язык</string>
-    <string name="settings_restart_onboarding">Пройти онбординг снова</string>
+    <string name="settings_restart_onboarding">Пройти знакомство снова</string>
+    <string name="settings_restart_caption">все семь экранов, выбор сохранится</string>
 
     <string name="session_default_title">Запись · %1$s</string>
     <string name="record_default_title">Запись</string>
@@ -180,17 +184,22 @@
     <string name="history_chart_bar">%1$s, %2$s</string>
     <string name="backup_block_title">Данные</string>
     <string name="backup_row_save">Сохранить копию</string>
+    <string name="backup_row_saving">Копия сохраняется</string>
+    <string name="backup_row_wait_restore">сначала дождитесь восстановления</string>
     <string name="backup_row_never">ещё не сохраняли</string>
     <string name="backup_row_last">последняя — %1$s</string>
     <string name="backup_row_stale">последняя — %1$s · с тех пор %2$s</string>
     <string name="backup_new_records_one">%1$d новая запись</string>
     <string name="backup_new_records_few">%1$d новые записи</string>
     <string name="backup_new_records_many">%1$d новых записей</string>
-    <string name="backup_row_running">идёт · %1$d\u00A0%%</string>
+    <string name="backup_row_app_size">в приложении %1$s</string>
     <string name="backup_row_restore">Восстановить из копии</string>
-    <string name="backup_row_total">В приложении сейчас: %1$s</string>
+    <string name="restore_row_running">Восстановление идёт</string>
+    <string name="restore_row_caption">заменит всё, что сейчас в приложении</string>
+    <string name="restore_row_wait_copy">сначала дождитесь, пока сохранится копия</string>
     <string name="analytics_row">Помогать улучшать приложение</string>
     <string name="analytics_row_caption">Обезличенная статистика: какие экраны открываются и где случаются сбои</string>
+    <string name="analytics_row_off">выключено — ничего не отправляется</string>
     <string name="privacy_row">Политика конфиденциальности</string>
     <string name="privacy_row_caption">Что остаётся на телефоне и что уходит с него</string>
     <string name="privacy_no_browser">Нет браузера, чтобы открыть страницу</string>
@@ -220,7 +229,9 @@
     <string name="backup_saving_title">Сохраняем копию</string>
     <string name="backup_phase_data">Разбор, занятия, прогресс</string>
     <string name="backup_phase_files">%1$s · %2$d из %3$d</string>
+    <string name="backup_phase_part">%1$s\u00A0%2$d\u00A0из\u00A0%3$d</string>
     <string name="backup_phase_verifying_file">Проверяем файл</string>
+    <string name="backup_phase_check">Проверка</string>
     <string name="backup_percent">%1$d\u00A0%%</string>
     <string name="backup_done_of">%1$s из %2$s</string>
     <string name="backup_remaining">осталось %1$s</string>

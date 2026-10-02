@@ -1,50 +1,19 @@
 package com.violinjourney.app.feature.backup
 
-import androidx.compose.ui.backhandler.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import com.violinjourney.app.shared.resources.Res
-import com.violinjourney.app.shared.resources.analytics_row
-import com.violinjourney.app.shared.resources.analytics_row_caption
-import com.violinjourney.app.shared.resources.backup_file_name
-import com.violinjourney.app.shared.resources.backup_new_records_few
-import com.violinjourney.app.shared.resources.backup_new_records_many
-import com.violinjourney.app.shared.resources.backup_new_records_one
-import com.violinjourney.app.shared.resources.backup_row_last
-import com.violinjourney.app.shared.resources.backup_row_never
-import com.violinjourney.app.shared.resources.backup_row_restore
-import com.violinjourney.app.shared.resources.backup_row_running
-import com.violinjourney.app.shared.resources.backup_row_save
-import com.violinjourney.app.shared.resources.backup_row_stale
-import com.violinjourney.app.shared.resources.backup_row_total
-import com.violinjourney.app.shared.resources.privacy_row
-import com.violinjourney.app.shared.resources.privacy_row_caption
-import org.jetbrains.compose.resources.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.backhandler.BackHandler
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -53,12 +22,37 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.violinjourney.app.core.backup.BackupJob
 import com.violinjourney.app.core.time.SystemWallClock
 import com.violinjourney.app.core.time.today
+import com.violinjourney.app.core.ui.components.ListGroup
+import com.violinjourney.app.core.ui.components.ListRow
+import com.violinjourney.app.core.ui.components.ListRowEnd
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
-import kotlinx.datetime.LocalDate
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.analytics_row
+import com.violinjourney.app.shared.resources.analytics_row_caption
+import com.violinjourney.app.shared.resources.analytics_row_off
+import com.violinjourney.app.shared.resources.backup_file_name
+import com.violinjourney.app.shared.resources.backup_new_records_few
+import com.violinjourney.app.shared.resources.backup_new_records_many
+import com.violinjourney.app.shared.resources.backup_new_records_one
+import com.violinjourney.app.shared.resources.backup_percent
+import com.violinjourney.app.shared.resources.backup_row_app_size
+import com.violinjourney.app.shared.resources.backup_row_last
+import com.violinjourney.app.shared.resources.backup_row_never
+import com.violinjourney.app.shared.resources.backup_row_restore
+import com.violinjourney.app.shared.resources.backup_row_save
+import com.violinjourney.app.shared.resources.backup_row_saving
+import com.violinjourney.app.shared.resources.backup_row_stale
+import com.violinjourney.app.shared.resources.backup_row_wait_restore
+import com.violinjourney.app.shared.resources.dot_separator
+import com.violinjourney.app.shared.resources.privacy_row
+import com.violinjourney.app.shared.resources.privacy_row_caption
+import com.violinjourney.app.shared.resources.restore_row_caption
+import com.violinjourney.app.shared.resources.restore_row_running
+import com.violinjourney.app.shared.resources.restore_row_wait_copy
 import kotlinx.datetime.TimeZone
-
+import org.jetbrains.compose.resources.stringResource
 
 /** «Интонация · копия · 20 сентября 2026.zip» — a name a person recognises in a folder a year later. */
 @Composable
@@ -119,105 +113,165 @@ fun RestoreRoute(onClose: () -> Unit, onOpenBackup: () -> Unit, viewModel: Resto
 }
 
 /**
- * The block «Данные» of the settings (handoff 21a): two ways in and a line of honesty. An old
- * copy says so in words, in the same colour — no badge, no dot on the tab: the app asks for nothing.
+ * The block «Данные» of the settings (spec 3.20, 3.34, 3.36.8): its view model, the system's «Открыть» and the policy in the browser
+ * around [DataGroup]. «Настройки» put the label of the group over it; the slot and this signature are those of the hosts of both
+ * platforms (their code passes [analyticsEnabled] on as it gets it — null until the settings are read, stage 121).
  */
 @Composable
 fun DataBlock(
     onOpenBackup: () -> Unit,
     onOpenRestore: (uri: String) -> Unit,
     modifier: Modifier = Modifier,
-    /** «Помогать улучшать приложение» (spec 3.34): the state belongs to the settings, the line belongs here. */
-    analyticsEnabled: Boolean = true,
+    /**
+     * «Помогать улучшать приложение» (spec 3.34): the state belongs to the settings, the line belongs here; null until the settings
+     * are read — the row holds its place and says nothing yet (3.36.8 «Загрузка»).
+     */
+    analyticsEnabled: Boolean? = true,
     onAnalyticsChange: (Boolean) -> Unit = {},
     viewModel: DataBlockViewModel,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val colors = MaterialTheme.colorScheme
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
     val system = rememberBackupSystem(onCopyPicked = { uri -> uri?.let(onOpenRestore) })
-    val running = state.runningPercent
-    Column(modifier = modifier.fillMaxWidth().background(colors.surfaceContainer, RoundedCornerShape(16.dp))) {
-        val caption = when {
-            running != null && !state.restoring -> stringResource(Res.string.backup_row_running, running)
-            state.lastBackupAtEpochMs == null -> stringResource(Res.string.backup_row_never)
-            state.newSinceStale > 0 -> stringResource(
-                Res.string.backup_row_stale,
-                Formats.dayAndMonth(state.lastBackupAtEpochMs!!, TimeZone.currentSystemDefault()),
-                plural(state.newSinceStale, Res.string.backup_new_records_one, Res.string.backup_new_records_few, Res.string.backup_new_records_many),
-            )
-            else -> stringResource(Res.string.backup_row_last, Formats.dayAndMonth(state.lastBackupAtEpochMs!!, TimeZone.currentSystemDefault()))
-        }
-        DataRow(AppIcons.SaveCopy, stringResource(Res.string.backup_row_save), caption, progress = running?.takeIf { !state.restoring }, onClick = onOpenBackup)
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = colors.surfaceContainerHigh)
-        DataRow(
-            icon = AppIcons.Restore,
-            title = stringResource(Res.string.backup_row_restore),
-            caption = running?.takeIf { state.restoring }?.let { stringResource(Res.string.backup_row_running, it) },
-            progress = running?.takeIf { state.restoring },
-            // a restore on its way is come back to; otherwise the way in is the system's «Открыть»
-            onClick = { if (state.restoring) onOpenRestore("") else system.pickCopy() },
+    DataGroup(
+        state = state,
+        analyticsEnabled = analyticsEnabled,
+        onAnalyticsChange = onAnalyticsChange,
+        onOpenBackup = onOpenBackup,
+        // a restore on its way is come back to without a file: the screen watches the job
+        onOpenRunningRestore = { onOpenRestore("") },
+        onPickCopy = system.pickCopy,
+        onOpenPrivacy = system.openPrivacyPolicy,
+        modifier = modifier,
+    )
+}
+
+/**
+ * The rows of «Данные» (spec 3.36.8, 5.29 R8) in one group: «Сохранить копию» — the one icon of the screen in the accent — with when
+ * the last copy was made and what the app weighs; «Восстановить из копии»; «Помогать улучшать приложение» with its switch; the policy.
+ * A copy on its way turns its row into its progress — «Копия сохраняется», «56 % · Видео 7 из 12» and a thin bar — and a restore on
+ * its way its own row; meanwhile the other one sleeps at 0.38 and its caption, whole, says why: one job at a time (spec 5.14). An old
+ * copy says so in the same grey words — no badge, nothing red: the app asks for nothing. Until the date of the last copy is read the
+ * caption of the copy keeps its line empty, so nothing blinks from «ещё не сохраняли» to a date; until the settings are read
+ * ([analyticsEnabled] null) the statistics hold the place of their caption and their switch, and a tap does nothing. Stateless.
+ */
+@Composable
+fun DataGroup(
+    state: DataBlockState,
+    analyticsEnabled: Boolean?,
+    onAnalyticsChange: (Boolean) -> Unit,
+    onOpenBackup: () -> Unit,
+    onOpenRunningRestore: () -> Unit,
+    onPickCopy: () -> Unit,
+    onOpenPrivacy: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = MaterialTheme.colorScheme
+    val copying = state.running?.takeIf { !it.restore }
+    val restoring = state.running?.takeIf { it.restore }
+    ListGroup(modifier) {
+        ListRow(
+            text = stringResource(if (copying != null) Res.string.backup_row_saving else Res.string.backup_row_save),
+            onClick = onOpenBackup,
+            caption = copyCaption(state),
+            enabled = !state.saveWaits,
+            // the icon alone in the accent: the words and the chevron are those of every row
+            leading = { AppIcon(AppIcons.SaveCopy, contentDescription = null, tint = colors.primary) },
+            below = copying?.let { { ThinBar(it.percent) } },
         )
-        state.totalBytes?.let { bytes ->
-            Text(
-                text = stringResource(Res.string.backup_row_total, Formats.fileSize(bytes)),
-                modifier = Modifier.heightIn(min = 40.dp).padding(start = 56.dp, end = 16.dp, top = 10.dp, bottom = 10.dp),
-                color = colors.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
-            )
-        }
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = colors.surfaceContainerHigh)
-        AnalyticsRow(enabled = analyticsEnabled, onChange = onAnalyticsChange)
-        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = colors.surfaceContainerHigh)
-        DataRow(
+        ListRow(
+            text = stringResource(if (restoring != null) Res.string.restore_row_running else Res.string.backup_row_restore),
+            // a restore on its way is come back to; otherwise the way in is the system's «Открыть»
+            onClick = if (restoring != null) onOpenRunningRestore else onPickCopy,
+            icon = AppIcons.Restore,
+            caption = when {
+                restoring != null -> runningWords(restoring)
+                state.restoreWaits -> stringResource(Res.string.restore_row_wait_copy)
+                else -> stringResource(Res.string.restore_row_caption)
+            },
+            enabled = !state.restoreWaits,
+            below = restoring?.let { { ThinBar(it.percent) } },
+        )
+        ListRow(
+            text = stringResource(Res.string.analytics_row),
+            onClick = { analyticsEnabled?.let { onAnalyticsChange(!it) } },
+            icon = AppIcons.Chart,
+            caption = when (analyticsEnabled) {
+                // not read yet: neither «on» nor «off» — the one who turned it off is not told it is on, and nothing flips
+                null -> ""
+                true -> stringResource(Res.string.analytics_row_caption)
+                false -> stringResource(Res.string.analytics_row_off)
+            },
+            end = ListRowEnd.Toggle(analyticsEnabled),
+        )
+        ListRow(
+            text = stringResource(Res.string.privacy_row),
+            onClick = onOpenPrivacy,
             icon = AppIcons.Lock,
-            title = stringResource(Res.string.privacy_row),
             caption = stringResource(Res.string.privacy_row_caption),
-            progress = null,
-            captionLines = 2,
-            onClick = system.openPrivacyPolicy,
         )
     }
 }
 
 /**
- * The last line of the block (spec 3.34): what leaves the phone stands next to what stays on it,
- * and one line does not deserve a section of its own. The icon is a stand-in until the set gets
- * the chart of the handoff.
+ * The caption of «Сохранить копию»: the copy on its way; the restore it waits for; nothing yet — the date is not read; or when the
+ * last copy was made («ещё не сохраняли», «с тех пор 9 новых записей» once it has grown old) and, once weighed, what the app weighs.
  */
 @Composable
-private fun AnalyticsRow(enabled: Boolean, onChange: (Boolean) -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    Row(
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).toggleable(value = enabled, role = Role.Switch, onValueChange = onChange).heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        AppIcon(AppIcons.Device, contentDescription = null, tint = colors.onSurfaceVariant)
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(stringResource(Res.string.analytics_row), color = colors.onSurface, style = MaterialTheme.typography.titleMedium)
-            Text(stringResource(Res.string.analytics_row_caption), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
-        }
-        Switch(checked = enabled, onCheckedChange = null)
+private fun copyCaption(state: DataBlockState): String {
+    state.running?.let { running -> if (!running.restore) return runningWords(running) }
+    if (state.saveWaits) return stringResource(Res.string.backup_row_wait_restore)
+    if (!state.dateRead) return ""
+    val zone = TimeZone.currentSystemDefault()
+    val last = state.lastBackupAtEpochMs
+    val made = when {
+        last == null -> stringResource(Res.string.backup_row_never)
+        state.newSinceStale > 0 -> stringResource(
+            Res.string.backup_row_stale,
+            Formats.dayAndMonth(last, zone),
+            plural(state.newSinceStale, Res.string.backup_new_records_one, Res.string.backup_new_records_few, Res.string.backup_new_records_many),
+        )
+        else -> stringResource(Res.string.backup_row_last, Formats.dayAndMonth(last, zone))
     }
+    val weight = state.totalBytes?.let { stringResource(Res.string.backup_row_app_size, Formats.fileSize(it)) }
+    return listOfNotNull(made, weight).joinToString(stringResource(Res.string.dot_separator))
 }
 
+/** «56 % · Видео 7 из 12», «38 % · Восстанавливаем»: how far a job is and what it is doing. */
 @Composable
-private fun DataRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, caption: String?, progress: Int?, captionLines: Int = 1, onClick: () -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    Row(
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable(role = Role.Button, onClick = onClick).heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        AppIcon(icon, contentDescription = null, tint = colors.onSurfaceVariant)
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(title, color = colors.onSurface, style = MaterialTheme.typography.titleMedium)
-            if (caption != null) Text(caption, color = colors.onSurfaceVariant, maxLines = captionLines, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = TABULAR_FIGURES))
-            if (progress != null) {
-                LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp).height(4.dp).clip(RoundedCornerShape(2.dp)), color = colors.primary, trackColor = colors.surfaceContainerHigh, drawStopIndicator = {})
-            }
-        }
-        AppIcon(AppIcons.ChevronRight, contentDescription = null, tint = colors.onSurfaceVariant)
-    }
+private fun runningWords(running: DataRunning): String =
+    stringResource(Res.string.backup_percent, running.percent) + stringResource(Res.string.dot_separator) + phaseWords(running.phase)
+
+/**
+ * The phase in the words of the row of «Данные» and of the line of phases of a copy ([BackupPhases.wordsOf]): «Видео 7 из 12»,
+ * «Проверка», «Восстанавливаем».
+ */
+@Composable
+internal fun phaseWords(phase: JobPhase): String = when (phase) {
+    is JobPhase.Files -> stringResource(BackupPhases.wordsOf(phase), partShortName(phase.part), phase.index, phase.count)
+    else -> stringResource(BackupPhases.wordsOf(phase))
 }
+
+/**
+ * The thin bar of a job on its way under the caption of its row (spec 5.29 R8): 4 high, a corner of 2, the accent over
+ * surfaceContainerHigh, no gap between them. Drawn only: the percent is in the caption, a reader hears it there.
+ */
+@Composable
+private fun ThinBar(percent: Int) {
+    val track = MaterialTheme.colorScheme.surfaceContainerHigh
+    val fill = MaterialTheme.colorScheme.primary
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(ThinBarHeight)
+            .drawBehind {
+                val corner = CornerRadius(size.height / 2)
+                drawRoundRect(track, cornerRadius = corner)
+                val done = size.width * percent.coerceIn(0, PERCENT_ALL) / PERCENT_ALL
+                if (done > 0f) drawRoundRect(fill, size = Size(done, size.height), cornerRadius = corner)
+            },
+    )
+}
+
+private val ThinBarHeight = 4.dp
+private const val PERCENT_ALL = 100

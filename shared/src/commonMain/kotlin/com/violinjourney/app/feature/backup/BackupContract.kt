@@ -5,6 +5,7 @@ import com.violinjourney.app.core.backup.BackupContents
 import com.violinjourney.app.core.backup.BackupFileProblem
 import com.violinjourney.app.core.backup.BackupJob
 import com.violinjourney.app.core.backup.BackupPart
+import com.violinjourney.app.core.backup.RestorePhase
 
 /** The screen «Копия данных» (spec 3.20): what goes into the copy, its making, and how it ended. */
 data class BackupState(
@@ -133,13 +134,42 @@ sealed interface RestoreEffect {
     data object Restart : RestoreEffect
 }
 
-/** The block «Данные» of the settings. */
+/** What a copy or a restore is doing now ([BackupPhases]): the words its row in «Данные» says, and the line of phases of its screen. */
+sealed interface JobPhase {
+    /** «Разбор, занятия, прогресс»: the database, the settings and the profile — before the first file of a part, too. */
+    data object Data : JobPhase
+
+    /** «Видео 7 из 12»: the file of a part being moved, from one, of how many it has. */
+    data class Files(val part: BackupPart, val index: Int, val count: Int) : JobPhase
+
+    /** «Проверка»: the archive is read back; nothing is left to stop. */
+    data object Check : JobPhase
+
+    /** «Проверяем», «Восстанавливаем», «Почти готово» — the steps of a restore. */
+    data class Restore(val phase: RestorePhase) : JobPhase
+}
+
+/** A copy ([restore] false) or a restore on its way: how far, in percent, and what it is doing. */
+data class DataRunning(val restore: Boolean, val percent: Int, val phase: JobPhase)
+
+/** The block «Данные» of the settings (spec 3.36.8). */
 data class DataBlockState(
+    /**
+     * The date of the last copy has been read. Until then [lastBackupAtEpochMs] null says nothing: the caption of «Сохранить копию»
+     * keeps its line empty instead of saying «ещё не сохраняли» and then a date.
+     */
+    val dateRead: Boolean = false,
     val lastBackupAtEpochMs: Long? = null,
     /** Recordings made since a copy that has grown old; zero — nothing to hint at. */
     val newSinceStale: Int = 0,
-    /** A copy or a restore is on its way: percent, for the thin bar of the row. */
-    val runningPercent: Int? = null,
-    val restoring: Boolean = false,
+    /** A copy or a restore on its way: the row of either shows its percent, its phase and a thin bar. */
+    val running: DataRunning? = null,
+    /** What the app weighs now; null until it has been weighed — the caption goes without it. */
     val totalBytes: Long? = null,
-)
+) {
+    /** A restore is on its way: «Сохранить копию» waits for it, dimmed, and says why — one job at a time (spec 5.14). */
+    val saveWaits: Boolean get() = running?.restore == true
+
+    /** A copy is on its way: «Восстановить из копии» waits for it, dimmed, and says why. */
+    val restoreWaits: Boolean get() = running?.restore == false
+}

@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,7 +30,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
@@ -64,16 +62,10 @@ import com.violinjourney.app.shared.resources.tolerance_pro_text
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
-// Handoff prototype: onboarding steps 2 and 3, reused by the settings screen.
-private val SelectorHeight = 48.dp
-private val SelectorCorner = 24.dp
-private val SelectorBorder = 1.dp
-private val PresetCorner = 16.dp
-private val PresetBorder = 2.dp
-private val PresetPaddingHorizontal = 15.dp
-private val PresetPaddingVertical = 13.dp
-private val PresetSpacing = 8.dp
 private const val TABULAR_FIGURES = "tnum"
+
+/** The numbers of the reference in the segments of «Настройки» (spec 5.29 R8): 15 sp, a step over the words of a segment. */
+private const val A4_SEGMENT_SP = 15
 
 // The setup of the onboarding (spec 3.36.8, 5.29 R8): the buttons of the reference…
 private val A4Gap = 8.dp
@@ -113,12 +105,16 @@ private val CaptionBreaks = charArrayOf(' ', '\n')
 
 /**
  * The two looks of a choice of the reference and of the tolerance (spec 3.36.8): [Onboarding] — the four buttons of 64 with «Гц» and
- * the three cards with a radio and the bar of the green zone of the setup; [Settings] — the look of «Настройки» (until stage 121 the
- * one they had).
+ * the three cards with a radio and the bar of the green zone of the setup, a choice made from nothing; [Settings] — the segments of R1
+ * in a row of «Настройки», a quick switch of a choice made already (stage 121): «440 · 441 · 442 · 443» and «Новичок ±12 ц · Средний
+ * ±8 ц · Профи ±3 ц», on the ground of the screen.
  */
 enum class ChoiceLook { Settings, Onboarding }
 
-/** The choice of the A4 reference pitch in hertz, in the [look] of its screen. */
+/**
+ * The choice of the A4 reference pitch in hertz, in the [look] of its screen. [description] — the name of the choice for a reader in
+ * «Настройки», on the group of its segments: the row's title and its note.
+ */
 @Composable
 fun A4Selector(
     optionsHz: List<Int>,
@@ -126,62 +122,32 @@ fun A4Selector(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
     look: ChoiceLook = ChoiceLook.Settings,
+    description: String? = null,
 ) {
     when (look) {
-        ChoiceLook.Settings -> A4Segments(optionsHz, selectedHz, onSelect, modifier)
+        ChoiceLook.Settings -> A4Segments(optionsHz, selectedHz, onSelect, modifier, description)
         ChoiceLook.Onboarding -> A4Buttons(optionsHz, selectedHz, onSelect, modifier)
     }
 }
 
-/** Segmented choice of the A4 reference pitch in hertz. */
+/**
+ * The reference in «Настройки» (spec 3.36.8, 5.29 R8): the segments of R1 on the ground of the screen — a container the colour of the
+ * row would not be seen — «440 · 441 · 442 · 443» at 15 sp, 800, in tabular figures, without «Гц»: four numbers beside «Эталон A4» read
+ * as a frequency, and a reader hears «440 герц» and «выбрано», as before.
+ */
 @Composable
-private fun A4Segments(
-    optionsHz: List<Int>,
-    selectedHz: Int,
-    onSelect: (Int) -> Unit,
-    modifier: Modifier,
-) {
-    val colors = MaterialTheme.colorScheme
-    val shape = RoundedCornerShape(SelectorCorner)
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(SelectorHeight)
-            .clip(shape)
-            .border(SelectorBorder, colors.outlineVariant, shape)
-            .selectableGroup(),
-    ) {
-        optionsHz.forEachIndexed { index, hz ->
-            if (index > 0) {
-                Box(
-                    Modifier
-                        .fillMaxHeight()
-                        .width(SelectorBorder)
-                        .background(colors.outlineVariant),
-                )
-            }
-            val selected = hz == selectedHz
-            val description = stringResource(Res.string.a4_option_description, hz)
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .background(if (selected) colors.primaryContainer else Color.Transparent)
-                    .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(hz) })
-                    .semantics { contentDescription = description },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = hz.toString(),
-                    color = if (selected) colors.onPrimaryContainer else colors.onSurface,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontSize = 16.sp,
-                        fontFeatureSettings = TABULAR_FIGURES,
-                    ),
-                )
-            }
-        }
-    }
+private fun A4Segments(optionsHz: List<Int>, selectedHz: Int, onSelect: (Int) -> Unit, modifier: Modifier, description: String?) {
+    SegmentedSwitch(
+        labels = optionsHz.map { it.toString() },
+        selectedIndex = optionsHz.indexOf(selectedHz).takeIf { it >= 0 },
+        onSelect = { onSelect(optionsHz[it]) },
+        modifier = modifier,
+        fontSize = A4_SEGMENT_SP,
+        description = description,
+        containerColor = MaterialTheme.colorScheme.surface,
+        strong = true,
+        segmentDescriptions = optionsHz.map { stringResource(Res.string.a4_option_description, it) },
+    )
 }
 
 /**
@@ -243,69 +209,53 @@ private fun A4Buttons(optionsHz: List<Int>, selectedHz: Int, onSelect: (Int) -> 
     }
 }
 
-/** The choice of «Новичок ±12 / Средний ±8 / Профи ±3» — how wide the green zone is — in the [look] of its screen. */
+/**
+ * The choice of «Новичок ±12 / Средний ±8 / Профи ±3» — how wide the green zone is — in the [look] of its screen. [description] — the
+ * name of the choice for a reader in «Настройки», on the group of its segments.
+ */
 @Composable
 fun TolerancePresetList(
     selected: TolerancePreset,
     onSelect: (TolerancePreset) -> Unit,
     modifier: Modifier = Modifier,
     look: ChoiceLook = ChoiceLook.Settings,
+    description: String? = null,
 ) {
     when (look) {
-        ChoiceLook.Settings -> Column(
-            modifier = modifier
-                .fillMaxWidth()
-                .selectableGroup(),
-            verticalArrangement = Arrangement.spacedBy(PresetSpacing),
-        ) {
-            TolerancePreset.entries.forEach { preset ->
-                PresetCard(preset, selected = preset == selected, onClick = { onSelect(preset) })
-            }
-        }
+        ChoiceLook.Settings -> ToleranceSegments(selected, onSelect, modifier, description)
         ChoiceLook.Onboarding -> ToleranceCards(selected, onSelect, modifier)
     }
 }
 
+/**
+ * The tolerance in «Настройки» (spec 3.36.8, 5.29 R8): the segments of R1 on the ground of the screen, the name at 800 and under it
+ * «±8 ц» at 12 sp — no caption and no bar here: the choice has been made, it is switched. The names of the three take one size, 14 sp
+ * or down to 12 together, and are never broken ([SegmentLabelSize]). A reader hears «Средний, плюс-минус 8 центов» and «выбрано».
+ */
 @Composable
-private fun PresetCard(preset: TolerancePreset, selected: Boolean, onClick: () -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    val shape = RoundedCornerShape(PresetCorner)
-    val (nameRes, textRes) = wordsOf(preset)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(if (selected) colors.surfaceContainer else Color.Transparent)
-            .border(PresetBorder, if (selected) colors.primary else colors.outlineVariant, shape)
-            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
-            .padding(horizontal = PresetPaddingHorizontal, vertical = PresetPaddingVertical),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(nameRes),
-                color = colors.onSurface,
-                style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
-            )
-            Text(
-                text = stringResource(textRes),
-                color = colors.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
-            )
-        }
-        Text(
-            text = stringResource(Res.string.tolerance_cents, preset.cents),
-            color = colors.onSurface,
-            style = TextStyle(
-                fontFamily = MaterialTheme.typography.titleLarge.fontFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                fontFeatureSettings = TABULAR_FIGURES,
-            ),
-        )
-    }
+private fun ToleranceSegments(selected: TolerancePreset, onSelect: (TolerancePreset) -> Unit, modifier: Modifier, description: String?) {
+    val presets = TolerancePreset.entries
+    val names = presets.map { stringResource(wordsOf(it).first) }
+    val spoken = presets.map { spokenCents(it) }
+    SegmentedSwitch(
+        labels = names,
+        selectedIndex = presets.indexOf(selected),
+        onSelect = { onSelect(presets[it]) },
+        modifier = modifier,
+        description = description,
+        containerColor = MaterialTheme.colorScheme.surface,
+        strong = true,
+        segmentDescriptions = presets.indices.map { "${names[it]}, ${spoken[it]}" },
+        sublabels = presets.map { stringResource(Res.string.tolerance_cents, it.cents) },
+    )
 }
+
+/** «плюс-минус 8 центов»: the cents of a preset as a reader says them. */
+@Composable
+private fun spokenCents(preset: TolerancePreset): String = stringResource(
+    Formats.plural(preset.cents, Res.string.tolerance_cents_spoken_one, Res.string.tolerance_cents_spoken_few, Res.string.tolerance_cents_spoken_many),
+    preset.cents,
+)
 
 private fun wordsOf(preset: TolerancePreset): Pair<StringResource, StringResource> = when (preset) {
     TolerancePreset.BEGINNER -> Res.string.tolerance_beginner_name to Res.string.tolerance_beginner_text
@@ -412,11 +362,7 @@ private fun ToleranceCard(
 ) {
     val colors = MaterialTheme.colorScheme
     val shape = RoundedCornerShape(CardCorner)
-    val spoken = stringResource(
-        Formats.plural(preset.cents, Res.string.tolerance_cents_spoken_one, Res.string.tolerance_cents_spoken_few, Res.string.tolerance_cents_spoken_many),
-        preset.cents,
-    )
-    val description = "${words.name}, ${words.caption}, $spoken"
+    val description = "${words.name}, ${words.caption}, ${spokenCents(preset)}"
     val number: @Composable () -> Unit = {
         Text(
             text = words.number,

@@ -16,8 +16,11 @@ fun SettingsRoute(
     onOpenSound: () -> Unit,
     /** The language of the app, where the platform has a screen for it (Android 13+, iOS); null — the device's language only. */
     onLanguageClick: (() -> Unit)?,
-    /** «Данные» (spec 3.20, 3.34): the copy and the statistics switch, with the platform's file pickers. */
-    dataBlock: @Composable (analyticsEnabled: Boolean, onAnalyticsChange: (Boolean) -> Unit) -> Unit,
+    /**
+     * «Данные» (spec 3.20, 3.34): the copy and the statistics switch, with the platform's file pickers. [analyticsEnabled] is null
+     * until the settings are read: the switch then holds its place and says nothing (3.36.8 «Загрузка»).
+     */
+    dataBlock: @Composable (analyticsEnabled: Boolean?, onAnalyticsChange: (Boolean) -> Unit) -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel,
@@ -43,7 +46,7 @@ fun SettingsRoute(
         onIntent = viewModel::onIntent,
         modifier = modifier,
         onBack = onClose,
-        dataBlock = { dataBlock(state.analyticsEnabled) { viewModel.onIntent(SettingsIntent.AnalyticsToggled(it)) } },
+        dataBlock = { dataBlock(state.analyticsEnabled.takeIf { state.read }) { viewModel.onIntent(SettingsIntent.AnalyticsToggled(it)) } },
         onLanguageClick = onLanguageClick,
     )
 }

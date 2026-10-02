@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.violinjourney.app.core.domain.TolerancePreset
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.theme.ViolinTheme
@@ -459,6 +461,49 @@ private fun SegmentsFrPreview() = ViolinTheme {
         )
     }
 }
+
+/**
+ * The segments of «Настройки» (spec 3.36.8, 5.29 R8) in a row of their group: the container the ground of the screen — the colour of
+ * the row would not be seen — the reference in numbers at 15 sp in tabular figures, the tolerance a word over «±N ц». The words of the
+ * three take one size: 14 sp; fr «Intermédiaire» on 360 — 12 together; at the font 1.3 where 12 does not hold it in a third, the
+ * segments share the row by their words, none broken.
+ */
+@Composable
+private fun SettingsSegments() = ViolinTheme {
+    val colors = MaterialTheme.colorScheme
+    Column(Modifier.fillMaxWidth().background(colors.surface).padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colors.surfaceContainer, RoundedCornerShape(18.dp))
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            A4Selector(optionsHz = listOf(440, 441, 442, 443), selectedHz = 442, onSelect = {})
+            TolerancePresetList(selected = TolerancePreset.INTERMEDIATE, onSelect = {})
+        }
+    }
+}
+
+@Preview(name = "Segments · settings: A4 numbers, tolerance word + ±N on the ground colour", widthDp = 412, heightDp = 230, locale = "ru")
+@Composable
+private fun SettingsSegmentsPreview() = SettingsSegments()
+
+@Preview(name = "Segments · settings, fr 360: «Intermédiaire» — the three words at 12 together", widthDp = 360, heightDp = 230, locale = "fr")
+@Composable
+private fun SettingsSegmentsFrenchPreview() = SettingsSegments()
+
+@Preview(name = "Segments · settings, 360 at 1.3: the two lines in 52", widthDp = 360, heightDp = 260, locale = "ru", fontScale = 1.3f)
+@Composable
+private fun SettingsSegmentsLargeFontPreview() = SettingsSegments()
+
+@Preview(name = "Segments · settings, fr 360 at 1.3: shared by the words at 12, none broken", widthDp = 360, heightDp = 260, locale = "fr", fontScale = 1.3f)
+@Composable
+private fun SettingsSegmentsFrenchLargeFontPreview() = SettingsSegments()
+
+@Preview(name = "Segments · settings, ru 320 at 1.5: the words under 12 sp, each «±N ц» one size with its word", widthDp = 320, heightDp = 280, locale = "ru", fontScale = 1.5f)
+@Composable
+private fun SettingsSegmentsSmallPhoneLargeFontPreview() = SettingsSegments()
 
 // The field (stage 102): the one field of the app, as the dialogs, the forms of R4 and the form of an event (R9) show it.
 

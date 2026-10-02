@@ -87,12 +87,16 @@
     <string name="tolerance_cents_spoken_many">plus or minus %1$d cents</string>
     <string name="a4_option_description">%1$d hertz</string>
 
+    <string name="settings_group_intonation">Intonation</string>
+    <string name="settings_group_records">Recordings</string>
+    <string name="settings_group_app">App</string>
     <string name="settings_a4_title">Reference pitch A4</string>
-    <string name="settings_a4_text">The frequency of the A above middle C, in Hz. All notes and strings are measured from it.</string>
+    <string name="settings_a4_note">all notes are measured from it</string>
     <string name="settings_tolerance_title">Tolerance</string>
-    <string name="settings_tolerance_text">The width of the green zone: how close to the note counts as “in tune”.</string>
+    <string name="settings_tolerance_note">width of the green zone</string>
     <string name="settings_language">Language</string>
-    <string name="settings_restart_onboarding">Go through onboarding again</string>
+    <string name="settings_restart_onboarding">Go through the introduction again</string>
+    <string name="settings_restart_caption">all seven screens, your choices stay</string>
 
     <string name="session_default_title">Recording · %1$s</string>
     <string name="record_default_title">Recording</string>
@@ -180,17 +184,22 @@
     <string name="history_chart_bar">%1$s, %2$s</string>
     <string name="backup_block_title">Data</string>
     <string name="backup_row_save">Save a copy</string>
+    <string name="backup_row_saving">Saving the copy</string>
+    <string name="backup_row_wait_restore">wait until the restore has finished first</string>
     <string name="backup_row_never">never saved yet</string>
     <string name="backup_row_last">last one — %1$s</string>
     <string name="backup_row_stale">last one — %1$s · %2$s since then</string>
     <string name="backup_new_records_one">%1$d new recording</string>
     <string name="backup_new_records_few">%1$d new recordings</string>
     <string name="backup_new_records_many">%1$d new recordings</string>
-    <string name="backup_row_running">in progress · %1$d %%</string>
+    <string name="backup_row_app_size">%1$s in the app</string>
     <string name="backup_row_restore">Restore from a copy</string>
-    <string name="backup_row_total">In the app now: %1$s</string>
+    <string name="restore_row_running">Restore in progress</string>
+    <string name="restore_row_caption">replaces everything in the app now</string>
+    <string name="restore_row_wait_copy">wait until the copy has been saved first</string>
     <string name="analytics_row">Help improve the app</string>
     <string name="analytics_row_caption">Anonymous statistics: which screens get opened and where the app fails</string>
+    <string name="analytics_row_off">off — nothing is sent</string>
     <string name="privacy_row">Privacy policy</string>
     <string name="privacy_row_caption">What stays on the phone and what leaves it</string>
     <string name="privacy_no_browser">No browser to open the page</string>
@@ -220,7 +229,9 @@
     <string name="backup_saving_title">Saving the copy</string>
     <string name="backup_phase_data">Analysis, practice, progress</string>
     <string name="backup_phase_files">%1$s · %2$d of %3$d</string>
+    <string name="backup_phase_part">%1$s\u00A0%2$d\u00A0of\u00A0%3$d</string>
     <string name="backup_phase_verifying_file">Checking the file</string>
+    <string name="backup_phase_check">Check</string>
     <string name="backup_percent">%1$d %%</string>
     <string name="backup_done_of">%1$s of %2$s</string>
     <string name="backup_remaining">%1$s left</string>

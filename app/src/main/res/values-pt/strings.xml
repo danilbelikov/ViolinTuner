@@ -87,12 +87,16 @@
     <string name="tolerance_cents_spoken_many">mais ou menos %1$d cents</string>
     <string name="a4_option_description">%1$d hertz</string>
 
+    <string name="settings_group_intonation">Afinação</string>
+    <string name="settings_group_records">Gravações</string>
+    <string name="settings_group_app">App</string>
     <string name="settings_a4_title">Lá de referência (A4)</string>
-    <string name="settings_a4_text">Frequência do lá central (A4), em Hz. Todas as notas e cordas são calculadas a partir dele.</string>
+    <string name="settings_a4_note">todas as notas partem dele</string>
     <string name="settings_tolerance_title">Tolerância</string>
-    <string name="settings_tolerance_text">Largura da zona verde: quão perto da nota conta como “afinado”.</string>
+    <string name="settings_tolerance_note">largura da zona verde</string>
     <string name="settings_language">Idioma</string>
     <string name="settings_restart_onboarding">Refazer a introdução</string>
+    <string name="settings_restart_caption">as sete telas, suas escolhas ficam</string>
 
     <string name="session_default_title">Gravação · %1$s</string>
     <string name="record_default_title">Gravação</string>
@@ -180,17 +184,22 @@
     <string name="history_chart_bar">%1$s, %2$s</string>
     <string name="backup_block_title">Dados</string>
     <string name="backup_row_save">Salvar cópia</string>
+    <string name="backup_row_saving">Salvando a cópia</string>
+    <string name="backup_row_wait_restore">primeiro espere a restauração terminar</string>
     <string name="backup_row_never">ainda não foi salva</string>
     <string name="backup_row_last">última — %1$s</string>
     <string name="backup_row_stale">última — %1$s · desde então, %2$s</string>
     <string name="backup_new_records_one">%1$d gravação nova</string>
     <string name="backup_new_records_few">%1$d gravações novas</string>
     <string name="backup_new_records_many">%1$d gravações novas</string>
-    <string name="backup_row_running">em andamento · %1$d %%</string>
+    <string name="backup_row_app_size">no app %1$s</string>
     <string name="backup_row_restore">Restaurar de uma cópia</string>
-    <string name="backup_row_total">No app agora: %1$s</string>
+    <string name="restore_row_running">Restauração em andamento</string>
+    <string name="restore_row_caption">substitui tudo o que está no app agora</string>
+    <string name="restore_row_wait_copy">primeiro espere a cópia ser salva</string>
     <string name="analytics_row">Ajudar a melhorar o aplicativo</string>
     <string name="analytics_row_caption">Estatísticas anônimas: quais telas são abertas e onde ocorrem as falhas</string>
+    <string name="analytics_row_off">desativado — nada é enviado</string>
     <string name="privacy_row">Política de privacidade</string>
     <string name="privacy_row_caption">O que fica no telefone e o que sai dele</string>
     <string name="privacy_no_browser">Nenhum navegador para abrir a página</string>
@@ -220,7 +229,9 @@
     <string name="backup_saving_title">Salvando a cópia</string>
     <string name="backup_phase_data">Análise, prática, progresso</string>
     <string name="backup_phase_files">%1$s · %2$d de %3$d</string>
+    <string name="backup_phase_part">%1$s\u00A0%2$d\u00A0de\u00A0%3$d</string>
     <string name="backup_phase_verifying_file">Verificando o arquivo</string>
+    <string name="backup_phase_check">Verificação</string>
     <string name="backup_percent">%1$d %%</string>
     <string name="backup_done_of">%1$s de %2$s</string>
     <string name="backup_remaining">faltam %1$s</string>

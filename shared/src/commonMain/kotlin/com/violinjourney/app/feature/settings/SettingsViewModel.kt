@@ -29,7 +29,8 @@ open class SettingsViewModel(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
-        initialValue = stateOf(UserSettings(), SoundCaption.BuiltIn(BuiltInPreset.OFF)),
+        // the defaults, not read: the rows a default would get wrong hold their places (spec 3.36.8 «Загрузка»)
+        initialValue = stateOf(UserSettings(), SoundCaption.BuiltIn(BuiltInPreset.OFF)).copy(read = false),
     )
 
     private val effectChannel = Channel<SettingsEffect>(Channel.BUFFERED)

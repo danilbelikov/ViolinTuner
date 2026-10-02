@@ -4,16 +4,20 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -23,11 +27,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.analytics_row
 import com.violinjourney.app.shared.resources.backup_row_last
+import com.violinjourney.app.shared.resources.backup_row_restore
+import com.violinjourney.app.shared.resources.backup_row_save
+import com.violinjourney.app.shared.resources.backup_row_saving
 import com.violinjourney.app.shared.resources.backup_title
 import com.violinjourney.app.shared.resources.form_section
 import com.violinjourney.app.shared.resources.history_filter_all
@@ -46,6 +54,7 @@ import com.violinjourney.app.shared.resources.piece_title_error
 import com.violinjourney.app.shared.resources.practice_discard
 import com.violinjourney.app.shared.resources.practice_save
 import com.violinjourney.app.shared.resources.practice_stop
+import com.violinjourney.app.shared.resources.privacy_row
 import com.violinjourney.app.shared.resources.restore_busy_saving
 import com.violinjourney.app.shared.resources.restore_button
 import com.violinjourney.app.shared.resources.restore_title
@@ -54,6 +63,7 @@ import com.violinjourney.app.shared.resources.section_pieces
 import com.violinjourney.app.shared.resources.section_scales
 import com.violinjourney.app.shared.resources.section_strokes
 import com.violinjourney.app.shared.resources.settings_a4_title
+import com.violinjourney.app.shared.resources.settings_language
 import com.violinjourney.app.shared.resources.settings_tolerance_title
 import com.violinjourney.app.shared.resources.shop_all
 import com.violinjourney.app.shared.resources.shop_group_instrument
@@ -216,7 +226,7 @@ private fun ColumnScope.SettingsGroups() {
     SectionLabel("Данные", Modifier.padding(top = 6.dp))
     ListGroup {
         ListRow(stringResource(Res.string.backup_title), onClick = {}, icon = AppIcons.SaveCopy, caption = stringResource(Res.string.backup_row_last, "21 сентября"))
-        ListRow(stringResource(Res.string.analytics_row), onClick = {}, icon = AppIcons.Device, end = ListRowEnd.Toggle(checked = true))
+        ListRow(stringResource(Res.string.analytics_row), onClick = {}, icon = AppIcons.Chart, end = ListRowEnd.Toggle(checked = true))
     }
     SectionLabel(stringResource(Res.string.path_title), Modifier.padding(top = 6.dp))
     ListGroup {
@@ -255,7 +265,7 @@ private fun SheetRowsPreview() = Kit(ground = { MaterialTheme.colorScheme.surfac
         ListRow(stringResource(Res.string.section_strokes), onClick = {}, end = ListRowEnd.Check(checked = false))
         ListRow(stringResource(Res.string.section_scales), onClick = {}, end = ListRowEnd.Check(checked = false), enabled = false)
     }
-    ListRow(stringResource(Res.string.analytics_row), onClick = {}, icon = AppIcons.Device, end = ListRowEnd.Toggle(checked = false))
+    ListRow(stringResource(Res.string.analytics_row), onClick = {}, icon = AppIcons.Chart, end = ListRowEnd.Toggle(checked = false))
 }
 
 @Preview(name = "Rows · a dimmed row in a group: its ground and the lines stay, the reason in its caption reads whole", widthDp = 412, heightDp = 300, locale = "ru")
@@ -272,7 +282,49 @@ private fun DimmedRowInGroupPreview() = Kit {
             end = ListRowEnd.None,
             enabled = false,
         )
-        ListRow(stringResource(Res.string.analytics_row), onClick = {}, icon = AppIcons.Device, end = ListRowEnd.Toggle(checked = true))
+        ListRow(stringResource(Res.string.analytics_row), onClick = {}, icon = AppIcons.Chart, end = ListRowEnd.Toggle(checked = true))
+    }
+}
+
+/**
+ * The two parameters stage 121 gave the row (spec 3.36.8, 5.29 R8): a value with the chevron after it — «Язык» opens the system's
+ * screen and shows what is set; something under the caption — the thin bar of a copy on its way; and an empty caption that holds the
+ * place of its line while the date of the last copy is read.
+ */
+@Preview(name = "Rows · value with chevron, progress under caption, an empty caption holding its line, a switch not known yet", widthDp = 412, heightDp = 380, locale = "ru")
+@Composable
+private fun ValueAndProgressRowsPreview() = Kit {
+    val colors = MaterialTheme.colorScheme
+    ListGroup {
+        ListRow(stringResource(Res.string.settings_language), onClick = {}, icon = AppIcons.Globe, end = ListRowEnd.Value("Русский", chevron = true))
+        ListRow(
+            stringResource(Res.string.backup_row_saving),
+            onClick = {},
+            caption = "56 % · Видео 7 из 12",
+            leading = { AppIcon(AppIcons.SaveCopy, contentDescription = null, tint = colors.primary) },
+            below = {
+                Box(Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(colors.surfaceContainerHigh)) {
+                    Box(Modifier.fillMaxWidth(0.56f).fillMaxHeight().background(colors.primary))
+                }
+            },
+        )
+        ListRow(stringResource(Res.string.backup_row_save), onClick = {}, icon = AppIcons.SaveCopy, caption = "")
+        // the settings not read yet: the caption and the switch hold their places, a tap toggles nothing
+        ListRow(stringResource(Res.string.analytics_row), onClick = {}, icon = AppIcons.Chart, caption = "", end = ListRowEnd.Toggle(checked = null))
+    }
+}
+
+/**
+ * A narrow phone at the font 1.5 (spec 5.29 R8, stage 121): the value of «Язык» gives way to the word of the title — «Sprache» whole
+ * at 16 sp, «Deutsch» cut; «Datenschutzerklärung» steps down to stand whole, and in 13 sp, the least, even that is not enough: the limit.
+ */
+@Preview(name = "Rows · de 320 at 1.5: «Sprache» whole, «Deutsch» gives way; long words a step smaller", widthDp = 320, heightDp = 300, locale = "de", fontScale = 1.5f)
+@Composable
+private fun NarrowLargeFontRowsPreview() = Kit {
+    ListGroup {
+        ListRow(stringResource(Res.string.settings_language), onClick = {}, icon = AppIcons.Globe, end = ListRowEnd.Value("Deutsch", chevron = true))
+        ListRow(stringResource(Res.string.backup_row_restore), onClick = {}, icon = AppIcons.Restore)
+        ListRow(stringResource(Res.string.privacy_row), onClick = {}, icon = AppIcons.Lock)
     }
 }
 

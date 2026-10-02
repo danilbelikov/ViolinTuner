@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -19,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,8 +29,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,8 +51,34 @@ private val RowPaddingSide = 16.dp
 private val RowPaddingVertical = 8.dp
 private val RowGap = 14.dp
 private val GroupLine = 1.dp
+
+/** From the caption to what stands under it — the thin bar of a copy on its way (spec 5.29 R8). */
+private val BelowCaption = 8.dp
+
+/** Between a value and the chevron after it («Язык», spec 5.29 R8). */
+private val ValueToChevron = 4.dp
 private const val DISABLED_ALPHA = 0.38f
 private const val TABULAR_FIGURES = "tnum"
+
+/**
+ * The words of a row, 16 sp — and where a word of them does not stand whole in its line (360 dp at the font 1.3: «конфиденциальности»,
+ * «Datenschutzerklärung»), all of them a step smaller, 0.5 sp at a time, down to the size of its caption, 13 sp — as the names of the
+ * sections of R4: no smaller than 13 (spec 5.29 R4, R8; stage 121). Past it the word breaks: the limit.
+ */
+private const val WORDS_SP = 16f
+private const val WORDS_LEAST_SP = 13f
+private val WordsFit = WholeWordsFit(WORDS_SP, WORDS_LEAST_SP)
+
+/**
+ * The caption, 13 sp — and where a word of it does not stand whole in its line (320 dp at the font 1.5: de «Wiederherstellung», 181 dp
+ * in 180), a step smaller, down to 12 sp, the least of the small words of R1 and R8 (stage 121). Past it the word breaks: the limit.
+ */
+private const val CAPTION_SP = 13f
+private const val CAPTION_LEAST_SP = 12f
+private val CaptionFit = WholeWordsFit(CAPTION_SP, CAPTION_LEAST_SP)
+
+/** What an empty caption shows: nothing, one line high. */
+private const val HELD_LINE = "\u00A0"
 
 /** What stands at the end of a [ListRow]. */
 @Immutable
@@ -59,11 +92,18 @@ sealed interface ListRowEnd {
     /** An arrow of 24 in the colour of the words: the row leads on to more of the same («Все трофеи» of «Мой путь»). */
     data object Arrow : ListRowEnd
 
-    /** A value in tabular figures, onSurfaceVariant: «440 Гц», «Средний ±8». */
-    data class Value(val text: String) : ListRowEnd
+    /**
+     * A value in tabular figures, onSurfaceVariant: «440 Гц», «Средний ±8». With [chevron] the chevron of the third level follows it —
+     * the row shows what is set and opens another screen to change it («Язык» of «Настройки», spec 3.36.8).
+     */
+    data class Value(val text: String, val chevron: Boolean = false) : ListRowEnd
 
-    /** The switch of the app ([AppSwitchMark], 52 × 32); the whole row toggles it. */
-    data class Toggle(val checked: Boolean) : ListRowEnd
+    /**
+     * The switch of the app ([AppSwitchMark], 52 × 32); the whole row toggles it. [checked] null — not known yet (the settings not
+     * read, spec 3.36.8 «Загрузка»): the place of the switch is held empty and the row toggles nothing, so a default never flips to
+     * the setting before the eye.
+     */
+    data class Toggle(val checked: Boolean?) : ListRowEnd
 
     /** A check in the accent on the chosen one of a list of choices; the whole row chooses. */
     data class Check(val checked: Boolean) : ListRowEnd
@@ -79,15 +119,22 @@ val LocalListGroupGround = staticCompositionLocalOf { Color.Unspecified }
  * A row of a list (spec 3.36.1, 5.29): 56 dp at the least (≈ 64 with a [caption] on two lines), an [icon] of 24 — or, in its
  * place, anything of its own ([leading]: the photo of 32 at «Имя и фото», 3.36.2) — the [text] of 16 sp / 600 and, at the
  * [end], a chevron, an arrow, a value, a switch or a check. The whole row is one target: pressed as a button, or
- * toggled as a switch ([ListRowEnd.Toggle] — the switch draws only, as `AnalyticsRow` does), or chosen as a radio button
+ * toggled as a switch ([ListRowEnd.Toggle] — the switch draws only: «Помогать улучшать приложение», R8), or chosen as a radio button
  * ([ListRowEnd.Check]); [onClick] hears it in every case. [accent] — the words and the icon in the accent, bolder, no chevron;
  * «Все трофеи» asks for the arrow ([ListRowEnd.Arrow]) in the accent too. [enabled] false dims the icon, the words and the end to 0.38 and the row is not pressed; its ground stays whole
  * — dimmed, it would let the lines of the group show through and stand out lighter than its neighbours — and so does the
- * [caption]: the caption of a dimmed row says why (R8, «Сначала дождитесь…»), and at 0.38 it would not read.
+ * [caption]: the caption of a dimmed row says why (R8, «сначала дождитесь…»), and at 0.38 it would not read.
  *
  * [strong] — the words at 700 instead of 600: the rows of the sheets of R4, «Что добавить?» and «Раздел» (5.29 R4), where each row
  * names a kind of thing rather than a setting. [singleLine] — the words stay on one line and end in an ellipsis: a name the player
- * gave, «В «Двойные ноты»», which may be long.
+ * gave, «В «Двойные ноты»», which may be long. Otherwise the words wrap at their spaces and a word is not broken while it can stand:
+ * where one does not stand whole at 16 sp, the words step down to 13 ([WordsFit]), and a value at the end gives way to their widest
+ * word, cut with an ellipsis («Язык» on 320 at the font 1.5: «Sprache» whole, «Deutsch» cut; as the row of choice of a form, R4).
+ *
+ * The [caption] wraps at its spaces and is never cut — a word that does not stand whole takes it a step smaller, down to 12 sp
+ * ([CaptionFit]) — its figures tabular: «56 % · Видео 7 из 12» does not shift as its numbers change; an empty
+ * one holds the place of its line and says nothing (the date of the last copy not read yet, spec 3.36.8). [below] — what stands 8
+ * under the caption, whole even in a dimmed row: the thin bar of a copy or a restore on its way («Данные» of «Настройки», R8).
  *
  * Inside a [ListGroup] the row paints the ground of the group; outside one it has no ground of its own — a row of a sheet.
  */
@@ -104,16 +151,33 @@ fun ListRow(
     leading: (@Composable () -> Unit)? = null,
     strong: Boolean = false,
     singleLine: Boolean = false,
+    below: (@Composable () -> Unit)? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     val ground = LocalListGroupGround.current
     val press = when (end) {
-        is ListRowEnd.Toggle -> Modifier.toggleable(value = end.checked, enabled = enabled, role = Role.Switch, onValueChange = { onClick() })
+        // nothing to toggle while it is not known: no switch, no press
+        is ListRowEnd.Toggle -> end.checked?.let { checked -> Modifier.toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = { onClick() }) } ?: Modifier
         is ListRowEnd.Check -> Modifier.selectable(selected = end.checked, enabled = enabled, role = Role.RadioButton, onClick = onClick)
         else -> Modifier.clickable(enabled = enabled, role = Role.Button, onClick = onClick)
     }
     // the ground and the caption stay whole: only what names and marks the row is dimmed
     val dim = if (enabled) Modifier else Modifier.alpha(DISABLED_ALPHA)
+    val wordsStyle = MaterialTheme.typography.bodyLarge.copy(
+        fontSize = WORDS_SP.sp,
+        lineHeight = 22.sp,
+        fontWeight = if (accent || strong) FontWeight.Bold else FontWeight.SemiBold,
+    )
+    // a value at the end leaves the widest word of the words its room, and the gap before the end; the chevron after it stays
+    val giveWay = if (end is ListRowEnd.Value && !singleLine) {
+        val reserved = widestWord(text, wordsStyle)
+        val density = LocalDensity.current
+        val gap = with(density) { RowGap.roundToPx() }
+        val least = if (end.chevron) with(density) { (IconSizes.Standalone + ValueToChevron).roundToPx() } else 0
+        Modifier.giveWayTo(reserved + gap, least)
+    } else {
+        Modifier
+    }
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -136,38 +200,75 @@ fun ListRow(
                 text = text,
                 modifier = dim,
                 color = words,
+                autoSize = if (singleLine) null else WordsFit,
                 maxLines = if (singleLine) 1 else Int.MAX_VALUE,
                 overflow = if (singleLine) TextOverflow.Ellipsis else TextOverflow.Clip,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 16.sp,
-                    lineHeight = 22.sp,
-                    fontWeight = if (accent || strong) FontWeight.Bold else FontWeight.SemiBold,
-                ),
+                style = wordsStyle,
             )
             if (caption != null) {
-                Text(caption, color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 17.5.sp))
+                Text(
+                    // an empty caption holds the place of its line: a no-break space is a line of the same height, and it is silent
+                    text = caption.ifEmpty { HELD_LINE },
+                    modifier = if (caption.isEmpty()) Modifier.clearAndSetSemantics {} else Modifier,
+                    color = colors.onSurfaceVariant,
+                    autoSize = CaptionFit,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = CAPTION_SP.sp, lineHeight = 17.5.sp, fontFeatureSettings = TABULAR_FIGURES),
+                )
+            }
+            if (below != null) {
+                Spacer(Modifier.height(BelowCaption))
+                below()
             }
         }
-        RowEnd(if (accent && end == ListRowEnd.Chevron) ListRowEnd.None else end, dim, words)
+        RowEnd(if (accent && end == ListRowEnd.Chevron) ListRowEnd.None else end, dim, words, giveWay)
     }
 }
 
+/**
+ * The widest word of [text] in [style], in pixels: what the words of a row keep beside a value at its end, so that the value gives
+ * way rather than a word breaking.
+ */
 @Composable
-private fun RowEnd(end: ListRowEnd, modifier: Modifier, words: Color) {
+private fun widestWord(text: String, style: TextStyle): Int {
+    val measurer = rememberTextMeasurer()
+    return remember(text, style, measurer) {
+        text.split(' ', '\n', '\t').filter { it.isNotEmpty() }.maxOfOrNull { word -> measurer.measure(word, style, softWrap = false, maxLines = 1).size.width } ?: 0
+    }
+}
+
+/**
+ * What stands at the end of a row, measured in what the row leaves it once [reserved] px stand before it — the widest word of the words
+ * and the gap to the end — but never narrower than [least] px (the chevron after a value and its gap): a value then gives way with an
+ * ellipsis. Where the room is not short it is measured as it would be without this, to the pixel.
+ */
+private fun Modifier.giveWayTo(reserved: Int, least: Int): Modifier = layout { measurable, constraints ->
+    val room = if (constraints.hasBoundedWidth) (constraints.maxWidth - reserved).coerceAtLeast(least).coerceIn(constraints.minWidth, constraints.maxWidth) else constraints.maxWidth
+    val placeable = measurable.measure(constraints.copy(maxWidth = room))
+    layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
+}
+
+/** [giveWay] — what a value at the end measures in ([giveWayTo]): it gives way to the widest word of the words before it. */
+@Composable
+private fun RowEnd(end: ListRowEnd, modifier: Modifier, words: Color, giveWay: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     when (end) {
         ListRowEnd.Chevron -> AppIcon(AppIcons.ChevronRight, contentDescription = null, modifier = modifier, tint = ViolinTheme.textTertiary)
         ListRowEnd.Arrow -> AppIcon(AppIcons.ArrowRight, contentDescription = null, modifier = modifier, tint = words)
         ListRowEnd.None -> Unit
-        is ListRowEnd.Value -> Text(
-            text = end.text,
-            modifier = modifier,
-            color = colors.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 20.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES),
-        )
-        is ListRowEnd.Toggle -> AppSwitchMark(checked = end.checked, modifier = modifier)
+        is ListRowEnd.Value -> if (end.chevron) {
+            // the value and the chevron together; a long value gives way to the chevron and to the words, not the other way round
+            Row(giveWay.then(modifier), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(ValueToChevron)) {
+                RowValue(end.text, Modifier.weight(1f, fill = false))
+                AppIcon(AppIcons.ChevronRight, contentDescription = null, tint = ViolinTheme.textTertiary)
+            }
+        } else {
+            RowValue(end.text, giveWay.then(modifier))
+        }
+        is ListRowEnd.Toggle -> if (end.checked != null) {
+            AppSwitchMark(checked = end.checked, modifier = modifier)
+        } else {
+            Spacer(Modifier.size(AppSwitchSize))
+        }
         // the unchosen keep the place of the check: the words of a list of choices do not move
         is ListRowEnd.Check -> if (end.checked) {
             AppIcon(AppIcons.Check, contentDescription = null, modifier = modifier, tint = colors.primary)
@@ -175,6 +276,19 @@ private fun RowEnd(end: ListRowEnd, modifier: Modifier, words: Color) {
             Spacer(Modifier.size(IconSizes.Standalone))
         }
     }
+}
+
+/** The value at the end of a row: 15 sp, 700, tabular figures, onSurfaceVariant, one line. */
+@Composable
+private fun RowValue(text: String, modifier: Modifier) {
+    Text(
+        text = text,
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 20.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES),
+    )
 }
 
 /**

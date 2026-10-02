@@ -87,12 +87,16 @@
     <string name="tolerance_cents_spoken_many">正负 %1$d 音分</string>
     <string name="a4_option_description">%1$d 赫兹</string>
 
+    <string name="settings_group_intonation">音准</string>
+    <string name="settings_group_records">录音</string>
+    <string name="settings_group_app">应用</string>
     <string name="settings_a4_title">标准音 A4</string>
-    <string name="settings_a4_text">小字一组 A 音的频率（Hz）。所有音和弦都以它为基准。</string>
+    <string name="settings_a4_note">所有音以此为准</string>
     <string name="settings_tolerance_title">容差</string>
-    <string name="settings_tolerance_text">绿色区域的宽度：离音多近才算“准”。</string>
+    <string name="settings_tolerance_note">绿色区域的宽度</string>
     <string name="settings_language">语言</string>
     <string name="settings_restart_onboarding">重新查看引导</string>
+    <string name="settings_restart_caption">全部七屏，已选设置会保留</string>
 
     <string name="session_default_title">录音 · %1$s</string>
     <string name="record_default_title">录音</string>
@@ -180,17 +184,22 @@
     <string name="history_chart_bar">%1$s，%2$s</string>
     <string name="backup_block_title">数据</string>
     <string name="backup_row_save">保存副本</string>
+    <string name="backup_row_saving">正在保存副本</string>
+    <string name="backup_row_wait_restore">请先等待恢复完成</string>
     <string name="backup_row_never">尚未保存过</string>
     <string name="backup_row_last">上次——%1$s</string>
     <string name="backup_row_stale">上次——%1$s · 此后有 %2$s</string>
     <string name="backup_new_records_one">%1$d 条新录音</string>
     <string name="backup_new_records_few">%1$d 条新录音</string>
     <string name="backup_new_records_many">%1$d 条新录音</string>
-    <string name="backup_row_running">进行中 · %1$d\u00A0%%</string>
+    <string name="backup_row_app_size">应用内 %1$s</string>
     <string name="backup_row_restore">从副本恢复</string>
-    <string name="backup_row_total">应用内现有：%1$s</string>
+    <string name="restore_row_running">正在恢复</string>
+    <string name="restore_row_caption">将替换应用内现有的一切</string>
+    <string name="restore_row_wait_copy">请先等待副本保存完成</string>
     <string name="analytics_row">帮助改进应用</string>
     <string name="analytics_row_caption">匿名统计：打开了哪些屏幕、在哪里出现故障</string>
+    <string name="analytics_row_off">已关闭——不会发送任何内容</string>
     <string name="privacy_row">隐私政策</string>
     <string name="privacy_row_caption">哪些留在手机上，哪些会离开手机</string>
     <string name="privacy_no_browser">没有可打开此页面的浏览器</string>
@@ -220,7 +229,9 @@
     <string name="backup_saving_title">正在保存副本</string>
     <string name="backup_phase_data">分析、练习、进度</string>
     <string name="backup_phase_files">%1$s · %2$d / %3$d</string>
+    <string name="backup_phase_part">%1$s\u00A0%2$d/%3$d</string>
     <string name="backup_phase_verifying_file">正在检查文件</string>
+    <string name="backup_phase_check">检查</string>
     <string name="backup_percent">%1$d\u00A0%%</string>
     <string name="backup_done_of">%1$s / %2$s</string>
     <string name="backup_remaining">还剩%1$s</string>

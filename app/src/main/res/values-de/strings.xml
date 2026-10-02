@@ -87,12 +87,16 @@
     <string name="tolerance_cents_spoken_many">plus minus %1$d Cent</string>
     <string name="a4_option_description">%1$d Hertz</string>
 
+    <string name="settings_group_intonation">Intonation</string>
+    <string name="settings_group_records">Aufnahmen</string>
+    <string name="settings_group_app">App</string>
     <string name="settings_a4_title">Kammerton A4</string>
-    <string name="settings_a4_text">Frequenz des eingestrichenen a in Hz. Von ihr aus werden alle Töne und Saiten berechnet.</string>
+    <string name="settings_a4_note">alle Töne gehen von ihm aus</string>
     <string name="settings_tolerance_title">Toleranz</string>
-    <string name="settings_tolerance_text">Breite der grünen Zone: wie nah am Ton noch als „sauber“ gilt.</string>
+    <string name="settings_tolerance_note">Breite der grünen Zone</string>
     <string name="settings_language">Sprache</string>
     <string name="settings_restart_onboarding">Einführung wiederholen</string>
+    <string name="settings_restart_caption">alle sieben Bildschirme, Ihre Auswahl bleibt</string>
 
     <string name="session_default_title">Aufnahme · %1$s</string>
     <string name="record_default_title">Aufnahme</string>
@@ -180,17 +184,22 @@
     <string name="history_chart_bar">%1$s, %2$s</string>
     <string name="backup_block_title">Daten</string>
     <string name="backup_row_save">Kopie speichern</string>
+    <string name="backup_row_saving">Kopie wird gespeichert</string>
+    <string name="backup_row_wait_restore">warten Sie zuerst, bis die Wiederherstellung fertig ist</string>
     <string name="backup_row_never">noch nie gespeichert</string>
     <string name="backup_row_last">letzte – %1$s</string>
     <string name="backup_row_stale">letzte – %1$s · seitdem %2$s</string>
     <string name="backup_new_records_one">%1$d neue Aufnahme</string>
     <string name="backup_new_records_few">%1$d neue Aufnahmen</string>
     <string name="backup_new_records_many">%1$d neue Aufnahmen</string>
-    <string name="backup_row_running">läuft · %1$d %%</string>
+    <string name="backup_row_app_size">in der App %1$s</string>
     <string name="backup_row_restore">Aus Kopie wiederherstellen</string>
-    <string name="backup_row_total">Jetzt in der App: %1$s</string>
+    <string name="restore_row_running">Wiederherstellung läuft</string>
+    <string name="restore_row_caption">ersetzt alles, was jetzt in der App ist</string>
+    <string name="restore_row_wait_copy">warten Sie zuerst, bis die Kopie gespeichert ist</string>
     <string name="analytics_row">Die App verbessern helfen</string>
     <string name="analytics_row_caption">Anonyme Statistik: welche Bildschirme geöffnet werden und wo Fehler auftreten</string>
+    <string name="analytics_row_off">aus – es wird nichts gesendet</string>
     <string name="privacy_row">Datenschutzerklärung</string>
     <string name="privacy_row_caption">Was auf dem Telefon bleibt und was es verlässt</string>
     <string name="privacy_no_browser">Kein Browser zum Öffnen der Seite</string>
@@ -220,7 +229,9 @@
     <string name="backup_saving_title">Kopie wird gespeichert</string>
     <string name="backup_phase_data">Analyse, Übezeiten, Fortschritt</string>
     <string name="backup_phase_files">%1$s · %2$d von %3$d</string>
+    <string name="backup_phase_part">%1$s\u00A0%2$d\u00A0von\u00A0%3$d</string>
     <string name="backup_phase_verifying_file">Datei wird geprüft</string>
+    <string name="backup_phase_check">Prüfung</string>
     <string name="backup_percent">%1$d %%</string>
     <string name="backup_done_of">%1$s von %2$s</string>
     <string name="backup_remaining">noch %1$s</string>

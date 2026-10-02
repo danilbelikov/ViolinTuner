@@ -9,6 +9,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -66,6 +67,7 @@ import com.violinjourney.app.core.ui.theme.AppShapes
 private const val SWITCH_MS = 200
 private const val LINE_HEIGHT = 1.15f
 private const val DISABLED_ALPHA = 0.38f
+private const val TABULAR_FIGURES = "tnum"
 
 /** The regular switch (spec 5.29): a container of 52, the pills of 44 inside it — 4 from its edges, 4 between them. */
 private val RegularHeight = 52.dp
@@ -123,7 +125,16 @@ private const val PREFIX_GAP = "\u2002"
  * ([SegmentFit.oneLine]: «С минусовкой | Только скрипка» in the narrow column lying at the font 1.3); only where not even 11.5 sp
  * holds them in one line do they go on two, the switch growing, rather than break a word — as it grows where its line itself is
  * taller than 24 (14 sp at Android's next step of font, 1.5: 25.5 dp). [byWords] and [wholeWords] have their own way of fitting and
- * take no [prefixes] and no [shrinkToTwoLines].
+ * take no [prefixes] and no [shrinkToTwoLines]. [strong] words take tabular figures as well: the numbers of the reference of
+ * «Настройки» (spec 5.29 R8) — a label without figures looks as before.
+ *
+ * [sublabels] — a second line under the words of each segment, 12 sp, 700, in tabular figures and the colour of the words: «Новичок»
+ * over «±12 ц», the tolerance of «Настройки» (spec 3.36.8, 5.29 R8). The words of all the segments then take one size, 14 sp or down
+ * to 12 together, and where even that does not hold one in its equal share the segments share the row by their words — a word is not
+ * broken ([SegmentLabelSize]); where a large font takes the words under 12, their second line goes down with them — a number is never
+ * larger than its word. The two
+ * lines keep to their line height ([ExactLines]), so that they stand in the pill of 44 at the font 1.3 as well. A regular switch
+ * only: it takes no [compact], [byWords], [wholeWords], [prefixes] and [shrinkToTwoLines].
  */
 @Composable
 fun SegmentedSwitch(
@@ -144,8 +155,13 @@ fun SegmentedSwitch(
     segmentDescriptions: List<String>? = null,
     onHold: ((index: Int, held: Boolean) -> Unit)? = null,
     shrinkToTwoLines: Boolean = false,
+    sublabels: List<String>? = null,
 ) {
     val looks = SwitchLooks(containerColor, enabled, segmentEnabled, segmentDescriptions, onHold)
+    if (sublabels != null) {
+        TwoLineSwitch(labels, sublabels, selectedIndex, onSelect, modifier, fontSize.toFloat(), strong, description, looks)
+        return
+    }
     val labelStyle = labelStyleOf(fontSize.toFloat(), strong, compact)
     val fits = byWords || wholeWords
     if (!fits && !shrinkToTwoLines) {
@@ -233,9 +249,9 @@ private fun textsOf(labels: List<String>, prefixes: List<String>?, sizeSp: Float
 }
 
 /**
- * The words of a segment at [sizeSp], 700 or [strong] 800, lines of 1.15. The [compact] pill of 24 is made for one such line: its
- * box is the line and no more ([ExactLines]) — on Android the box of material3's style is Manrope's own 1.37 em, which at the font
- * 1.3 (14 sp are 18.8 dp there) is 26.3 dp, and the pill grew past 24 to take it, the switch past its 48 (50.67).
+ * The words of a segment at [sizeSp], 700 or [strong] 800 in tabular figures, lines of 1.15. The [compact] pill of 24 is made for one
+ * such line: its box is the line and no more ([ExactLines]) — on Android the box of material3's style is Manrope's own 1.37 em, which
+ * at the font 1.3 (14 sp are 18.8 dp there) is 26.3 dp, and the pill grew past 24 to take it, the switch past its 48 (50.67).
  */
 @Composable
 private fun labelStyleOf(sizeSp: Float, strong: Boolean, compact: Boolean): TextStyle {
@@ -243,9 +259,78 @@ private fun labelStyleOf(sizeSp: Float, strong: Boolean, compact: Boolean): Text
         fontSize = sizeSp.sp,
         lineHeight = (sizeSp * LINE_HEIGHT).sp,
         fontWeight = if (strong) FontWeight.ExtraBold else FontWeight.Bold,
+        fontFeatureSettings = if (strong) TABULAR_FIGURES else null,
     )
     return if (compact) style.copy(lineHeightStyle = ExactLines) else style
 }
+
+/**
+ * A switch whose segments carry a second line ([SegmentedSwitch]'s `sublabels`): the words of every segment at the one size
+ * [SegmentLabelSize] finds for them (from [maxSp] down), shares equal or by the words, and under the words their second line at 12 sp
+ * — or, under words smaller than that (a large font), at their size ([SegmentLabelSize.secondSp]). The lines keep to their line height
+ * ([ExactLines]): two of them stand in the pill of 44 at the font 1.3 too.
+ */
+@Composable
+private fun TwoLineSwitch(
+    labels: List<String>,
+    sublabels: List<String>,
+    selectedIndex: Int?,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier,
+    maxSp: Float,
+    strong: Boolean,
+    description: String?,
+    looks: SwitchLooks,
+) {
+    val labelStyle = labelStyleOf(maxSp, strong, compact = false).copy(lineHeightStyle = ExactLines)
+    val secondStyle = labelStyleOf(SegmentLabelSize.MIN_SP, strong = false, compact = false)
+        .copy(fontFeatureSettings = TABULAR_FIGURES, lineHeightStyle = ExactLines)
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val room = constraints.maxWidth
+        val plan = remember(labels, sublabels, labelStyle, secondStyle, measurer, density, room) {
+            val around = labels.indices.map { index -> with(density) { labelRoom(index, labels.lastIndex, compact = false).toPx() } }
+            // the second lines at 12 sp are asked for at every size from 14 down to 12: measured once a size
+            val seconds = HashMap<Float, List<SegmentFit.Label>>()
+            SegmentLabelSize.plan(
+                room = room.toFloat(),
+                around = around,
+                slack = with(density) { SegmentSlack.toPx() },
+                leastSp = with(density) { SegmentLabelSize.LEAST_DP.dp.toSp().value },
+                secondsAt = { sizeSp ->
+                    seconds.getOrPut(sizeSp) {
+                        val style = secondStyle.at(sizeSp)
+                        sublabels.map { line ->
+                            SegmentFit.Label(
+                                line = measurer.lineWidth(AnnotatedString(line), style),
+                                word = line.split(' ', '\n', '\t').filter { it.isNotEmpty() }.maxOfOrNull { measurer.lineWidth(AnnotatedString(it), style) } ?: 0f,
+                            )
+                        }
+                    }
+                },
+                maxSp = maxSp,
+            ) { sizeSp ->
+                val style = labelStyle.at(sizeSp)
+                labels.map { measurer.lineWidth(AnnotatedString(it), style) }
+            }
+        }
+        val style = if (plan.sizeSp == maxSp) labelStyle else labelStyle.at(plan.sizeSp)
+        val secondSp = SegmentLabelSize.secondSp(plan.sizeSp)
+        SwitchRow(
+            labels.map(::AnnotatedString), selectedIndex, onSelect, Modifier, compact = false, labelStyle = style,
+            // a row of no width yet (a transition) has nothing to share
+            weights = plan.widths.takeIf { widths -> widths.all { it > 0f } }, description = description, looks = looks,
+            seconds = SecondLines(sublabels, if (secondSp == SegmentLabelSize.MIN_SP) secondStyle else secondStyle.at(secondSp)),
+        )
+    }
+}
+
+/** The style at [sizeSp], its lines of 1.15. */
+private fun TextStyle.at(sizeSp: Float): TextStyle = copy(fontSize = sizeSp.sp, lineHeight = (sizeSp * LINE_HEIGHT).sp)
+
+/** The second lines of the segments, one to each, and their style. */
+private class SecondLines(val texts: List<String>, val style: TextStyle)
 
 /** What of a switch is not about its words: its ground, what of it answers, what TalkBack says of each segment and who hears a hold. */
 private class SwitchLooks(
@@ -267,6 +352,7 @@ private fun SwitchRow(
     weights: List<Float>?,
     description: String?,
     looks: SwitchLooks,
+    seconds: SecondLines? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     val container = if (looks.containerColor.isSpecified) looks.containerColor else colors.surfaceContainer
@@ -345,16 +431,33 @@ private fun SwitchRow(
                         .padding(horizontal = LabelPadding),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        text = text,
-                        // the segment says its description; its label, said as well, would be heard twice
-                        modifier = if (spoken != null) Modifier.clearAndSetSemantics { } else Modifier,
-                        color = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        textAlign = TextAlign.Center,
-                        style = labelStyle,
-                    )
+                    // the segment says its description; its label, said as well, would be heard twice
+                    val silent = if (spoken != null) Modifier.clearAndSetSemantics { } else Modifier
+                    val words = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant
+                    if (seconds == null) {
+                        Text(
+                            text = text,
+                            modifier = silent,
+                            color = words,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.Center,
+                            style = labelStyle,
+                        )
+                    } else {
+                        // the words and under them their second line, of their colour
+                        Column(silent, horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(text = text, color = words, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, style = labelStyle)
+                            Text(
+                                text = seconds.texts[index],
+                                color = words,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                textAlign = TextAlign.Center,
+                                style = seconds.style,
+                            )
+                        }
+                    }
                 }
             }
         }

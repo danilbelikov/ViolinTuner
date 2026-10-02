@@ -13,6 +13,7 @@ import com.violinjourney.app.core.backup.BackupStore
 import com.violinjourney.app.core.backup.stoppable
 import com.violinjourney.app.core.backup.underWay
 import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.core.recording.RecordingWatch
 import com.violinjourney.app.core.recording.video.VideoImport
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
@@ -205,7 +206,17 @@ open class RestoreViewModel(
     }
 }
 
-/** The block «Данные» of the settings: when the last copy was made, whether it has grown old, and a copy on its way. */
+/**
+ * The block «Данные» of the settings (spec 3.36.8): when the last copy was made, whether it has grown old, what the app weighs, and a
+ * copy or a restore on its way with its phase. Until the date is read ([DataBlockState.dateRead]) «ещё не сохраняли» is not said: it
+ * is said only of a date that has been read and is not there.
+ *
+ * Nothing blinks (3.36.8 «Загрузка»), so the two halves of the state are kept apart. The job is in the manager's memory and is read at
+ * once: the first value already has it, and the slow half never holds it back. The slow half — the date in DataStore, the recordings in
+ * Room with a look at the file of every one with sound — is read once and kept. The block follows both for as long as it lives — the
+ * screen of a copy or a restore opened over «Настройки» and closed again — so a return starts from the rows as they stand, not from what
+ * they were when it left.
+ */
 open class DataBlockViewModel(
     manager: BackupManager,
     prefs: BackupPrefs,
@@ -216,31 +227,38 @@ open class DataBlockViewModel(
 ) : ViewModel() {
     private val total = MutableStateFlow<Long?>(null)
 
-    val state: StateFlow<DataBlockState> = combine(manager.job, prefs.lastBackupAtEpochMs, sessions.sessions, total) { job, last, all, bytes ->
-        val stale = last != null && (clock.millis() - last) / MS_PER_DAY > config.staleAfterDays
-        DataBlockState(
-            lastBackupAtEpochMs = last,
-            // a quiet word in the same line, never a badge: the app still asks for nothing (spec 3.20)
-            newSinceStale = if (stale) all.count { it.startedAtEpochMs > last!! } else 0,
-            runningPercent = when (job) {
-                is BackupJob.Saving -> ((job.progress?.fraction ?: 0f) * PERCENT).toInt()
-                is BackupJob.Restoring -> ((job.progress?.fraction ?: 0f) * PERCENT).toInt()
-                else -> null
-            },
-            restoring = job is BackupJob.Restoring,
-            totalBytes = bytes,
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), DataBlockState())
+    /** When the last copy was made and how many recordings have come since an old one; null until both are read. */
+    private val dated: StateFlow<Dated?> = combine(prefs.lastBackupAtEpochMs, sessions.sessions) { last, all -> Dated(last, newSince(last, all)) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    val state: StateFlow<DataBlockState> = combine(manager.job, dated, total) { job, dated, bytes -> stateOf(job, dated, bytes) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, stateOf(manager.job.value, dated = null, bytes = null))
 
     /** Weighing walks the folders of the media: on every return to the tab, not on every frame. */
     fun refresh() {
         viewModelScope.launch { total.value = store.contents().totalBytes }
     }
 
-    private companion object {
-        const val STOP_TIMEOUT_MS = 5_000L
-        const val PERCENT = 100
+    private fun stateOf(job: BackupJob, dated: Dated?, bytes: Long?) = DataBlockState(
+        dateRead = dated != null,
+        lastBackupAtEpochMs = dated?.last,
+        newSinceStale = dated?.newSince ?: 0,
+        running = BackupPhases.runningOf(job),
+        totalBytes = bytes,
+    )
+
+    /**
+     * The recordings started after a copy older than [BackupConfig.staleAfterDays] whole days (spec 3.20: «копии больше 30 дней и с тех
+     * пор появились записи»); none for a younger copy and without one. A quiet word in the same line, never a badge: the app still asks
+     * for nothing.
+     */
+    private fun newSince(last: Long?, all: List<SessionSummary>): Int {
+        if (last == null || (clock.millis() - last) / MS_PER_DAY <= config.staleAfterDays) return 0
+        return all.count { it.startedAtEpochMs > last }
     }
+
+    /** The slow half of the state, once read. */
+    private data class Dated(val last: Long?, val newSince: Int)
 }
 
 private const val MS_PER_DAY = 24 * 60 * 60 * 1_000L

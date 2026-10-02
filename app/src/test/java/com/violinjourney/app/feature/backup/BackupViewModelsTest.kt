@@ -12,11 +12,14 @@ import com.violinjourney.app.core.backup.BackupPart
 import com.violinjourney.app.core.backup.FakeBackupDocuments
 import com.violinjourney.app.core.backup.FakeBackupPrefs
 import com.violinjourney.app.core.backup.FakeBackupStore
+import com.violinjourney.app.core.backup.RestorePhase
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.practice.FakeRunningPracticeStore
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
+import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.core.recording.RecordingWatch
 import com.violinjourney.app.core.recording.video.AnalysisSpeed
 import com.violinjourney.app.core.recording.video.FakeFileTakeAnalyzer
@@ -31,10 +34,12 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -58,6 +63,7 @@ class BackupViewModelsTest {
     private val counts = BackupCounts(sessions = 23, pieces = 5, practiceDays = 41, level = 4, withSound = 19, videos = 6)
     private val store by lazy { FakeBackupStore(folder.root, now, counts) }
     private val documents = FakeBackupDocuments()
+    private val prefs = FakeBackupPrefs()
     private val watch = RecordingWatch()
     private val clock = FixedWallClock(now, TimeZone.UTC)
 
@@ -68,7 +74,7 @@ class BackupViewModelsTest {
     fun tearDown() = Dispatchers.resetMain()
 
     private fun TestScope.manager() = BackupManager(
-        store, documents, FakeBackupPrefs(), {}, BackupConfig(), clock, { testScheduler.currentTime }, StandardTestDispatcher(testScheduler),
+        store, documents, prefs, {}, BackupConfig(), clock, { testScheduler.currentTime }, StandardTestDispatcher(testScheduler),
         analytics = NoOpAnalytics(),
     )
 
@@ -79,6 +85,12 @@ class BackupViewModelsTest {
     )
 
     private fun TestScope.backupScreen(manager: BackupManager) = BackupViewModel(manager, store, BackupConfig(), watch, importer())
+
+    /** The block «Данные» over the same manager and the same date of the last copy; it reads while something watches it. */
+    private fun TestScope.dataBlock(manager: BackupManager) =
+        DataBlockViewModel(manager, prefs, FakeSessionRepository(), store, BackupConfig(), clock).also { block ->
+            backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { block.state.collect {} }
+        }
 
     private fun TestScope.restoreScreen(manager: BackupManager, uri: String?) =
         RestoreViewModel(manager, store, watch, importer(), SavedStateHandle(listOfNotNull(uri?.let { RestoreViewModel.ARG_URI to it }).toMap()))
@@ -262,5 +274,176 @@ class BackupViewModelsTest {
         assertTrue((noRoomForData.state.value.stage as RestoreStage.Ready).missingEvenUnsafeBytes > 0)
         noRoomForData.onIntent(RestoreIntent.UnsafeClicked)
         assertNull(noRoomForData.state.value.dialog)
+    }
+
+    // «Данные» of «Настройки» (spec 3.36.8): the date not read is not «ещё не сохраняли», and one job at a time is seen before a touch.
+
+    @Test
+    fun `the date not read yet is not never-saved`() = runTest {
+        val manager = manager()
+        val block = DataBlockViewModel(manager, prefs, FakeSessionRepository(), store, BackupConfig(), clock)
+        // nothing has been read: not «ещё не сохраняли» — the caption keeps its line empty
+        assertFalse(block.state.value.dateRead)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { block.state.collect {} }
+        advanceUntilIdle()
+        assertTrue(block.state.value.dateRead)
+        assertNull("read, and there is none: «ещё не сохраняли»", block.state.value.lastBackupAtEpochMs)
+        // a copy saved — the same row now says its date
+        savedCopy(manager)
+        advanceUntilIdle()
+        assertEquals(now.toEpochMilliseconds(), block.state.value.lastBackupAtEpochMs)
+    }
+
+    @Test
+    fun `a copy on its way turns the row into its progress and puts the restore to sleep`() = runTest {
+        val manager = manager()
+        val block = dataBlock(manager)
+        advanceUntilIdle()
+        assertNull(block.state.value.running)
+        val gate = CompletableDeferred<Unit>()
+        store.prepareGate = gate
+        manager.saveTo("content://downloads/2", BackupPart.entries.toSet(), "копия.zip")
+        advanceUntilIdle()
+        val during = block.state.value
+        assertEquals(DataRunning(restore = false, percent = 0, phase = JobPhase.Data), during.running)
+        assertTrue("«Восстановить из копии» waits for the copy", during.restoreWaits)
+        assertFalse(during.saveWaits)
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertTrue(manager.job.value is BackupJob.Saved)
+        assertNull("the copy is saved: nothing runs, nothing waits", block.state.value.running)
+        assertFalse(block.state.value.restoreWaits)
+    }
+
+    @Test
+    fun `a restore on its way puts the copy to sleep and says its step`() = runTest {
+        // the block sees every state the moment the manager sets it, as the screen of the restore does
+        Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
+        val manager = manager()
+        val copy = savedCopy(manager)
+        val block = dataBlock(manager)
+        var during: DataBlockState? = null
+        store.onSettle = { during = block.state.value }
+        manager.restore(copy, unsafe = false)
+        advanceUntilIdle()
+        val seen = checkNotNull(during) { "the restore settled its copy" }
+        assertEquals(true, seen.running?.restore)
+        assertEquals(JobPhase.Restore(RestorePhase.EXTRACTING), seen.running?.phase)
+        assertTrue("«Сохранить копию» waits for the restore", seen.saveWaits)
+        assertFalse(seen.restoreWaits)
+        assertTrue(manager.job.value is BackupJob.Restored)
+        // unpacked and marked, the restore waits for its restart: still on its way — the copy still waits, the row leads to the screen
+        // that restarts the app
+        val restored = block.state.value
+        assertEquals(DataRunning(restore = true, percent = 100, phase = JobPhase.Restore(RestorePhase.FINISHING)), restored.running)
+        assertTrue("«Сохранить копию» waits for the restart", restored.saveWaits)
+    }
+
+    // The rows of «Данные» stand from the first frame as they are (spec 3.36.8 «Загрузка»: «Ничего не мигает»).
+
+    /** Recordings not read in the test's time: Room, with the file of every recording with sound to look at, on a busy phone. */
+    private class SilentSessions : SessionRepository by FakeSessionRepository() {
+        override val sessions: Flow<List<SessionSummary>> = MutableSharedFlow()
+    }
+
+    @Test
+    fun `a block opened while a copy is on its way has it in its first value before the slow half is read`() = runTest {
+        val manager = manager()
+        val gate = CompletableDeferred<Unit>()
+        store.prepareGate = gate
+        manager.saveTo("content://downloads/2", BackupPart.entries.toSet(), "копия.zip")
+        advanceUntilIdle()
+        assertTrue(manager.job.value is BackupJob.Saving)
+        // «назад» from the copy, «назад» from Live, the gear: a new block, and Room has not answered
+        val block = DataBlockViewModel(manager, prefs, SilentSessions(), store, BackupConfig(), clock)
+        val first = block.state.value
+        assertEquals(DataRunning(restore = false, percent = 0, phase = JobPhase.Data), first.running)
+        assertTrue("«Восстановить из копии» asleep from the first frame", first.restoreWaits)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { block.state.collect {} }
+        advanceUntilIdle()
+        assertFalse("Room still silent: the date is not read", block.state.value.dateRead)
+        assertEquals("the copy still shown while Room is silent", first.running, block.state.value.running)
+        // the copy ends while Room is still silent: the rows follow the job without waiting for it
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertTrue(manager.job.value is BackupJob.Saved)
+        assertNull(block.state.value.running)
+        assertFalse(block.state.value.restoreWaits)
+    }
+
+    @Test
+    fun `a block returned to after a while starts from the job as it is now`() = runTest {
+        val manager = manager()
+        val block = DataBlockViewModel(manager, prefs, FakeSessionRepository(), store, BackupConfig(), clock)
+        val settings = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { block.state.collect {} }
+        advanceUntilIdle()
+        assertNull(block.state.value.running)
+        // the screen of a copy over «Настройки»: nothing watches the block for longer than a sharing that stops would wait
+        settings.cancel()
+        advanceTimeBy(UNWATCHED_MS)
+        val gate = CompletableDeferred<Unit>()
+        store.prepareGate = gate
+        manager.saveTo("content://downloads/2", BackupPart.entries.toSet(), "копия.zip")
+        advanceUntilIdle()
+        // back: the first frame reads the block before anything collects it again
+        assertEquals(DataRunning(restore = false, percent = 0, phase = JobPhase.Data), block.state.value.running)
+        assertTrue(block.state.value.restoreWaits)
+        // and the other way round: the copy saved while nothing watched — no copy on its way, and its date
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertNull(block.state.value.running)
+        assertEquals(now.toEpochMilliseconds(), block.state.value.lastBackupAtEpochMs)
+    }
+
+    // An old copy (spec 3.20: «копии больше 30 дней и с тех пор появились записи») says how many recordings came after it.
+
+    /** A recording started at [startedAt]. */
+    private fun recording(id: Long, startedAt: Long) = SessionSummary(
+        id = id, title = null, startedAtEpochMs = startedAt, durationMs = 60_000, a4Hz = 440.0, toleranceCents = 8.0, nearCents = 20.0,
+        scorePercent = 80, nearPercent = 0, offPercent = 20, maeCents = 0.0, biasCents = 0.0, previewZones = emptyList(), audioPath = null,
+    )
+
+    private fun daysBeforeNow(days: Long): Long = now.toEpochMilliseconds() - days * DAY_MS
+
+    /** The block over [recordings] and a copy made at [copyAt], at [clock], read. */
+    private fun TestScope.blockOver(copyAt: Long, recordings: List<SessionSummary>, at: FixedWallClock = clock): DataBlockState {
+        prefs.lastBackupAtEpochMs.value = copyAt
+        val sessions = FakeSessionRepository().also { it.sessions.value = recordings }
+        val block = DataBlockViewModel(manager(), prefs, sessions, store, BackupConfig(), at)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { block.state.collect {} }
+        advanceUntilIdle()
+        return block.state.value
+    }
+
+    @Test
+    fun `an old copy counts the recordings started after it`() = runTest {
+        val copyAt = daysBeforeNow(31)
+        // one before the copy and one of its very moment are in it; two came after
+        val recordings = listOf(recording(1, daysBeforeNow(40)), recording(2, copyAt), recording(3, daysBeforeNow(10)), recording(4, daysBeforeNow(1)))
+        assertEquals(2, blockOver(copyAt, recordings).newSinceStale)
+    }
+
+    @Test
+    fun `a copy of thirty days is not old yet and of thirty one is`() = runTest {
+        // «больше 30 дней»: whole days — thirty to the millisecond are not more
+        val copyAt = daysBeforeNow(30)
+        val recordings = listOf(recording(1, daysBeforeNow(1)))
+        assertEquals(0, blockOver(copyAt, recordings).newSinceStale)
+        val dayLater = FixedWallClock(Instant.fromEpochMilliseconds(now.toEpochMilliseconds() + DAY_MS), TimeZone.UTC)
+        assertEquals(1, blockOver(copyAt, recordings, at = dayLater).newSinceStale)
+    }
+
+    @Test
+    fun `an old copy with nothing after it says nothing more`() = runTest {
+        val copyAt = daysBeforeNow(45)
+        assertEquals(0, blockOver(copyAt, listOf(recording(1, daysBeforeNow(50)))).newSinceStale)
+        assertEquals(0, blockOver(copyAt, emptyList()).newSinceStale)
+    }
+
+    private companion object {
+        const val DAY_MS = 24 * 60 * 60 * 1_000L
+
+        /** Longer than a sharing that stops when nothing watches waits (5 s): what the block had then must not be what it shows. */
+        const val UNWATCHED_MS = 10_000L
     }
 }

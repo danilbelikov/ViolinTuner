@@ -89,6 +89,18 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `until the settings are read the rows a default would get wrong say nothing`() = runTest {
+        // the statistics turned off: until DataStore answers, the state is the defaults — on — and says it is not read
+        repository.setAnalyticsEnabled(false)
+        val viewModel = SettingsViewModel(repository, FakeSoundRepository(), SoundConfig())
+        assertFalse("not read before the first value", viewModel.state.value.read)
+        backgroundScope.launch { viewModel.state.collect {} }
+        runCurrent()
+        assertTrue(viewModel.state.value.read)
+        assertFalse(viewModel.state.value.analyticsEnabled)
+    }
+
+    @Test
     fun `restarting the onboarding clears the flag and opens it`() = runTest {
         val viewModel = SettingsViewModel(repository, FakeSoundRepository(), SoundConfig())
         viewModel.onIntent(SettingsIntent.RestartOnboardingClicked)

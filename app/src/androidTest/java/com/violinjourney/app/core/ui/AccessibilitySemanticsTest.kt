@@ -174,6 +174,36 @@ import com.violinjourney.app.shared.resources.takt_icon
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.hasText
+import com.violinjourney.app.core.backup.BackupPart
+import com.violinjourney.app.core.domain.UserSettings
+import com.violinjourney.app.feature.backup.DataBlockState
+import com.violinjourney.app.feature.backup.DataGroup
+import com.violinjourney.app.feature.backup.DataRunning
+import com.violinjourney.app.feature.backup.JobPhase
+import com.violinjourney.app.feature.settings.SettingsScreen
+import com.violinjourney.app.feature.settings.SettingsState
+import com.violinjourney.app.shared.resources.a4_option_description
+import com.violinjourney.app.shared.resources.analytics_row
+import com.violinjourney.app.shared.resources.backup_block_title
+import com.violinjourney.app.shared.resources.backup_part_video
+import com.violinjourney.app.shared.resources.backup_percent
+import com.violinjourney.app.shared.resources.backup_phase_part
+import com.violinjourney.app.shared.resources.backup_row_restore
+import com.violinjourney.app.shared.resources.backup_row_saving
+import com.violinjourney.app.shared.resources.dot_separator
+import com.violinjourney.app.shared.resources.nav_settings
+import com.violinjourney.app.shared.resources.restore_row_wait_copy
+import com.violinjourney.app.shared.resources.settings_a4_note
+import com.violinjourney.app.shared.resources.settings_a4_title
+import com.violinjourney.app.shared.resources.settings_group_app
+import com.violinjourney.app.shared.resources.settings_group_intonation
+import com.violinjourney.app.shared.resources.settings_group_records
+import com.violinjourney.app.shared.resources.settings_tolerance_note
+import com.violinjourney.app.shared.resources.settings_tolerance_title
+import com.violinjourney.app.shared.resources.tolerance_cents
 import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 import org.junit.Assert.assertEquals
@@ -870,6 +900,101 @@ class AccessibilitySemanticsTest {
         }
         compose.onNode(hasSetTextAction() and hasContentDescription(label)).assertExists()
         compose.onNodeWithText(title).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+    }
+
+    // «Настройки» of R8 (spec 3.36.8, TalkBack): the header and the labels of the groups are headings; a segment of the reference is
+    // «440 герц», of the tolerance «Средний, плюс-минус 8 центов», each a chosen radio button in a group named by its row, whose title is
+    // not read apart; a row of «Данные» that waits for the other job is «недоступно» and its caption, whole, says why; the statistics is a
+    // switch, on or off.
+
+    /** «Настройки» with the group «Данные» in [data]. */
+    @Composable
+    private fun Settings(data: DataBlockState, analytics: Boolean = true) = ViolinTheme {
+        SettingsScreen(
+            state = SettingsState(440, UserSettings.A4_OPTIONS_HZ, TolerancePreset.INTERMEDIATE, SoundCaption.BuiltIn(BuiltInPreset.OFF), analyticsEnabled = analytics),
+            onIntent = {},
+            onBack = {},
+            dataBlock = {
+                DataGroup(data, analytics, onAnalyticsChange = {}, onOpenBackup = {}, onOpenRunningRestore = {}, onPickCopy = {}, onOpenPrivacy = {})
+            },
+            onLanguageClick = {},
+        )
+    }
+
+    @Test
+    fun theHeaderAndTheLabelsOfTheGroupsOfSettingsAreHeadings() {
+        var words = emptyList<String>()
+        compose.setContent {
+            words = listOf(stringResource(Res.string.nav_settings)) +
+                listOf(Res.string.settings_group_intonation, Res.string.settings_group_records, Res.string.backup_block_title, Res.string.settings_group_app)
+                    .map { stringResource(it).uppercase() }
+            Settings(DataBlockState(dateRead = true))
+        }
+        compose.waitForIdle()
+        words.forEach { word -> compose.onNodeWithText(word).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading)) }
+    }
+
+    @Test
+    fun theSegmentsOfSettingsSayTheirHertzAndCentsInAGroupNamedByTheirRow() {
+        var hertz = ""
+        var middle = ""
+        var reference = ""
+        var tolerance = ""
+        var title = ""
+        var number = ""
+        compose.setContent {
+            hertz = stringResource(Res.string.a4_option_description, 440)
+            val cents = TolerancePreset.INTERMEDIATE.cents
+            middle = stringResource(Res.string.tolerance_intermediate_name) + ", " + stringResource(
+                Formats.plural(cents, Res.string.tolerance_cents_spoken_one, Res.string.tolerance_cents_spoken_few, Res.string.tolerance_cents_spoken_many),
+                cents,
+            )
+            title = stringResource(Res.string.settings_a4_title)
+            reference = title + ", " + stringResource(Res.string.settings_a4_note)
+            tolerance = stringResource(Res.string.settings_tolerance_title) + ", " + stringResource(Res.string.settings_tolerance_note)
+            number = stringResource(Res.string.tolerance_cents, cents)
+            Settings(DataBlockState(dateRead = true))
+        }
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription(hertz).assertIsSelected().assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
+        compose.onNodeWithContentDescription(middle).assertIsSelected().assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
+        compose.onNodeWithContentDescription(reference).assertExists()
+        compose.onNodeWithContentDescription(tolerance).assertExists()
+        // the title of a row is the name of its group, the second line of a segment is in its description: neither is read apart
+        compose.onAllNodesWithText(title).assertCountEquals(0)
+        compose.onAllNodesWithText(number).assertCountEquals(0)
+    }
+
+    @Test
+    fun aRowOfDataWaitingForTheOtherJobIsUnavailableAndItsCaptionSaysWhy() {
+        var saving = ""
+        var progress = ""
+        var restore = ""
+        var why = ""
+        var analytics = ""
+        compose.setContent {
+            saving = stringResource(Res.string.backup_row_saving)
+            progress = stringResource(Res.string.backup_percent, 56) + stringResource(Res.string.dot_separator) +
+                stringResource(Res.string.backup_phase_part, stringResource(Res.string.backup_part_video), 7, 12)
+            restore = stringResource(Res.string.backup_row_restore)
+            why = stringResource(Res.string.restore_row_wait_copy)
+            analytics = stringResource(Res.string.analytics_row)
+            ViolinTheme {
+                DataGroup(
+                    state = DataBlockState(dateRead = true, running = DataRunning(restore = false, percent = 56, phase = JobPhase.Files(BackupPart.VIDEO, 7, 12))),
+                    analyticsEnabled = false,
+                    onAnalyticsChange = {},
+                    onOpenBackup = {},
+                    onOpenRunningRestore = {},
+                    onPickCopy = {},
+                    onOpenPrivacy = {},
+                )
+            }
+        }
+        compose.waitForIdle()
+        compose.onNode(hasText(saving) and hasText(progress)).assertIsEnabled()
+        compose.onNode(hasText(restore) and hasText(why)).assertIsNotEnabled()
+        compose.onNodeWithText(analytics).assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch)).assertIsOff()
     }
 
     /** The introduction on [step]; gives back the word of «Пропустить» in the language of the test. */
