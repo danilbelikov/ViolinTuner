@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Кадр видео в списках</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Токены приложения — как в docs/redesign/mockups/records.html (тёмная тема — единственная, spec 3.6). */
+:root,[data-theme="dark"]{
+  --bg:#131318; --surface:#1E1D25; --surface-2:#292833;
+  --text:#E6E4EE; --text-2:#A39FB5; --text-3:#8A8699;
+  --border:#3A3846;
+  --accent:#C4ADFF; --on-accent:#2E1A6E; --t3:#5B43B8;
+  --danger:#FF7A7A;
+  --font:"Manrope",-apple-system,Roboto,system-ui,sans-serif;
+}
+/* Обвязка страницы */
+:root{--page-bg:#07080A;--page-card:#121419;--page-text:#E9ECF1;--page-muted:#99A1AE;--page-border:#252A33;--mark:#FF3B6B}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page-bg);color:var(--page-text);font:15px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+.doc{max-width:1440px;margin:0 auto;padding:24px 16px 80px}
+.doc h1{margin:0 0 6px;font-size:28px;letter-spacing:-.02em}
+.meta{margin:0;color:var(--page-muted);max-width:980px}
+.meta b{color:var(--page-text)}
+.block{background:var(--page-card);border:1px solid var(--page-border);border-radius:18px;padding:20px 22px;margin:24px 0}
+.block h2{margin:0 0 12px;font-size:18px}
+.block p,.block li{color:var(--page-muted)}
+.block b{color:var(--page-text)}
+.screens{display:flex;flex-wrap:wrap;gap:40px 36px;margin-top:24px;align-items:flex-start}
+.screen{display:flex;flex-direction:column;gap:10px}
+.screen h3{margin:0;font-size:17px}
+.screen .goal{margin:0;color:var(--page-muted);max-width:390px;font-size:14px}
+.notes{list-style:none;margin:0;padding:0;width:360px;max-width:100%;display:flex;flex-direction:column;gap:10px}
+.notes li{position:relative;padding:10px 12px 10px 44px;border-radius:12px;background:var(--page-card);border:1px solid var(--page-border);color:var(--page-muted);font-size:14px;line-height:1.45}
+.notes li b{color:var(--page-text)}
+.notes li::before{content:attr(data-n);position:absolute;left:12px;top:10px;width:22px;height:22px;border-radius:50%;background:var(--mark);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
+
+/* Телефон */
+.phone{position:relative;width:390px;height:844px;flex:none;padding:11px;border-radius:56px;background:#0A0A0B;box-shadow:0 0 0 1px #2a2a2e inset,0 30px 60px -20px rgba(0,0,0,.35)}
+.phone-screen{position:relative;width:100%;height:100%;border-radius:45px;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font);display:flex;flex-direction:column}
+@media (max-width:440px){.phone{zoom:.84}}
+.statusbar{flex:none;height:44px;padding:14px 28px 0 34px;display:flex;justify-content:space-between;font-size:15px;font-weight:600}
+.statusbar span:last-child{display:flex;gap:6px;align-items:center}
+.scroll{flex:1;min-height:0;overflow:hidden;padding:0 16px}
+.ic{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ic-s{width:18px;height:18px}
+.mark{position:absolute;width:22px;height:22px;border-radius:50%;background:var(--mark);color:#fff;font:700 12px/22px var(--font);text-align:center;box-shadow:0 0 0 2px #fff,0 2px 6px rgba(0,0,0,.3);z-index:5}
+
+/* «Записи» */
+.r-title{display:flex;align-items:center;justify-content:space-between;padding:6px 4px 8px;min-height:56px}
+.r-title h1{font-size:28px;font-weight:800;letter-spacing:-.02em;margin:0}
+.r-link{height:44px;padding:0 8px;border:0;background:none;color:var(--accent);font:700 15px var(--font);display:inline-flex;align-items:center;gap:6px}
+.strip{background:var(--surface);border-radius:18px;padding:14px 16px 10px}
+.strip-head{display:flex;justify-content:space-between;font-size:15px}
+.strip-head b{font-weight:700}
+.strip-head span{color:var(--text-2);font-weight:600}
+.bars{display:grid;grid-template-columns:repeat(14,1fr);gap:4px;align-items:end;height:28px;margin-top:10px}
+.bars i{display:block;border-radius:3px;background:var(--t3);min-height:3px}
+.bars i.z{background:var(--surface-2)}
+.bars i.t{background:var(--accent)}
+.chips{display:flex;gap:8px;margin:14px 0 2px}
+.chip{flex:none;height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--border);color:var(--text);font:600 14px var(--font);display:inline-flex;align-items:center}
+.chip.on{background:var(--t3);border-color:var(--t3)}
+.day{display:flex;align-items:center;gap:8px;padding:14px 0 6px;font-size:13px;font-weight:700;color:var(--text-2)}
+.today{height:22px;padding:0 8px;border-radius:999px;border:1.5px solid var(--accent);color:var(--accent);font-size:12px;font-weight:700;display:inline-flex;align-items:center}
+
+/* Карточка записи (3.36.5) и плитка (3.38) */
+.card{position:relative;display:flex;align-items:center;gap:12px;min-height:64px;padding:8px 4px 8px 12px;border-radius:16px;background:var(--surface);margin-bottom:6px}
+.card.sel{background:color-mix(in srgb,var(--accent) 14%,var(--surface));box-shadow:0 0 0 1.5px var(--accent) inset}
+.tile{width:40px;height:40px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;color:var(--text-2);flex:none}
+.tile.hollow{background:transparent;border:1.5px solid var(--border)}
+.tile .ic{width:22px;height:22px}
+.frame{position:relative;width:40px;height:40px;border-radius:10px;overflow:hidden;flex:none;background:var(--surface-2);display:grid;place-items:center;color:var(--text-2)}
+.frame .ic{width:22px;height:22px}
+.frame svg.pic{position:absolute;inset:0;width:100%;height:100%}
+.check{width:40px;height:40px;border-radius:50%;border:2px solid var(--text-3);flex:none;display:grid;place-items:center}
+.check.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.main{flex:1;min-width:0}
+.main b{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.main small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;color:var(--text-2);font-variant-numeric:tabular-nums}
+.star{width:14px;height:14px;fill:var(--accent);stroke:none;flex:none}
+.more{width:44px;height:44px;border:0;background:none;color:var(--text-2);display:grid;place-items:center;flex:none}
+.selbar{flex:none;display:flex;align-items:center;gap:4px;padding:4px 8px;min-height:60px;background:var(--surface);border-bottom:1px solid var(--border)}
+.selbar .n{flex:1;font-size:17px;font-weight:800}
+.icon-b{width:48px;height:48px;border:0;background:none;color:var(--text);display:grid;place-items:center;flex:none}
+.dimmed{opacity:.38}
+.tabbar{flex:none;display:flex;padding:6px 8px 26px;background:var(--surface)}
+.tab{flex:1;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:600;color:var(--text-2)}
+.tab .pill{width:56px;height:32px;border-radius:16px;display:grid;place-items:center}
+.tab.on{color:var(--text)}
+.tab.on .pill{background:var(--t3)}
+
+/* Экран произведения: шапка и раздел дублей */
+.top{flex:none;display:flex;align-items:center;gap:4px;padding:2px 8px 6px}
+.top b{flex:1;font-size:20px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.label{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin:16px 4px 8px}
+.label span{text-transform:none;letter-spacing:0;font-weight:700;color:var(--accent);font-size:15px}
+.pages{display:flex;gap:10px;margin-top:4px}
+.pages i{width:84px;height:112px;border-radius:12px;background:#E9E2D2;opacity:.82;flex:none}
+.dock{flex:none;padding:12px 16px 30px;background:var(--surface);border-radius:24px 24px 0 0;display:flex;align-items:center;gap:12px}
+.dock .vid{width:56px;height:56px;border-radius:50%;border:1.5px solid var(--border);display:grid;place-items:center;color:var(--text);flex:none}
+.dock .rec{flex:1;height:56px;border-radius:28px;background:var(--accent);color:var(--on-accent);font:800 16px var(--font);display:flex;align-items:center;justify-content:center;gap:8px}
+.dock .rec i{width:14px;height:14px;border-radius:50%;background:var(--on-accent)}
+
+/* Состояния плитки крупно */
+.states{display:flex;flex-wrap:wrap;gap:18px}
+.state{width:150px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;font-size:13px;color:var(--page-muted)}
+.state b{color:var(--page-text);font-size:14px}
+.zoom{zoom:2.4;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:var(--surface)}
+/* Какой кадр */
+.film{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}
+.shot{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--page-muted);width:196px}
+.shot svg{width:196px;height:110px;border-radius:10px;display:block}
+.shot.pick svg{outline:3px solid var(--accent);outline-offset:3px}
+.shot b{color:var(--page-text)}
+.cmp{display:flex;flex-wrap:wrap;gap:28px}
+.cmp .col{width:358px}
+.cmp h4{margin:0 0 8px;font-size:15px}
+.wide{position:relative;width:64px;height:44px;border-radius:10px;overflow:hidden;flex:none}
+.wide svg{position:absolute;inset:0;width:100%;height:100%}
+.round{position:relative;width:40px;height:40px;border-radius:50%;overflow:hidden;flex:none}
+.round svg{position:absolute;inset:0;width:100%;height:100%}
+.guide{position:absolute;top:0;bottom:0;width:0;border-left:1px dashed var(--mark);z-index:4}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <radialGradient id="spot" cx="50%" cy="40%" r="55%"><stop offset="0" stop-color="#FFE9B5" stop-opacity=".85"/><stop offset=".55" stop-color="#C98B4A" stop-opacity=".25"/><stop offset="1" stop-color="#120C14" stop-opacity="0"/></radialGradient>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C49A73"/><stop offset="1" stop-color="#9C7656"/></linearGradient>
+    <linearGradient id="wall2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9FB3B6"/><stop offset="1" stop-color="#7A8E92"/></linearGradient>
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7B4A28"/><stop offset="1" stop-color="#4A2B17"/></linearGradient>
+    <filter id="blur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5"/></filter>
+  </defs>
+  <!-- Иконки — из records.html -->
+  <symbol id="i-watch" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V10M10 2.5h4M18.5 6.5l1.5-1.5"/></symbol>
+  <symbol id="i-string" viewBox="0 0 24 24"><path d="M12 2v20"/><path d="M8 5c-3 4-3 10 0 14M16 5c3 4 3 10 0 14"/></symbol>
+  <symbol id="i-sheet" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 11h8M8 14h8"/><circle cx="10" cy="17.3" r="1.3" fill="currentColor"/></symbol>
+  <symbol id="i-tape" viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="3"/><circle cx="8.5" cy="11" r="2"/><circle cx="15.5" cy="11" r="2"/><path d="M7 19l1.5-3h7l1.5 3"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M9 18V5l10-2v13"/><circle cx="6.5" cy="18" r="2.5" fill="currentColor"/><circle cx="16.5" cy="16" r="2.5" fill="currentColor"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></g></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="m15.5 10.5 6-3.5v10l-6-3.5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+
+  <!-- Кадры. Горизонтальные — 160 × 90 (16 : 9), вертикальный — 90 × 160 (9 : 16). Условные сцены, чтобы показать раскладку. -->
+  <symbol id="sc-home" viewBox="0 0 160 90">
+    <rect width="160" height="90" fill="url(#wall)"/>
+    <rect x="14" y="10" width="34" height="40" rx="2" fill="#E9F2F6"/><rect x="16" y="12" width="30" height="36" fill="#A9CFE2"/><path d="M31 12v36M16 30h30" stroke="#E9F2F6" stroke-width="2"/>
+    <rect y="70" width="160" height="20" fill="#6A4A33"/>
+    <path d="M124 40h22l-3 8h-16z" fill="#2A2420"/><path d="M135 48v26M128 74h14" stroke="#2A2420" stroke-width="2"/>
+    <path d="M70 90 74 50q6-8 14 0l4 40z" fill="#2F4A6E"/>
+    <circle cx="81" cy="38" r="9" fill="#E3B997"/><path d="M72 36q2-11 10-11 9 0 9 10-3-6-9-5-6 1-10 6z" fill="#3B2A20"/>
+    <ellipse cx="66" cy="49" rx="17" ry="6" transform="rotate(-14 66 49)" fill="#9A4F22"/><path d="M50 56 112 28" stroke="#E6D7B6" stroke-width="1.6"/>
+  </symbol>
+  <symbol id="sc-stage" viewBox="0 0 160 90">
+    <rect width="160" height="90" fill="#120C14"/>
+    <rect width="160" height="90" fill="url(#spot)"/>
+    <path d="M0 0h26q-6 45 4 90H0z" fill="#5E1420"/><path d="M160 0h-26q6 45-4 90h30z" fill="#5E1420"/>
+    <rect y="74" width="160" height="16" fill="url(#wood)"/>
+    <path d="M72 76 75 46q5-7 11 0l3 30z" fill="#141414"/>
+    <circle cx="80" cy="36" r="8" fill="#F1D3B6"/><path d="M72 34q2-10 9-10 8 0 8 9-3-5-8-4-6 0-9 5z" fill="#2B1B14"/>
+    <ellipse cx="67" cy="46" rx="15" ry="5" transform="rotate(-14 67 46)" fill="#B0602A"/><path d="M53 52 108 27" stroke="#F3E6C8" stroke-width="1.4"/>
+  </symbol>
+  <symbol id="sc-lesson" viewBox="0 0 160 90">
+    <rect width="160" height="90" fill="#D9D2C2"/>
+    <rect x="106" y="8" width="44" height="40" fill="#8D6E52"/><path d="M106 21h44M106 34h44" stroke="#6E553F" stroke-width="2"/>
+    <rect x="110" y="11" width="5" height="9" fill="#B8463C"/><rect x="117" y="12" width="4" height="8" fill="#3C6E8B"/><rect x="123" y="11" width="6" height="9" fill="#D6B04A"/><rect x="112" y="24" width="8" height="9" fill="#4E7A4C"/>
+    <rect y="72" width="160" height="18" fill="#9A8A74"/>
+    <path d="M38 90 41 52q5-7 11 0l3 38z" fill="#C2543E"/>
+    <circle cx="47" cy="42" r="8" fill="#E8C3A2"/><path d="M39 40q2-10 9-10 8 0 8 9-3-5-8-4-6 0-9 5z" fill="#6B4630"/>
+    <ellipse cx="35" cy="52" rx="14" ry="5" transform="rotate(-14 35 52)" fill="#9A4F22"/><path d="M22 58 72 34" stroke="#E6D7B6" stroke-width="1.4"/>
+    <path d="M92 90 95 48q6-8 13 0l3 42z" fill="#5A5F6A"/>
+    <circle cx="101" cy="37" r="8.5" fill="#D8AE8C"/><path d="M93 34q3-10 9-9 8 1 7 10-2-5-7-5-5 0-9 4z" fill="#B9B4AC"/>
+  </symbol>
+  <symbol id="sc-hall" viewBox="0 0 160 90">
+    <rect width="160" height="90" fill="#2B1A12"/>
+    <path d="M20 0h120l-10 50H30z" fill="#6E3F22"/><path d="M40 6h80l-6 40H46z" fill="#8C5530"/>
+    <rect x="30" y="50" width="100" height="10" fill="#B07A45"/>
+    <path d="M76 52 78 34q3-5 7 0l2 18z" fill="#121212"/><circle cx="81" cy="28" r="5" fill="#F0D2B4"/><ellipse cx="73" cy="34" rx="9" ry="3" transform="rotate(-14 73 34)" fill="#A9582A"/>
+    <g fill="#120A07"><circle cx="10" cy="80" r="9"/><circle cx="28" cy="84" r="9"/><circle cx="46" cy="79" r="9"/><circle cx="64" cy="85" r="9"/><circle cx="82" cy="80" r="9"/><circle cx="100" cy="84" r="9"/><circle cx="118" cy="79" r="9"/><circle cx="136" cy="85" r="9"/><circle cx="154" cy="80" r="9"/></g>
+  </symbol>
+  <symbol id="sc-portrait" viewBox="0 0 90 160">
+    <rect width="90" height="160" fill="url(#wall2)"/>
+    <rect x="58" y="14" width="24" height="30" fill="#E8EEF0"/><rect x="60" y="16" width="20" height="26" fill="#BFD7E0"/>
+    <rect y="136" width="90" height="24" fill="#5D4A3C"/>
+    <path d="M28 150 32 52q12-12 26 0l4 98z" fill="#7A2E3A"/>
+    <circle cx="45" cy="37" r="12" fill="#E6BE9C"/><path d="M33 34q3-15 13-14 12 1 11 14-4-8-12-7-8 1-12 7z" fill="#2E211A"/>
+    <ellipse cx="30" cy="54" rx="21" ry="7" transform="rotate(-16 30 54)" fill="#9A4F22"/><path d="M12 64 84 26" stroke="#E6D7B6" stroke-width="1.8"/>
+  </symbol>
+  <symbol id="sc-hand" viewBox="0 0 160 90">
+    <rect width="160" height="90" fill="url(#wall)"/>
+    <rect x="14" y="10" width="34" height="40" rx="2" fill="#E9F2F6"/><rect x="16" y="12" width="30" height="36" fill="#A9CFE2"/>
+    <rect y="70" width="160" height="20" fill="#6A4A33"/>
+    <g filter="url(#blur)"><ellipse cx="92" cy="58" rx="48" ry="34" fill="#E0B08C"/><rect x="40" y="62" width="70" height="40" rx="18" fill="#2F4A6E"/></g>
+  </symbol>
+  <symbol id="sc-back" viewBox="0 0 160 90">
+    <rect width="160" height="90" fill="url(#wall)"/>
+    <rect x="14" y="10" width="34" height="40" rx="2" fill="#E9F2F6"/><rect x="16" y="12" width="30" height="36" fill="#A9CFE2"/>
+    <rect y="70" width="160" height="20" fill="#6A4A33"/>
+    <path d="M124 40h22l-3 8h-16z" fill="#2A2420"/><path d="M135 48v26M128 74h14" stroke="#2A2420" stroke-width="2"/>
+    <path d="M96 90 98 46q8-9 18 0l2 44z" fill="#2F4A6E" filter="url(#blur)"/><circle cx="107" cy="38" r="9" fill="#E3B997" filter="url(#blur)"/>
+  </symbol>
+  <symbol id="sc-dark" viewBox="0 0 160 90">
+    <rect width="160" height="90" fill="#06060A"/><circle cx="80" cy="40" r="10" fill="#0D0B12"/>
+  </symbol>
+</svg>
+
+<div class="doc">
+  <h1>Кадр видео в списках · 3.38</h1>
+  <p class="meta">Черновик 0.92 (<b>docs/spec/thumbs.md</b>). У записи с видео вместо круга с камерой — кадр из самого видео:
+  скруглённый квадрат <b>40 × 40</b>, той же ширины, что круг. Названия всех карточек начинаются с одной линии, выбор не прыгает,
+  поверх кадра ничего нет. Кадр — из <b>середины</b> видео. Сцены в кадрах условные: макет показывает раскладку, а не съёмку.</p>
+
+  <div class="screens">
+    <!-- 1. Записи · Все -->
+    <div class="screen">
+      <h3>1 · «Записи» — все записи вперемешку</h3>
+      <p class="goal">Звук и видео в одном списке: кадр узнаётся с вытянутой руки, а линия названий не ломается.</p>
+      <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start">
+        <div class="phone"><div class="phone-screen">
+          <div class="statusbar"><span>18:46</span><span>●●●● ▮</span></div>
+          <div class="scroll">
+            <div class="r-title"><h1>Записи</h1><button class="r-link"><svg class="ic ic-s"><use href="#i-check"/></svg>Выбрать</button></div>
+            <div class="strip"><div class="strip-head"><b>За две недели</b><span>12 записей</span></div>
+              <div class="bars"><i style="height:30%"></i><i class="z"></i><i style="height:60%"></i><i style="height:30%"></i><i class="z"></i><i style="height:90%"></i><i style="height:30%"></i><i class="z"></i><i style="height:60%"></i><i style="height:30%"></i><i style="height:30%"></i><i class="z"></i><i style="height:60%"></i><i class="t" style="height:100%"></i></div></div>
+            <div class="chips"><span class="chip on">Все</span><span class="chip">Дубли</span><span class="chip">Видео</span><span class="chip">С Live</span></div>
+            <div class="day">4 октября, суббота <span class="today">сегодня</span></div>
+            <div class="card"><span class="mark" style="left:-6px;top:-6px">1</span><div class="frame"><svg class="ic"><use href="#i-cam"/></svg><svg class="pic" viewBox="40 0 90 90" preserveAspectRatio="xMidYMid slice"><use href="#sc-home" width="160" height="90"/></svg></div><div class="main"><b>Менуэт соль мажор <svg class="star"><use href="#i-star"/></svg></b><small>18:42 · 2:05 · видео</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+            <div class="card"><span class="mark" style="left:-6px;top:-6px">2</span><div class="tile"><svg class="ic"><use href="#i-note"/></svg></div><div class="main"><b>Запись</b><small>18:10 · 0:32</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+            <div class="card"><div class="frame"><svg class="pic" viewBox="35 0 90 90"><use href="#sc-stage" width="160" height="90"/></svg></div><div class="main"><b>Осенний концерт · 24 октября</b><small>19:02 · 3:40 · выступление</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+            <div class="day">3 октября, пятница</div>
+            <div class="card"><div class="tile"><svg class="ic"><use href="#i-note"/></svg></div><div class="main"><b>Концерт ля минор, 1 ч.</b><small>08:05 · 3:12 · дубль</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+            <div class="card"><span class="mark" style="left:-6px;top:-6px">3</span><div class="frame"><svg class="pic" viewBox="0 17.5 90 90"><use href="#sc-portrait" width="90" height="160"/></svg></div><div class="main"><b>Этюд № 2, Вольфарт</b><small>07:40 · 1:15 · видео</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+            <div class="card"><div class="frame"><svg class="pic" viewBox="25 0 90 90"><use href="#sc-lesson" width="160" height="90"/></svg></div><div class="main"><b>Урок · 3 октября</b><small>17:30 · 6:48 · урок</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+            <div class="card"><span class="mark" style="left:-6px;top:-6px">4</span><div class="tile hollow"><svg class="ic"><use href="#i-cam"/></svg></div><div class="main"><b>Гамма ре мажор</b><small>07:12 · 0:58 · видео · без звука</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+          </div>
+          <div class="tabbar"><div class="tab"><span class="pill"><svg class="ic"><use href="#i-watch"/></svg></span>Занятия</div><div class="tab"><span class="pill"><svg class="ic"><use href="#i-string"/></svg></span>Live</div><div class="tab"><span class="pill"><svg class="ic"><use href="#i-sheet"/></svg></span>Репертуар</div><div class="tab on"><span class="pill"><svg class="ic"><use href="#i-tape"/></svg></span>Записи</div></div>
+        </div></div>
+        <ol class="notes">
+          <li data-n="1"><b>Кадр вместо круга с камерой</b> — скруглённый квадрат 40 × 40, скругление 10. Ширина та же, что у круга: названия и строки всех карточек начинаются с одной линии.</li>
+          <li data-n="2"><b>Звук — как был:</b> круг со знаком. Форма говорит, что внутри: круг — звук, квадрат с картинкой — видео. Слово «видео» в строке и для TalkBack — прежнее.</li>
+          <li data-n="3"><b>Вертикальное видео</b> обрезано по квадрату со сдвигом вверх: лицо и скрипка — в верхней половине такого кадра. Горизонтальное — по центру.</li>
+          <li data-n="4"><b>Видео потеряно</b> — прежний контур с камерой, как у записи без звука: кадр от видео, которого нет, не показывается.</li>
+          <li data-n="·">Поверх кадра — ничего: ни плёнки, ни знака «play». Картинка сама и есть знак, а середина кадра — самое узнаваемое место.</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- 2. Дубли произведения -->
+    <div class="screen">
+      <h3>2 · Дубли на экране произведения</h3>
+      <p class="goal">Здесь дубли называются датой, и раньше у всех видео была одна и та же камера. Теперь видно, где дома, а где урок.</p>
+      <div class="phone"><div class="phone-screen">
+        <div class="statusbar"><span>18:46</span><span>●●●● ▮</span></div>
+        <div class="top"><button class="icon-b"><svg class="ic"><use href="#i-back"/></svg></button><b>Менуэт соль мажор</b><button class="icon-b"><svg class="ic"><use href="#i-more"/></svg></button></div>
+        <div class="scroll">
+          <div class="label">Ноты</div>
+          <div class="pages"><i></i><i></i><i></i></div>
+          <div class="label">Дубли · 6 <span>Выбрать</span></div>
+          <div class="card"><div class="frame"><svg class="pic" viewBox="40 0 90 90"><use href="#sc-home" width="160" height="90"/></svg></div><div class="main"><b>4 октября <svg class="star"><use href="#i-star"/></svg></b><small>18:42 · 2:05 · видео</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+          <div class="card"><div class="frame"><svg class="pic" viewBox="25 0 90 90"><use href="#sc-lesson" width="160" height="90"/></svg></div><div class="main"><b>2 октября</b><small>17:34 · 2:11 · видео</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+          <div class="card"><div class="tile"><svg class="ic"><use href="#i-note"/></svg></div><div class="main"><b>1 октября</b><small>08:20 · 2:02</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+          <div class="card"><div class="frame"><svg class="pic" viewBox="35 0 90 90"><use href="#sc-hall" width="160" height="90"/></svg></div><div class="main"><b>28 сентября</b><small>19:15 · 2:20 · видео · под минусовку</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+          <div class="card"><div class="frame"><svg class="pic" viewBox="0 17.5 90 90"><use href="#sc-portrait" width="90" height="160"/></svg></div><div class="main"><b>26 сентября</b><small>07:50 · 2:09 · видео</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+          <div class="card"><div class="frame"><svg class="ic"><use href="#i-cam"/></svg></div><div class="main"><b>25 сентября</b><small>07:41 · 2:15 · видео</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+        </div>
+        <div class="dock"><span class="vid"><svg class="ic"><use href="#i-cam"/></svg></span><span class="rec"><i></i>Записать дубль</span></div>
+      </div></div>
+    </div>
+
+    <!-- 3. Выбор -->
+    <div class="screen">
+      <h3>3 · Режим выбора</h3>
+      <p class="goal">Кадр, как и круг, сменяется отметкой той же ширины — список не прыгает; вышли из выбора — кадр вернулся.</p>
+      <div class="phone"><div class="phone-screen">
+        <div class="statusbar"><span>18:46</span><span>●●●● ▮</span></div>
+        <div class="selbar"><button class="icon-b"><svg class="ic"><use href="#i-x"/></svg></button><span class="n">Выбрано: 2</span><button class="icon-b" style="width:auto;padding:0 8px;color:var(--accent);font:700 15px var(--font)">Выбрать все</button><button class="icon-b" style="color:var(--danger)"><svg class="ic"><use href="#i-trash"/></svg></button></div>
+        <div class="scroll">
+          <div class="dimmed"><div class="strip" style="margin-top:12px"><div class="strip-head"><b>За две недели</b><span>12 записей</span></div><div class="bars"><i style="height:30%"></i><i class="z"></i><i style="height:60%"></i><i style="height:30%"></i><i class="z"></i><i style="height:90%"></i><i style="height:30%"></i><i class="z"></i><i style="height:60%"></i><i style="height:30%"></i><i style="height:30%"></i><i class="z"></i><i style="height:60%"></i><i class="t" style="height:100%"></i></div></div>
+          <div class="chips"><span class="chip on">Все</span><span class="chip">Дубли</span><span class="chip">Видео</span><span class="chip">С Live</span></div></div>
+          <div class="day">4 октября, суббота <span class="today">сегодня</span></div>
+          <div class="card sel"><div class="check on"><svg class="ic ic-s"><use href="#i-check"/></svg></div><div class="main"><b>Менуэт соль мажор <svg class="star"><use href="#i-star"/></svg></b><small>18:42 · 2:05 · видео</small></div></div>
+          <div class="card"><div class="check"></div><div class="main"><b>Запись</b><small>18:10 · 0:32</small></div></div>
+          <div class="card sel"><div class="check on"><svg class="ic ic-s"><use href="#i-check"/></svg></div><div class="main"><b>Осенний концерт · 24 октября</b><small>19:02 · 3:40 · выступление</small></div></div>
+          <div class="day">3 октября, пятница</div>
+          <div class="card"><div class="check"></div><div class="main"><b>Концерт ля минор, 1 ч.</b><small>08:05 · 3:12 · дубль</small></div></div>
+          <div class="card"><div class="check"></div><div class="main"><b>Этюд № 2, Вольфарт</b><small>07:40 · 1:15 · видео</small></div></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <h2>Плитка: все состояния (крупно)</h2>
+    <div class="states">
+      <div class="state"><div class="zoom"><div class="tile"><svg class="ic"><use href="#i-note"/></svg></div></div><b>Звук</b>круг со знаком — без изменений</div>
+      <div class="state"><div class="zoom"><div class="tile hollow"><svg class="ic"><use href="#i-note"/></svg></div></div><b>Без звука</b>контур — без изменений</div>
+      <div class="state"><div class="zoom"><div class="frame"><svg class="pic" viewBox="40 0 90 90"><use href="#sc-home" width="160" height="90"/></svg></div></div><b>Видео</b>кадр по центру</div>
+      <div class="state"><div class="zoom"><div class="frame"><svg class="pic" viewBox="0 17.5 90 90"><use href="#sc-portrait" width="90" height="160"/></svg></div></div><b>Вертикальное видео</b>полоса с 11 % по 67 % высоты</div>
+      <div class="state"><div class="zoom"><div class="frame"><svg class="ic"><use href="#i-cam"/></svg></div></div><b>Кадр читается</b>квадрат с камерой; кадр проявляется за 150 мс</div>
+      <div class="state"><div class="zoom"><div class="tile"><svg class="ic"><use href="#i-cam"/></svg></div></div><b>Миниатюры нет</b>прежний круг с камерой</div>
+      <div class="state"><div class="zoom"><div class="tile hollow"><svg class="ic"><use href="#i-cam"/></svg></div></div><b>Видео потеряно</b>прежний контур с камерой</div>
+      <div class="state"><div class="zoom"><div class="check on"><svg class="ic ic-s"><use href="#i-check"/></svg></div></div><b>Выбор</b>отметка той же ширины</div>
+    </div>
+  </div>
+
+  <div class="block">
+    <h2>Какой кадр: середина видео</h2>
+    <p>Видео со штатива начинается с руки у телефона и шага к пюпитру, а кончается шагом обратно. В середине уже играют.</p>
+    <div class="film">
+      <div class="shot"><svg viewBox="0 0 160 90"><use href="#sc-hand" width="160" height="90"/></svg><b>0 с</b>рука у телефона — до 0.92 миниатюра была этим кадром</div>
+      <div class="shot pick"><svg viewBox="0 0 160 90"><use href="#sc-home" width="160" height="90"/></svg><b>середина — берём</b>уже играют</div>
+      <div class="shot"><svg viewBox="0 0 160 90"><use href="#sc-back" width="160" height="90"/></svg><b>конец</b>шаг к телефону</div>
+    </div>
+    <p style="margin-top:16px">Середина тёмная (погас свет, затемнение между пьесами) — берётся первый кадр, тёмный и он — кадр на 1-й секунде (прежнее правило). Тёмные все — середина.</p>
+    <div class="film">
+      <div class="shot"><svg viewBox="0 0 160 90"><use href="#sc-dark" width="160" height="90"/></svg><b>середина — тёмная</b>пропускаем</div>
+      <div class="shot pick"><svg viewBox="0 0 160 90"><use href="#sc-stage" width="160" height="90"/></svg><b>0 с — берём</b>первый светлый</div>
+    </div>
+    <p style="margin-top:16px">Старые миниатюры (первый кадр) переделываются один раз при первом запуске новой версии, в фоне. Пока проход идёт, у видео прежняя камера; кадры встают все разом, когда переделаны все.</p>
+  </div>
+
+  <div class="block">
+    <h2>Рассмотрено и отклонено</h2>
+    <div class="cmp">
+      <div class="col">
+        <h4>Кадр 64 × 44, как у «Выступлений»</h4>
+        <div style="position:relative;background:var(--bg);padding:10px;border-radius:14px">
+          <span class="guide" style="left:74px"></span><span class="guide" style="left:98px"></span>
+          <div class="card"><div class="wide"><svg viewBox="0 3 160 90" preserveAspectRatio="xMidYMid slice"><use href="#sc-home" width="160" height="90"/></svg></div><div class="main"><b>Менуэт соль мажор</b><small>18:42 · 2:05 · видео</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+          <div class="card"><div class="tile"><svg class="ic"><use href="#i-note"/></svg></div><div class="main"><b>Запись</b><small>18:10 · 0:32</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+          <div class="card"><div class="wide"><svg viewBox="0 3 160 90" preserveAspectRatio="xMidYMid slice"><use href="#sc-stage" width="160" height="90"/></svg></div><div class="main"><b>Осенний концерт</b><small>19:02 · 3:40 · видео</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+        </div>
+        <p>Названия видео и звука начинаются на 24 dp врозь — край ломается в каждом смешанном списке, а отметка выбора на месте кадра двигала бы строку. Фигура при этом не крупнее: высота почти та же (44 против 40), выигрыш — только края комнаты, а у вертикального видео — даже меньше видно.</p>
+      </div>
+      <div class="col">
+        <h4>Кадр в круге 40</h4>
+        <div style="background:var(--bg);padding:10px;border-radius:14px">
+          <div class="card"><div class="round"><svg viewBox="35 0 90 90"><use href="#sc-home" width="160" height="90"/></svg></div><div class="main"><b>Менуэт соль мажор</b><small>18:42 · 2:05 · видео</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+          <div class="card"><div class="tile"><svg class="ic"><use href="#i-note"/></svg></div><div class="main"><b>Запись</b><small>18:10 · 0:32</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+          <div class="card"><div class="round"><svg viewBox="35 0 90 90"><use href="#sc-stage" width="160" height="90"/></svg></div><div class="main"><b>Осенний концерт</b><small>19:02 · 3:40 · видео</small></div><button class="more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+        </div>
+        <p>Круг с фотографией читается как аватар человека, а не как видео; форма перестаёт отличать видео от звука. Углы кадра срезаны — видно ещё меньше.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
