@@ -6,6 +6,7 @@ import com.violinjourney.app.core.audio.backing.IosBackingPcmReader
 import com.violinjourney.app.core.audio.fx.SoundMeters
 import com.violinjourney.app.core.audio.interruptionEndsInput
 import com.violinjourney.app.core.audio.routeChangeStopsSound
+import com.violinjourney.app.core.audio.takeForPlayback
 import com.violinjourney.app.core.concurrent.PlatformLock
 import com.violinjourney.app.core.concurrent.withLock
 import com.violinjourney.app.core.domain.backing.BackingConfig
@@ -47,13 +48,11 @@ import platform.AVFAudio.AVAudioFormat
 import platform.AVFAudio.AVAudioPCMBuffer
 import platform.AVFAudio.AVAudioPlayerNode
 import platform.AVFAudio.AVAudioSession
-import platform.AVFAudio.AVAudioSessionCategoryPlayback
 import platform.AVFAudio.AVAudioSessionInterruptionNotification
 import platform.AVFAudio.AVAudioSessionInterruptionReasonKey
 import platform.AVFAudio.AVAudioSessionInterruptionTypeKey
 import platform.AVFAudio.AVAudioSessionRouteChangeNotification
 import platform.AVFAudio.AVAudioSessionRouteChangeReasonKey
-import platform.AVFAudio.setActive
 import platform.Foundation.NSError
 import platform.Foundation.NSLog
 import platform.Foundation.NSNotificationCenter
@@ -479,8 +478,7 @@ class IosSessionPlayer internal constructor(
     }
 
     private fun takeForPlaying(session: AVAudioSession) {
-        session.setCategory(AVAudioSessionCategoryPlayback, null)
-        session.setActive(true, null)
+        session.takeForPlayback()
     }
 
     // NSLog takes Objective-C objects for its arguments: the line is made whole here, its percent signs doubled.

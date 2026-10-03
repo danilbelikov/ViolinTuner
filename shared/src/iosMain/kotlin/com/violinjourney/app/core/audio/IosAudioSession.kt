@@ -4,6 +4,8 @@ import com.violinjourney.app.core.concurrent.PlatformLock
 import com.violinjourney.app.core.concurrent.withLock
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.AVFAudio.AVAudioSession
+import platform.AVFAudio.AVAudioSessionCategoryPlayback
+import platform.AVFAudio.AVAudioSessionModeDefault
 import platform.AVFAudio.AVAudioSessionRouteChangeReasonOldDeviceUnavailable
 import platform.AVFAudio.AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
 import platform.AVFAudio.preferredIOBufferDuration
@@ -150,6 +152,17 @@ internal object IosAudioSession {
 
     /** How many use the session now; for tests. */
     val count: Int get() = users.users
+}
+
+/**
+ * Takes the session for playing a recording or a backing aloud. The mode is set too, not only the category: a microphone
+ * leaves the session in the measurement mode, which keeps across a change of the category alone and plays the
+ * loudspeaker much quieter — a take listened to after Live was barely heard.
+ */
+@OptIn(ExperimentalForeignApi::class)
+internal fun AVAudioSession.takeForPlayback() {
+    setCategory(AVAudioSessionCategoryPlayback, AVAudioSessionModeDefault, 0u, null)
+    setActive(true, null)
 }
 
 /**

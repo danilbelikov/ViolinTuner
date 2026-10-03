@@ -4,6 +4,7 @@ import com.violinjourney.app.core.audio.IosAudioSession
 import com.violinjourney.app.core.audio.asULong
 import com.violinjourney.app.core.audio.interruptionEndsInput
 import com.violinjourney.app.core.audio.routeChangeStopsSound
+import com.violinjourney.app.core.audio.takeForPlayback
 import com.violinjourney.app.core.domain.backing.AudioRoute
 import com.violinjourney.app.core.domain.backing.BackingOutput
 import com.violinjourney.app.core.io.PlatformFile
@@ -35,7 +36,6 @@ import platform.AVFAudio.AVAudioPlayer
 import platform.AVFAudio.AVAudioPlayerDelegateProtocol
 import platform.AVFAudio.AVAudioPlayerNode
 import platform.AVFAudio.AVAudioSession
-import platform.AVFAudio.AVAudioSessionCategoryPlayback
 import platform.AVFAudio.AVAudioSessionInterruptionNotification
 import platform.AVFAudio.AVAudioSessionInterruptionReasonKey
 import platform.AVFAudio.AVAudioSessionInterruptionTypeKey
@@ -50,7 +50,6 @@ import platform.AVFAudio.AVAudioSessionRouteChangeReasonKey
 import platform.AVFAudio.AVAudioTime
 import platform.AVFAudio.currentRoute
 import platform.AVFAudio.outputLatency
-import platform.AVFAudio.setActive
 import platform.Foundation.NSError
 import platform.Foundation.NSLog
 import platform.Foundation.NSNotificationCenter
@@ -162,8 +161,7 @@ internal class IosBackingPreview : BackingPreview {
     }
 
     private fun takeForPlaying(session: AVAudioSession) {
-        session.setCategory(AVAudioSessionCategoryPlayback, null)
-        session.setActive(true, null)
+        session.takeForPlayback()
     }
 }
 
