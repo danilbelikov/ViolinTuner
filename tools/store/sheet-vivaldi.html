@@ -1,0 +1,21 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;width:1240px;height:1754px;background:#f6f1e6;overflow:hidden}
+#p{position:absolute;left:70px;top:60px;width:1100px}
+#p svg{width:1100px}
+</style><script src="https://cdn.jsdelivr.net/npm/abcjs@6/dist/abcjs-basic-min.js"></script></head><body><div id="p"></div><script>
+const tune = `X:1
+T:Concerto in A minor
+T:I. Allegro
+C:A. Vivaldi, Op. 3 No. 6
+M:C
+L:1/16
+Q:"Allegro" 1/4=104
+K:Am
+!f!A2A2 A2A2 e2e2 e2e2 | (cBAB) (cde2) (dcBA) ^G2E2 | A2c2 e2a2 ^g2e2 B2^g2 | a2e2 c2A2 E4 z4 |
+!p!e2e2 e2e2 a2a2 a2a2 | (fedc) (dcBA) ^G2B2 e4 | (dcBA) (GFED) C2E2 A2c2 | B2^G2 E2^G2 A4 z4 |
+!f!c2c2 c2c2 g2g2 g2g2 | (edcB) (cBAG) F2A2 c4 | (BAGF) (EDCB,) C2E2 G2c2 | B2G2 D2G2 C4 z4 |
+!mf!(EFGA) (Bcde) (fedc) (BAGF) | (EFGA) (Bcde) f4 d4 | (DEFG) (ABcd) (edcB) (AGFE) | ^D2F2 B2d2 c4 B4 |
+!f!e2e2 e2e2 (edcB) (A^GAB) | c2A2 E2C2 A,4 z4 | !p!(e^fge) (^fgaf) (gab g) (abc'a) | b2^g2 e2B2 e4 z4 |
+!f!A2A2 A2A2 e2e2 e2e2 | (cBAB) (cde2) (dcBA) ^G2E2 | (ABcd) (e^fga) (b^gea) (^gfed) | c2B2 A2^G2 A4 z4 |]`;
+ABCJS.renderAbc('p', tune, {staffwidth: 1060, scale: 1.55, paddingtop: 10, paddingbottom: 0});
+</script></body></html>

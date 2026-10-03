@@ -1,0 +1,420 @@
+<!doctype html>
+<!--
+  The promo video, 1080 × 1920, 15 s: one page that draws any moment of it — render(t) — for render.js to capture at 30
+  frames a second. The screens are frames of the app recorded in the simulator (docs/store/listing.md, «Видео»); the
+  scenes change on the bar lines of the music (music.py, a bar is 2.5 s):
+    0–5     Live: the note goes from red through amber to green, the chips under the caption light up with it
+    5–7.5   the record button opens the analysis of a take: a light runs along the notes, the drifting note is marked
+    7.5–10  the notes fly into the bar of the journey on «Занятия»: minutes and clean notes become bars
+    10–12.5 the card of the road opens the journey, the road slides on to the home
+    12.5–15 the end card
+-->
+<html><head><meta charset="utf-8"><style>
+@font-face { font-family: Manrope; src: url('../../../app/src/main/res/font/manrope_variable.ttf'); font-weight: 200 800; }
+html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #0d0f12; }
+body { position: relative; font-family: Manrope, sans-serif; color: #f4f1fb; }
+#bg { position: absolute; inset: 0; }
+.caption { position: absolute; left: 40px; right: 40px; top: 96px; text-align: center; }
+.caption h1 { margin: 0; font-size: 66px; line-height: 1.1; font-weight: 800; letter-spacing: -1.4px; }
+.caption p { margin: 16px 0 0; font-size: 36px; line-height: 1.25; font-weight: 500; color: rgba(244,241,251,.72); }
+.caption em { font-style: normal; }
+.w { display: inline-block; white-space: pre; }
+#chips { position: absolute; left: 0; right: 0; top: 268px; display: flex; justify-content: center; gap: 14px; }
+.chip { font-size: 30px; font-weight: 700; padding: 10px 26px; border-radius: 99px; border: 2px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.05); color: rgba(244,241,251,.45); display: flex; align-items: center; gap: 12px; }
+.chip i { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+#phone { position: absolute; left: 176px; top: 360px; width: 700px; height: 1521px; padding: 14px; border-radius: 101px;
+  background: #08080b; box-shadow: 0 40px 120px rgba(0,0,0,.6), 0 0 0 3px rgba(255,255,255,.10), inset 0 0 0 2px rgba(255,255,255,.06);
+  transform-origin: 50% 40%; }
+#screen { position: relative; width: 700px; height: 1521px; border-radius: 87px; overflow: hidden; background: #000; }
+#screen img { position: absolute; left: 0; top: 0; width: 700px; height: 1521px; transform-origin: 0 0; }
+#screen canvas, #fx { position: absolute; left: 0; top: 0; pointer-events: none; }
+#end { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; text-align: center; }
+#end img { width: 240px; height: 240px; border-radius: 54px; box-shadow: 0 30px 90px rgba(0,0,0,.55), 0 0 120px rgba(170,140,255,.35); }
+#end h2 { margin: 56px 0 0; font-size: 92px; font-weight: 800; letter-spacing: -2px; }
+#end p { margin: 18px 0 0; font-size: 40px; font-weight: 500; color: rgba(244,241,251,.75); }
+#end .chips { display: flex; gap: 14px; margin-top: 40px; }
+#end .chips span { font-size: 30px; font-weight: 600; padding: 10px 26px; border-radius: 99px; color: #c3b2ff;
+  background: rgba(255,255,255,.07); border: 2px solid rgba(255,255,255,.10); }
+</style></head><body>
+<div id="bg"></div>
+<div class="caption" id="cap"><h1></h1><p></p></div>
+<div id="chips"></div>
+<div id="phone"><div id="screen">
+  <img id="a"><img id="b"><canvas id="over" width="700" height="1521"></canvas>
+</div></div>
+<canvas id="fx" width="1080" height="1920"></canvas>
+<div id="end"><img id="icon"><h2></h2><p></p><div class="chips"></div></div>
+<script>
+const P = new URLSearchParams(location.search);
+const FRAMES = P.get('frames');  // a folder of folders: live/0001.jpg …, as render.js extracts them
+const LANG = P.get('lang') || 'ru';
+const SRC_W = 760;  // the width of the extracted frames
+const S = 700 / SRC_W;  // frame px → screen px
+const FPS = 30;
+
+const TEXTS = {
+  ru: {
+    live: ['Видно, куда уходит *нота*', ''], chips: ['мимо', 'рядом', 'в строе'],
+    take: ['Каждая запись — *с разбором*', 'какая нота уходит и на сколько'],
+    practice: ['Занимайтесь *каждый день*', 'минуты и чистые ноты превращаются в такты'],
+    journey: ['Такты ведут *по залам мира*', 'Кремона · Милан · Зальцбург · Вена…'],
+    home: ['…и обставляют *ваш дом*', 'вещи из лавки и из поездок'],
+    end: ['Violin Journey', 'Интонационный тренажёр для скрипки', ['без рекламы', 'без аккаунта']],
+  },
+  en: {
+    live: ['See where the *note* goes', ''], chips: ['off', 'close', 'in tune'],
+    take: ['Every take, *analysed*', 'which note drifts, and by how much'],
+    practice: ['Practise *every day*', 'minutes and clean notes turn into bars'],
+    journey: ['Bars take you *round the world*', 'Cremona · Milan · Salzburg · Vienna…'],
+    home: ['…and furnish *your home*', 'things from the shop and from your travels'],
+    end: ['Violin Journey', 'An intonation trainer for the violin', ['no ads', 'no account']],
+  },
+};
+const T = TEXTS[LANG];
+const ZONE = { red: '#ff6b6b', amber: '#ffc659', green: '#5ee39a', none: '#9a96aa' };
+const THEME = {  // the background: its glow and its base, by scene
+  green: ['#1d5a40', '#10251c'], amber: ['#6d5420', '#2a2112'], violet: ['#4a3a8c', '#221b42'],
+  warm: ['#7a4f2a', '#2e2017'], end: ['#3d2f78', '#17132c'],
+  red: ['#6a2a2c', '#2a1416'],
+};
+
+// where things are on the frames (px of a 760-wide frame)
+const REC = [380, 1400];  // the record button of Live
+const LANE = [118, 785, 705, 1110];  // the notes of the take
+const DRIFT = [28, 1225, 732, 1333];  // «Что уходит»
+const SHARP_NOTE = [567, 1043];  // G#4, the note that drifts
+const NOTES = [[130,996],[160,996],[192,996],[224,996],[256,808],[288,808],[318,808],[350,808],[372,902],[388,947],[403,995],
+  [419,947],[434,902],[450,855],[473,808],[496,855],[512,902],[528,947],[543,995],[567,1043],[598,1089],[640,996],[690,996]];
+const BAR_LINE = [52, 1021, 708];  // the bar of the road on «Занятия»: x from, y, x to
+const STREAK = [548, 280, 705, 328];  // «30 дней»
+const CARD = [28, 663, 732, 1047];  // the card of the road
+
+// ---------- helpers
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lin = (t, a, b) => clamp((t - a) / (b - a));
+const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const out = x => 1 - Math.pow(1 - x, 3);
+const mix = (a, b, x) => a + (b - a) * x;
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const mixColor = (a, b, x) => { const p = hex(a), q = hex(b); return `rgb(${p.map((v, i) => Math.round(mix(v, q[i], x))).join(',')})`; };
+const frame = (clip, n) => `${FRAMES}/${clip}/${String(Math.max(1, Math.round(n))).padStart(4, '0')}.jpg`;
+const sx = x => x * S, sy = y => y * S;  // frame px → screen px
+const $ = id => document.getElementById(id);
+
+function styled(text) {
+  // words appear one after another; *…* is the accent, in the colour of the scene
+  const parts = text.split('*');
+  let html = '', n = 0;
+  parts.forEach((part, i) => part.split(/(\s+)/).forEach(word => {
+    if (!word) return;
+    if (/^\s+$/.test(word)) { html += ' '; return; }
+    html += `<span class="w" data-n="${n++}"${i % 2 ? ' data-accent="1"' : ''}>${word}</span>`;
+  }));
+  return html;
+}
+
+let shownCaption = null;
+function caption(key, t, t0, t1, accent) {
+  const [h, p] = key ? T[key] : ['', ''];
+  const cap = $('cap');
+  if (shownCaption !== key) {
+    cap.querySelector('h1').innerHTML = styled(h);
+    cap.querySelector('p').innerHTML = styled(p);
+    shownCaption = key;
+  }
+  const words = cap.querySelectorAll('.w');
+  words.forEach(w => {
+    const n = +w.dataset.n + (w.closest('p') ? 4 : 0);
+    const inX = out(lin(t, t0 + n * .05, t0 + n * .05 + .45));
+    const outX = lin(t, t1 - .3, t1);
+    w.style.opacity = inX * (1 - outX);
+    w.style.transform = `translateY(${(1 - inX) * 26 - outX * 14}px)`;
+    if (w.dataset.accent) w.style.color = accent;
+  });
+}
+
+function background(glow, base, tint) {
+  $('bg').style.background =
+    `radial-gradient(80% 50% at 50% 58%, ${tint || glow} 0%, transparent 72%),` +
+    `radial-gradient(130% 70% at 50% 0%, ${glow} 0%, ${base} 50%, #0d0f12 100%)`;
+}
+function themeAt(a, b, x) {
+  return [mixColor(THEME[a][0], THEME[b][0], x), mixColor(THEME[a][1], THEME[b][1], x)];
+}
+
+// the frames of Live, by the time of the video: the note slides from −35 back to −7 (the recorded flat drift, backwards),
+// then holds in tune while the ring fills with light
+function liveSource(f) {
+  if (f < 12) return 420;
+  if (f < 90) return 420 - (f - 12) * 1.3;
+  return 440 + (f - 90);
+}
+
+async function load(img, src) {
+  if (img.dataset.src === src) return;
+  img.dataset.src = src;
+  img.src = src;
+  await img.decode().catch(() => {});
+}
+
+// ---------- the moment t
+async function render(t) {
+  const f = Math.round(t * FPS);
+  const a = $('a'), b = $('b');
+  const over = $('over').getContext('2d'), fx = $('fx').getContext('2d');
+  over.clearRect(0, 0, 700, 1521);
+  fx.clearRect(0, 0, 1080, 1920);
+  const phone = $('phone');
+  let phoneY = 0, phoneScale = 1, phoneOpacity = 1;
+  a.style.cssText = ''; b.style.cssText = 'opacity:0';
+  $('chips').style.opacity = 0;
+  $('end').style.opacity = 0;
+  const loads = [];
+
+  if (t < 5) {
+    // ---- Live
+    const src = Math.round(liveSource(f));
+    loads.push(load(a, frame('live', src)));
+    const zone = ZONES[src - 1] || 'none';
+    const enter = out(lin(t, 0, .6));
+    phoneY = (1 - enter) * 90; phoneScale = .96 + .04 * enter; phoneOpacity = enter;
+    const [glow, base] = zone === 'green' ? THEME.green : zone === 'amber' ? THEME.amber : THEME.red;
+    background(glow, base, ZONE[zone] + '55');
+    caption('live', t, .2, 5.0, ZONE[zone]);
+    chips(t, zone);
+    if (t > 4.2) recordPress(fx, t - 4.2);
+  } else if (t < 7.5) {
+    // ---- the take: opened from the record button
+    loads.push(load(a, frame('live', 440 + 90 + (f - 150))), load(b, frame('analysis', 95)));
+    const open = ease(lin(t, 5.0, 5.65));
+    b.style.cssText = `opacity:1; clip-path: circle(${open * 1700}px at ${sx(REC[0])}px ${sy(REC[1])}px)`;
+    const [glow, base] = themeAt('green', 'amber', open);
+    background(glow, base);
+    caption('take', t, 5.25, 7.45, '#ffcf6b');
+    sweep(over, t);
+    drift(over, t);
+    if (t > 7.2) particles(fx, t, 0);
+  } else if (t < 10) {
+    // ---- «Занятия»: the notes become bars
+    const x = ease(lin(t, 7.5, 7.85));
+    loads.push(load(a, frame('analysis', 95)), load(b, frame('practice', 73 + (f - 225))));
+    a.style.opacity = 1 - x;
+    b.style.cssText = `opacity:${x}`;
+    const [glow, base] = themeAt('amber', 'violet', x);
+    background(glow, base);
+    caption('practice', t, 7.7, 9.95, '#c3b2ff');
+    particles(fx, t, 1);
+    barFill(over, t);
+    streak(over, t);
+    if (t > 9.75) loads.push(...zoomToCard(a, b, t, f));
+  } else if (t < 12.5) {
+    // ---- the journey, then on to the home
+    const x = ease(lin(t, 9.75, 10.35));
+    if (t < 10.35) loads.push(...zoomToCard(a, b, t, f));
+    else {
+      const slide = ease(lin(t, 11.15, 11.6));
+      loads.push(load(a, frame('journey', 100 + (f - 300))), load(b, frame('home', 100 + (f - 335))));
+      a.style.cssText = `transform: translateX(${-slide * 700}px)`;
+      b.style.cssText = `opacity:1; transform: translateX(${(1 - slide) * 700}px)`;
+      motionLines(over, slide);
+    }
+    const [glow, base] = themeAt('violet', 'warm', x);
+    background(glow, base);
+    if (t < 11.3) caption('journey', t, 10.0, 11.3, '#ffc98a');
+    else caption('home', t, 11.35, 12.45, '#ffc98a');
+    if (t > 12.2) leaving();
+  } else {
+    // ---- the end card
+    loads.push(load(a, frame('home', 100 + (f - 335))));
+    leaving();
+    caption(null, t, 0, 0, '#fff');
+    const x = ease(lin(t, 12.5, 13.1));
+    const [glow, base] = themeAt('warm', 'end', x);
+    background(glow, base);
+    endCard(t);
+  }
+
+  function leaving() {
+    const x = ease(lin(t, 12.2, 12.9));
+    phoneY = x * 260; phoneScale = 1 - .18 * x; phoneOpacity = 1 - x;
+  }
+  phone.style.transform = `translateY(${phoneY}px) scale(${phoneScale})`;
+  phone.style.opacity = phoneOpacity;
+  await Promise.all(loads);
+  await document.fonts.ready;
+}
+
+// ---------- effects
+function chips(t, zone) {
+  const box = $('chips');
+  if (!box.children.length) {
+    box.innerHTML = T.chips.map((c, i) => `<span class="chip" data-z="${['red', 'amber', 'green'][i]}"><i></i>${c}</span>`).join('');
+  }
+  const show = out(lin(t, .9, 1.4)) * (1 - lin(t, 4.6, 4.95));
+  box.style.opacity = show;
+  box.style.transform = `translateY(${(1 - show) * 16}px)`;
+  [...box.children].forEach(chip => {
+    const on = chip.dataset.z === zone;
+    const c = ZONE[chip.dataset.z];
+    chip.style.color = on ? '#0d0f12' : 'rgba(244,241,251,.45)';
+    chip.style.background = on ? c : 'rgba(255,255,255,.05)';
+    chip.style.borderColor = on ? c : 'rgba(255,255,255,.12)';
+    chip.style.boxShadow = on ? `0 0 40px ${c}88` : 'none';
+    chip.querySelector('i').style.background = on ? '#0d0f12' : c;
+  });
+}
+
+function phonePoint(x, y) {  // a point of the frame → the page, with the phone where it stands
+  return [176 + 14 + sx(x), 360 + 14 + sy(y)];
+}
+
+function recordPress(ctx, dt) {
+  // the record button is pressed: its dot swells, rings go out from it
+  const [x, y] = phonePoint(...REC);
+  for (let i = 0; i < 2; i++) {
+    const k = lin(dt, i * .18, .6 + i * .18);
+    if (k <= 0 || k >= 1) continue;
+    ctx.strokeStyle = `rgba(255,110,110,${(1 - k) * .9})`;
+    ctx.lineWidth = 6 * (1 - k) + 1;
+    ctx.beginPath(); ctx.arc(x, y, 40 + k * 160, 0, Math.PI * 2); ctx.stroke();
+  }
+  const pulse = Math.sin(Math.min(dt / .25, 1) * Math.PI);
+  ctx.fillStyle = `rgba(255,90,90,${.5 * pulse})`;
+  ctx.beginPath(); ctx.arc(x, y, 34 + 10 * pulse, 0, Math.PI * 2); ctx.fill();
+}
+
+function sweep(ctx, t) {
+  // a light runs along the notes of the take, left to right
+  const k = ease(lin(t, 5.7, 6.7));
+  if (k <= 0 || k >= 1) return;
+  const x = sx(mix(LANE[0], LANE[2], k));
+  const g = ctx.createLinearGradient(x - 90, 0, x + 20, 0);
+  g.addColorStop(0, 'rgba(255,255,255,0)');
+  g.addColorStop(.85, 'rgba(255,255,255,.22)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(x - 90, sy(LANE[1]), 110, sy(LANE[3] - LANE[1]));
+  ctx.fillStyle = 'rgba(255,255,255,.85)';
+  ctx.fillRect(x, sy(LANE[1]), 3, sy(LANE[3] - LANE[1]));
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+
+function drift(ctx, t) {
+  // the note that drifts: a ring on it, then the row that says how much
+  const k = out(lin(t, 6.45, 6.85)) * (1 - lin(t, 7.3, 7.5));
+  if (k <= 0) return;
+  const pulse = .5 + .5 * Math.sin((t - 6.45) * 9);
+  ctx.strokeStyle = `rgba(255,207,107,${k})`;
+  ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.arc(sx(SHARP_NOTE[0]), sy(SHARP_NOTE[1]), 26 + 6 * pulse, 0, Math.PI * 2); ctx.stroke();
+  const r = out(lin(t, 6.65, 7.0)) * (1 - lin(t, 7.3, 7.5));
+  ctx.strokeStyle = `rgba(255,207,107,${r})`;
+  ctx.lineWidth = 4;
+  ctx.shadowColor = 'rgba(255,207,107,.8)'; ctx.shadowBlur = 24 * r;
+  roundRect(ctx, sx(DRIFT[0]), sy(DRIFT[1]), sx(DRIFT[2] - DRIFT[0]), sy(DRIFT[3] - DRIFT[1]), 30);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+}
+
+// the notes of the take fly up and settle into the bar of the road: one flight, drawn on the page
+function particles(ctx, t, phase) {
+  const start = 7.2, end = 8.7;
+  NOTES.forEach(([nx, ny], i) => {
+    const t0 = start + i * .018, t1 = end - (NOTES.length - i) * .012;
+    const k = lin(t, t0, t1);
+    if (k <= 0 || k >= 1) return;
+    const [x0, y0] = phonePoint(nx, ny);
+    const [x1, y1] = phonePoint(mix(BAR_LINE[0], BAR_LINE[2] * .86, i / NOTES.length), BAR_LINE[1]);
+    const e = ease(k);
+    const lift = Math.sin(e * Math.PI) * (260 + (i % 5) * 40);
+    const x = mix(x0, x1, e), y = mix(y0, y1, e) - lift;
+    const c = i === 19 ? '#ffcf6b' : '#5ee39a';
+    const a = Math.min(1, k * 6, (1 - k) * 5);
+    ctx.fillStyle = c; ctx.globalAlpha = a;
+    ctx.shadowColor = c; ctx.shadowBlur = 22;
+    ctx.beginPath(); ctx.arc(x, y, 9 + 4 * Math.sin(e * Math.PI), 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+  });
+}
+
+function barFill(ctx, t) {
+  // where the notes land, the bar of the road glows and a light runs along it
+  const k = lin(t, 8.4, 9.4);
+  if (k <= 0 || k >= 1) return;
+  const glow = Math.sin(k * Math.PI);
+  const x = sx(mix(BAR_LINE[0], BAR_LINE[2], ease(k)));
+  ctx.shadowColor = '#c3b2ff'; ctx.shadowBlur = 30 * glow;
+  ctx.fillStyle = `rgba(195,178,255,${.55 * glow})`;
+  roundRect(ctx, sx(BAR_LINE[0]) - 4, sy(BAR_LINE[1]) - 10, sx(BAR_LINE[2] - BAR_LINE[0]) + 8, 20, 10);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = `rgba(255,255,255,${.9 * glow})`;
+  ctx.beginPath(); ctx.arc(x, sy(BAR_LINE[1]), 9, 0, Math.PI * 2); ctx.fill();
+}
+
+function streak(ctx, t) {
+  const k = lin(t, 8.9, 9.75);
+  if (k <= 0 || k >= 1) return;
+  const glow = Math.sin(k * Math.PI);
+  ctx.strokeStyle = `rgba(255,160,90,${glow})`;
+  ctx.lineWidth = 4;
+  ctx.shadowColor = '#ffa05a'; ctx.shadowBlur = 26 * glow;
+  roundRect(ctx, sx(STREAK[0]) - 4, sy(STREAK[1]) - 4, sx(STREAK[2] - STREAK[0]) + 8, sy(STREAK[3] - STREAK[1]) + 8, 28);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+}
+
+function zoomToCard(a, b, t, f) {
+  // the card of the road grows into the journey
+  const k = ease(lin(t, 9.75, 10.35));
+  const cx = sx((CARD[0] + CARD[2]) / 2), cy = sy((CARD[1] + CARD[3]) / 2);
+  // «Занятия» flies into the card until the card fills the screen, and the journey settles out of it
+  const zoom = 1 + k * 1.8, fade = lin(k, .45, .9), settle = 1.12 - .12 * out(lin(k, .4, 1));
+  a.style.cssText = `opacity:${1 - fade}; transform: translate(${cx}px, ${cy}px) scale(${zoom}) translate(${-cx}px, ${-cy}px)`;
+  b.style.cssText = `opacity:${fade}; transform: translate(350px, 500px) scale(${settle}) translate(-350px, -500px)`;
+  return [load(a, frame('practice', 73 + (f - 225))), load(b, frame('journey', Math.max(100, 100 + (f - 300))))];
+}
+
+function motionLines(ctx, slide) {
+  // the road slides on: a few light streaks across the screen while it moves
+  const k = Math.sin(slide * Math.PI);
+  if (k <= .01) return;
+  ctx.strokeStyle = `rgba(255,201,138,${.35 * k})`;
+  ctx.lineWidth = 3;
+  for (let i = 0; i < 7; i++) {
+    const y = 260 + i * 160 + (i % 2) * 40;
+    const len = 160 + (i % 3) * 90;
+    const x = 700 - slide * 900 - (i % 4) * 60;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + len, y); ctx.stroke();
+  }
+}
+
+function endCard(t) {
+  const end = $('end');
+  if (!end.dataset.ready) {
+    end.dataset.ready = 1;
+    $('icon').src = P.get('icon');
+    end.querySelector('h2').textContent = T.end[0];
+    end.querySelector('p').textContent = T.end[1];
+    end.querySelector('.chips').innerHTML = T.end[2].map(c => `<span>${c}</span>`).join('');
+  }
+  end.style.opacity = 1;
+  const parts = [$('icon'), end.querySelector('h2'), end.querySelector('p'), end.querySelector('.chips')];
+  parts.forEach((el, i) => {
+    const k = out(lin(t, 12.75 + i * .14, 13.35 + i * .14));
+    el.style.opacity = k;
+    el.style.transform = i === 0 ? `scale(${.7 + .3 * k})` : `translateY(${(1 - k) * 30}px)`;
+  });
+  const fade = lin(t, 14.6, 15);
+  document.body.style.filter = fade > 0 ? `brightness(${1 - fade})` : '';
+}
+
+window.ready = (async () => { await document.fonts.load('800 66px Manrope'); await document.fonts.load('500 36px Manrope'); })();
+</script>
+</body></html>

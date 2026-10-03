@@ -88,21 +88,63 @@ Ten languages: English, Russian, German, French, Spanish, Italian, Portuguese, K
 
 **What's new (1.0)** — `First release. Play, listen to yourself and set off on the journey.`
 
-## Скриншоты — готовы 24.09.2026
+## Скриншоты
 
-`docs/store/screenshots/<ru|en>/` — кадры 1080 × 2160 (Google Play берёт не длиннее 2:1) с подписью сверху, загружать по порядку номеров. Исходные снимки без подписей — `screenshots/raw/`; подписи — в `tools/store/frames.py`.
+### Русский, новый дизайн — 03.10.2026
 
-**Русский, 8 кадров** — история: слышу ноту → занятия это игра → музыка, которую я храню.
-1. Live «в строе» — «Улучшайте точность» · проверяйте каждую ноту — цвет виден издалека
-2. Итог занятия «+96 тактов» — «Занятия — это игра» · за минуты и чистые ноты — такты
-3. Путешествие, Вена — «Путешествуйте по залам мира» · такты везут вас из города в город
-4. Дом — «Обставляйте свой дом» · вещи из лавки и из поездок
-5. Репертуар: время по элементам, разделы — «Весь репертуар под рукой» · произведения, гаммы, этюды — и время на каждое
-6. Произведение с тремя дублями и ростом 64 → 81 % — «Записывайте дубли» · и смотрите, как растёт чистота
-7. «Звук» дубля, «Камерный зал», эквалайзер — «Обрабатывайте звук» · эквалайзер, компрессор, зал — и сразу «Поделиться»
-8. «Настройка», зафиксирована A — «Настраивайте скрипку» · четыре струны, авто или с фиксацией
+`docs/store/screenshots/ru/` — 10 кадров 1080 × 1920 (9:16: так просит RuStore, берёт и Google Play), PNG до 1,1 МБ (лимит RuStore — 3 МБ), загружать по порядку номеров. Исходные снимки эмулятора — `screenshots/raw/ru-v2/`; подписи и фон — в `tools/store/frames.py`. Снимки идут целиком, без выносок и приближений кусков интерфейса (так решил владелец 03.10).
 
-**Английский, 8 кадров** — та же история, те же экраны.
+История: первые три кадра — то, ради чего скачивают (видно фальшь, понятно без вглядывания, разбор записи); дальше тюнер, занятия, путешествие и дом; в конце репертуар, произведение с дублями и события. Итог занятия «+90 тактов» уступил место репертуару: в RuStore не больше 10 кадров.
+
+1. Live «в строе +2» — «Фальшь видно **сразу**» · поставьте телефон на пюпитр и играйте · плашки «без рекламы», «без аккаунта»
+2. Три телефона с Live рядом: зелёный, янтарный, красный — «Не нужно **вглядываться**» · цвет виден краем глаза, пока вы смотрите в ноты; «В строе — до ±8 центов», «Чуть выше — от 8 до 20», «Мимо — дальше 20»
+3. Разбор дубля 81 %, лента нот, «G#4 на струне D +14 ц» — «Разбор каждой **записи**» · какая нота уходит и на сколько
+4. «Настройка», A зафиксирована — «Тюнер для **скрипки**» · G, D, A, E — струна находится сама
+5. «Занятия»: 120 ч, «Сегодня 45 мин», неделя 4 ч 30 мин, «30 дней» — «Занимайтесь **каждый день**» · таймер, неделя и серия дней подряд
+6. Путешествие, Вена — «Путешествуйте по **залам мира**» · Кремона, Вена, Париж, Токио — 16 остановок
+7. Дом — «Обставьте **свой дом**» · вещи из лавки и из поездок
+8. «Репертуар» плитками: выучено 4 из 12, время по элементам — «Весь репертуар — **под рукой**» · произведения, гаммы, этюды, штрихи и сколько времени на каждое
+9. Концерт Вивальди: страница нот, заметка, дубли 68 → 81 → 93 % — «Слышно, как растёт **чистота**» · ноты, заметки и дубли к каждому произведению
+10. Календарь октября: уроки по вторникам, репетиция, концерт — «Уроки и концерты — **в календаре**» · программа выступления и записи с него
+
+Запасные снимки в `raw/ru-v2/`: «Звук» с «Камерным залом» (`11-sound`), разбор 93 % (`09a-take93`), итог занятия «+90 тактов» (`05-recap`), «Занятия» с Веной (`04b-practice-vienna`), лавка (`07b-shop`), экран концерта (`10b-event`).
+
+Как переснять (только эмулятор; данные `.debug` заменяются — сперва архив `run-as … tar`, см. память об эмуляторе):
+1. `./gradlew :app:assembleDebug -PfakePitch=true`, поставить, пройти онбординг, язык приложения — `ru`. На Live записать одну запись (≈ 30 с): из неё засев берёт длительность дублей.
+2. `python3 tools/store/seed.py ru` — 157 дней занятий, до вчера 119 ч 15 мин и серия 29 дней, дорога до Вены, 15 вещей, репертуар из 12 (выучено 4) с подходами, страница нот Вивальди (`sheet-vivaldi.jpg`, набрана abcjs из `sheet-vivaldi.html`), три дубля с синтезированным звуком и разбором мелодии (68, 81, 93 %; G#4 уходит выше), урок каждый вторник, репетиция и «Осенний концерт» через три недели, весенний концерт в прошлом.
+3. Демо-режим строки состояния (`settings put global sysui_demo_allowed 1`, `am broadcast -a com.android.systemui.demo -e command enter`, `clock -e hhmm 0900`, `battery -e level 100`, `network -e wifi show -e level 4 -e fully true`, `notifications -e visible false`). Эмулятор в демо-режиме рисует второй значок Wi‑Fi — `frames.py` закрашивает его цветом строки состояния (`EXTRA_WIFI`), сырые снимки не трогает.
+4. Итог: «Начать занятие», `python3 tools/store/session.py 45` (сдвигает начало в DataStore и перезапускает), «Закончить занятие» → «Сохранить» — 45 мин, +90 тактов, 120 ч, 30 дней подряд, до Праги ещё 250; снимать через 3 с, когда докрутятся числа. В доме — «Забрать» у первого подарка.
+5. Снимки — `adb exec-out screencap -p` в `screenshots/raw/ru-v2/` под именами из `frames.py`; Live — серией (фейковый звук сам ходит по зелёному, янтарному и красному), из неё же кадры для трёх колец; в «Настройке» зафиксировать A; «Звук» — у дубля 81 % пресет «Камерный зал».
+6. `python3 tools/store/frames.py ru` (или `ru 01 03` — только эти кадры).
+7. Вернуть данные из архива, `am broadcast … -e command exit`, `emu avd snapshot save default_boot`.
+
+### App Store, английский — 03.10.2026
+
+`docs/store/screenshots/appstore-en/` — 10 кадров 1320 × 2868 (6,9″ iPhone — обязательный размер App Store, меньшие он уменьшает сам), PNG до 1,3 МБ. Снято приложением iOS в симуляторе iPhone 17 Pro Max, а не эмулятором Android: в App Store не должно быть чужой платформы. Исходники — `screenshots/raw/en-ios/`, генератор — `python3 tools/store/frames.py en appstore`. Порядок и снимки те же, что у русских, кроме 10-го: календарь на iPhone виден только после прокрутки, а симулятор без касаний не прокручивает, поэтому там экран концерта. Подписи — британским английским, как в самом приложении («Programme», «learnt»).
+
+1. Intonation you can **see** · put your phone on the stand and play · no ads, no account
+2. No need to **stare** · you catch the colour out of the corner of your eye while reading the music; In tune — within ±8 cents, A bit sharp — 8 to 20 cents, Off — beyond 20 cents
+3. Every **take** analysed · which note drifts, and by how much
+4. A tuner made for **violin** · G, D, A, E — it finds the string itself
+5. Practise **every day** · a timer, your week and a streak of days
+6. Travel the world's **concert halls** · Cremona, Vienna, Paris, Tokyo — 16 stops
+7. Furnish **your home** · things from the shop and from your travels
+8. Your whole repertoire **at hand** · pieces, scales, études, bow strokes and the time spent on each
+9. Watch your intonation **improve** · sheet music, notes and takes for every piece
+10. Get ready for **your concert** · the programme, notes and recordings in one place
+
+Запасные в `raw/en-ios/`: «Performances» (`10d-performances`), прошедший концерт (`10e-past`).
+
+Как переснять:
+1. На эмуляторе — шаги 1–4 русских с `seed.py en` (язык приложения `en`), архив данных `run-as … tar` до и после.
+2. Собрать iOS (`xcodebuild … -configuration Debug -sdk iphonesimulator`, CLAUDE.md), поставить в симулятор iPhone 17 Pro Max, запустить один раз. Симулятор — английский (`defaults write -g AppleLanguages -array en`, `AppleLocale en_US`, перезагрузка — иначе часы «09:41»), строка состояния — `simctl status_bar … override --time 9:41 --dataNetwork wifi --wifiMode active --wifiBars 3 --cellularMode notSupported --batteryState discharging --batteryLevel 100`, микрофон — `simctl privacy … grant microphone`.
+3. Данные с эмулятора — в `Library/Application Support/` контейнера: `violin.db` (после `wal_checkpoint`, `journal_mode=DELETE`), `user_settings.preferences_pb` из `files/datastore/`, папки `sessions`, `repertoire`, `waveforms`, `profile`, `backings` из `files/`.
+4. Снимки — `simctl launch … <аргументы>`, через 7–9 с `simctl io … screenshot`: Live — `-openRoute live -fakeScenario IN_TUNE` (`01-live`, `02-green`) и `DRIFT_FLAT` (`02-red`); янтарный — `-fakeScenario DEMO` и серия снимков с 3,5 с, кадр «sharp +15» (`02-amber`); `-liveMode tuning -fakeScenario IN_TUNE` (`03-tune`); без аргументов — «Practice» (`04-practice`); `-openRoute journey | home | repertoire | piece/<id Вивальди> | session/<id дубля 81 %> | event/<id «Autumn concert»>`.
+
+### Google Play, английский — старый дизайн, 24.09.2026
+
+`docs/store/screenshots/en/` — 8 кадров 1080 × 2160 прежнего дизайна; переснять тем же порядком, как русские (App Store — отдельный набор выше).
+
 1. Sharpen your intonation · check every note — the colour shows from afar
 2. Practice is a game · minutes and clean notes earn you bars
 3. Travel the world's concert halls · bars carry you from city to city
@@ -112,19 +154,22 @@ Ten languages: English, Russian, German, French, Spanish, Italian, Portuguese, K
 7. Polish the sound · equaliser, compressor, hall — then share it
 8. Tune your violin · four strings, automatic or locked
 
-Как переснять (только эмулятор, база `.debug` заменяется):
-1. `./gradlew :app:assembleDebug -PfakePitch=true`, поставить, пройти онбординг; `adb shell cmd locale set-app-locales com.violinjourney.app.debug --locales ru-RU` (или `en-US`).
-2. Записать на Live одну запись (≈ 30 с) — из неё засев делает дубли. `python3 tools/store/seed.py ru` (или `en`) — 64 дня занятий, серия 27 дней, уровень 5, дорога до Вены, 15 вещей в доме, репертуар с подходами за 30 дней, три дубля «Концерта ля минор» с синтезированным звуком; в доме нажать «Забрать» у первого подарка.
-   - Итог занятия с тактами: начать занятие на Live, остановить приложение, сдвинуть `practice_started_at` в `files/datastore/user_settings.preferences_pb` на ~45 мин назад (лист «Закончить» не даёт выставить больше прошедшего), запустить, «Закончить занятие» → «Сохранить».
-   - «Звук»: у лучшего дубля — «Звук» → пресет «Камерный зал» → раскрыть эквалайзер.
-3. `adb shell wm size 1080x2160` и демо-режим строки состояния (`am broadcast -a com.android.systemui.demo -e command enter`, часы `clock -e hhmm 0900`, `battery -e level 100`, `network -e wifi show -e level 4 -e fully true`, `notifications -e visible false`).
-4. Снимки — `adb exec-out screencap -p` в `screenshots/raw/<язык>/NN-имя.png`; Live проходит «в строе → выше → ниже → вибрато → тишина → шум» за 24 с — снимать серией и выбирать.
-5. `python3 tools/store/frames.py ru` (или `en`) — подписи (они в самом скрипте).
-6. Вернуть: `wm size reset`, `am broadcast … -e command exit`.
-
-Экрана разбора одной записи нет: сборка с фейковым звуком играет только A4, разбор выходит бедным. Настоящий разбор снимается на телефоне со скрипкой.
-
 Иконка 512 и баннер 1024×500 — `docs/store/icon-512.png`, `feature-graphic-ru.png`, `feature-graphic-en.png`.
+
+## Видео
+
+`docs/store/video/promo-ru.mp4` — 15 с, 1080 × 1920, 30 кадров/с, H.264 + AAC (03.10.2026). Без голоса: подписи и лёгкая музыка, синтезированная `tools/store/promo/music.py` (своя — без чужих лицензий). Сцены меняются по тактам музыки (такт 2,5 с) и переходят одна в другую:
+1. 0–5 с — Live: нота идёт от красного «ниже −35» через янтарный в зелёный «в строе», под подписью «Видно, куда уходит нота» загораются чипы «мимо · рядом · в строе» в цвет кольца; нажатие кнопки записи.
+2. 5–7,5 с — от кнопки записи кругом раскрывается разбор дубля 81 %: по нотам бежит свет, G#4 и строка «Что уходит» обводятся — «Каждая запись — с разбором».
+3. 7,5–10 с — ноты разбора взлетают и ложатся в полосу пути на «Занятиях», полоса и «30 дней» вспыхивают — «Занимайтесь каждый день».
+4. 10–12,5 с — карточка пути раскрывается в путешествие (Вена), дорога уезжает вбок к дому — «Такты ведут по залам мира», «…и обставляют ваш дом».
+5. 12,5–15 с — значок, «Violin Journey», «Интонационный тренажёр для скрипки», «без рекламы · без аккаунта».
+
+Как пересобрать:
+1. Русские данные магазина (шаги 1–4 русских скриншотов) перенести в симулятор iPhone 17 Pro Max, как для App Store, симулятор — на русском (`AppleLanguages ru`, `AppleLocale ru_RU`, перезагрузка), микрофон разрешён.
+2. Клипы — `simctl io … recordVideo` с запуска приложения (эмулятор Android пишет ~11 кадров/с — дёргано): `live` 30 с с `-openRoute live -fakeScenario DEMO`, `practice` 6 с без аргументов, `journey` 7 с, `home` 7 с, `analysis` 6 с с `-openRoute session/<id дубля 81 %>`.
+3. Кадры — ffmpeg (`imageio_ffmpeg.get_ffmpeg_exe()`): `-vf fps=30,scale=760:-2` в `<папка>/<клип>/%04d.jpg`; Dynamic Island закрасить цветом строки состояния (прямоугольник 262,18–498,94); зоны Live по кадрам — `live-zones.json` (цвет слова статуса). Номера кадров в `promo.html` (`liveSource`, смещения клипов) подобраны под эти записи — после пересъёмки сверить.
+4. `python3 tools/store/promo/music.py music.wav`, затем `node tools/store/promo/render.js ru <папка> music.wav docs/store/video/promo-ru.mp4` (Chrome без окна по DevTools, ~40 с); `--only 4.5,6.2` — отдельные моменты картинками. Английские подписи уже есть (`TEXTS.en`), нужны английские клипы.
 
 ## Прочее для обеих консолей
 
