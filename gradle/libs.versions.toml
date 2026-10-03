@@ -19,6 +19,9 @@ room = "2.8.5"
 camerax = "1.6.2"
 # anonymous statistics (spec 3.34); agreed by the owner
 appmetrica = "8.5.1"
+# «Видео с нотами» (spec 3.37): Transformer encodes the picture again with the notes drawn over it; agreed by the owner
+# 2026-10-03. The version CameraX already brings media3-common and media3-muxer at — bump it together with camerax.
+media3 = "1.9.0"
 # Compose Multiplatform for the code Android and iOS share; agreed by the owner. 1.10.2 and material3
 # 1.9.0 are the ones that resolve on Android to exactly the androidx Compose of composeBom (ui 1.10.4,
 # material3 1.4.0): moving to them changes nothing in the Android app. Bump them together with the BOM.
@@ -76,6 +79,9 @@ androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", 
 androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }
 androidx-camera-video = { group = "androidx.camera", name = "camera-video", version.ref = "camerax" }
 androidx-camera-compose = { group = "androidx.camera", name = "camera-compose", version.ref = "camerax" }
+androidx-media3-common = { group = "androidx.media3", name = "media3-common", version.ref = "media3" }
+androidx-media3-effect = { group = "androidx.media3", name = "media3-effect", version.ref = "media3" }
+androidx-media3-transformer = { group = "androidx.media3", name = "media3-transformer", version.ref = "media3" }
 compose-mp-runtime = { group = "org.jetbrains.compose.runtime", name = "runtime", version.ref = "composeMultiplatform" }
 compose-mp-foundation = { group = "org.jetbrains.compose.foundation", name = "foundation", version.ref = "composeMultiplatform" }
 compose-mp-ui = { group = "org.jetbrains.compose.ui", name = "ui", version.ref = "composeMultiplatform" }

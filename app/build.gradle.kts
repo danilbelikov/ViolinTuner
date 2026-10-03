@@ -129,6 +129,14 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.media3.common)
+    // Lottie (and the AppCompat it brings) serves only LottieOverlay of media3-effect, which «Видео с нотами» does not use
+    implementation(libs.androidx.media3.effect) {
+        exclude(group = "com.airbnb.android", module = "lottie")
+    }
+    implementation(libs.androidx.media3.transformer) {
+        exclude(group = "com.airbnb.android", module = "lottie")
+    }
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
