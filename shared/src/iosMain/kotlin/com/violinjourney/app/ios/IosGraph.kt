@@ -24,6 +24,10 @@ import com.violinjourney.app.core.audio.playback.VideoPictureFactory
 import com.violinjourney.app.core.audio.recording.IosAacEncoder
 import com.violinjourney.app.core.audio.recording.PcmEncoderFactory
 import com.violinjourney.app.core.audio.share.IosSoundRenderer
+import com.violinjourney.app.core.recording.overlay.IosNotesVideoRenderer
+import com.violinjourney.app.core.recording.overlay.IosOverlayText
+import com.violinjourney.app.core.recording.overlay.NotesVideoConfig
+import com.violinjourney.app.core.recording.overlay.NotesVideoRenderer
 import com.violinjourney.app.core.backup.BackupConfig
 import com.violinjourney.app.core.backup.BackupManager
 import com.violinjourney.app.core.backup.DataLayout
@@ -196,6 +200,9 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val shareFiles = IosShareFiles(io)
     val housekeeping = Housekeeping(sessions, waveforms, avatarFiles, profiles, shareFiles, repertoire, backings, backingPcm, clock, io)
     val renderer = IosSoundRenderer(soundConfig, io)
+    val notesVideoConfig = NotesVideoConfig()
+    /** «Видео с нотами» (spec 3.37): the picture encoded again with the notes drawn into its frames. */
+    val notesVideoRenderer: NotesVideoRenderer = IosNotesVideoRenderer(IosOverlayText::load, notesVideoConfig, io)
     val renderSpeed = RenderSpeed()
 
     // A copy of the data (spec 3.20): the same manager as on Android, over the files and the pickers of iOS.

@@ -134,6 +134,9 @@ class NotesVideoRendererTest {
         assertTrue(render(source, target))
         val frame = frameAt(target, 1_000, keep = "video-turned-1s")
         assertTrue("shown standing: ${frame.width} × ${frame.height}", frame.height > frame.width)
+        // the picture itself is there, above the shade: grey, not the black of a frame it fell out of
+        val above = frame.getPixel(frame.width / 2, frame.height / 5)
+        assertTrue("the picture shows: ${Integer.toHexString(above)}", luminance(above) > PICTURE)
         val geometry = NotesOverlayGeometry(frame.width.toFloat(), frame.height.toFloat(), config)
         assertTrue(geometry.portrait)
         val (low, high) = NotesOverlays.heights(listOf(69), config)
@@ -175,5 +178,8 @@ class NotesVideoRendererTest {
 
         /** A frame of the test video and a frame of the summary. */
         const val FRAME_SLACK_MS = 150L
+
+        /** The test picture is mid grey wherever the frame count puts it: well above black. */
+        const val PICTURE = 0.12
     }
 }
