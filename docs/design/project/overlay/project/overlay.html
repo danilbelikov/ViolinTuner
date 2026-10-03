@@ -22,6 +22,8 @@ canvas { display: block; border-radius: 10px; box-shadow: 0 0 0 1px #2c2b36; bac
 .portrait { width: 300px; height: 533px; }
 .landscape { width: 560px; height: 315px; }
 .square { width: 360px; height: 360px; }
+.crop { width: 324px; height: 397px; }
+.crop + .cap { max-width: 324px; }
 /* the sheet «Поделиться», 360 dp wide, R1 / R5 */
 .sheet { width: 360px; background: var(--container); border-radius: 28px 28px 0 0; padding: 10px 16px 16px; box-shadow: 0 0 0 1px #2c2b36; }
 .handle { width: 32px; height: 4px; border-radius: 2px; background: var(--ter); opacity: .5; margin: 0 auto 14px; }
@@ -59,28 +61,30 @@ code { font-size: 12px; color: var(--primary); }
 </head>
 <body>
 <h1>Видео с нотами</h1>
-<p>Макет к spec 3.37 и 5.30 — выбранные владельцем варианты B (лента нот) и D (итог) из <code>docs/ideas/video-overlay/mockup.html</code>, в точных размерах. Кадры нарисованы в настоящем разрешении (1080 × 1920, 1920 × 1080, 1080 × 1080) и уменьшены. Всё меряется в <b>u</b> — сотой доле короткой стороны кадра. Нота «Менуэт соль мажор» выдумана; фон — условная картинка видео.</p>
+<p>Макет к spec 3.37 и 5.30 (черновик 0.90) — выбранные владельцем варианты B (лента нот) и D (итог) из <code>docs/ideas/video-overlay/mockup.html</code>, в точных размерах; с 0.90 — отклонение в ярлыке, рассыпание у черты, заставка с названием и подпись приложения в итоге. Кадры нарисованы в настоящем разрешении (1080 × 1920, 1920 × 1080, 1080 × 1080) и уменьшены. Всё меряется в <b>u</b> — сотой доле короткой стороны кадра. Нота «Менуэт соль мажор» выдумана; фон — условная картинка видео.</p>
 
 <h2>1. Лента нот во время видео</h2>
 <div class="row">
   <div><canvas id="portrait" class="portrait" width="1080" height="1920"></canvas>
-    <div class="cap">Портрет 1080 × 1920, t = 7,2 с. Черта — середина кадра; ноты едут справа налево со скоростью 11 u/с (≈ 9 с на ширину). Нота под чертой — полная, остальные — 0,62; над чертой — ярлык текущей ноты цветом её зоны. Цвет капсулы — зона среднего отклонения ноты, как на ленте экрана записи. Подпись внутри — только где влезает. Бейдж — балл записи.</div></div>
+    <div class="cap">Портрет 1080 × 1920, t = 12,2 с. Черта — середина кадра; ноты едут справа налево со скоростью 11 u/с (≈ 9 с на ширину). Справа от черты — что впереди: нота под чертой полная, остальные — 0,62. Слева капсул нет: доехав до черты, нота рассыпается пылью цвета своей зоны (раздел 6). Над чертой — ярлык текущей ноты: название цветом зоны, стрелка и среднее отклонение ноты — «F#4 ↑ +14», «рядом». Цвет капсулы — зона среднего отклонения ноты, как на ленте экрана записи. Подпись внутри — от начала видимой части капсулы и только пока та её вмещает: обрезков букв у черты нет. Бейдж — «Анализ игры» с крутилкой (оборот в секунду), правее — приглушённо «Анализируй свою игру в приложении Violin Journey», в портрете в две строки.</div></div>
   <div><canvas id="landscape" class="landscape" width="1920" height="1080"></canvas>
-    <div class="cap">Landscape 1920 × 1080, тот же момент: полоса ниже (18 u), скорость та же — на ширину ≈ 16 с.</div>
+    <div class="cap">Landscape 1920 × 1080, t = 8,5 с: «C5 ↓ −14». Полоса ниже (18 u), скорость та же — на ширину ≈ 16 с.</div>
     <div style="height:16px"></div>
     <canvas id="square" class="square" width="1080" height="1080"></canvas>
-    <div class="cap">Квадрат 1080 × 1080 — по правилам портрета.</div></div>
+    <div class="cap">Квадрат 1080 × 1080, t = 3,6 с — по правилам портрета. Нота в строе: вместо стрелки точка — «G4 ● +3».</div></div>
 </div>
 
 <h2>2. Итог — 3 секунды после конца видео</h2>
 <div class="row">
   <div><canvas id="cardP" class="portrait" width="1080" height="1920"></canvas>
-    <div class="cap">Последний кадр стоит, темнеет за 400 мс до 0,9, поверх — итог. Видео становится на 3 с длиннее; игра ничем не закрыта.</div></div>
+    <div class="cap">Последний кадр стоит, темнеет за 400 мс до 0,9, поверх — итог. Видео становится на 3 с длиннее; игра ничем не закрыта. Внизу — подпись приложения: значок и «Анализируй свою игру в приложении Violin Journey»; блок итога — по центру того, что над ней.</div></div>
   <div><canvas id="cardL" class="landscape" width="1920" height="1080"></canvas>
-    <div class="cap">Landscape: колонка итога 84 u по центру.</div>
+    <div class="cap">Landscape: колонка итога 84 u по центру, подпись — 4 u от низа.</div>
     <div style="height:16px"></div>
     <canvas id="cardL2" class="landscape" width="1920" height="1080"></canvas>
     <div class="cap">Без прошлого дубля и без «уходящих» нот: строк две — «Лучшая нота» и «Что уходит · ничего».</div></div>
+  <div><canvas id="cardDe" class="portrait" width="1080" height="1920"></canvas>
+    <div class="cap">Немецкий: «Analysiere dein Spiel in der App Violin Journey». При 2,8 u и русская (≈ 73,5 u), и немецкая строка влезают в место под текст — 75 u (колонка 84 − значок 7 − зазор 2); что длиннее, переносится по словам на вторую строку (межстрочный 3,9 u), «Violin Journey» не разрывается, значок — по центру двух строк. Название записи — как его назвал человек.</div></div>
 </div>
 
 <h2>3. «Поделиться» видео-дубля</h2>
@@ -123,13 +127,40 @@ code { font-size: 12px; color: var(--primary); }
 <tr><th>Что</th><th>Портрет и квадрат</th><th>Landscape</th></tr>
 <tr><td>Затемнение снизу</td><td>65 u: прозрачное → чёрный 0,45 на 35 % → 0,78 у низа</td><td>47 u, те же стопы</td></tr>
 <tr><td>Полоса нот</td><td>30 u высотой; низ — 15,2 u от низа кадра</td><td>18 u; низ — 13,6 u от низа</td></tr>
-<tr><td>Бейдж</td><td>7,2 u, поля 2,6 / 2,8 u, точка 1,8 u цвета «в строе», зазор 1,4 u; текст 3,4 u, 700, белый; стекло #131318 · 0,72; отступ 5 u слева и снизу</td><td>отступ 4 u</td></tr>
-<tr><td>Нота</td><td colspan="2">капсула 4,4 u; зазор 0,6 u; подпись 2,8 u, 800, #0B0B10, отступ 1,6 u — только если подпись + 3,2 u влезает; под чертой — 1,0, остальные — 0,62</td></tr>
+<tr><td>Бейдж</td><td>7,2 u, поля 2,6 / 2,8 u, крутилка (с 0.90) — дуга 270°, 2,2 u, линия 0,45 u, цвета «в строе», оборот 1000 мс; зазор 1,4 u; текст «Анализ игры» 3,4 u, 700, белый; правее через 2,4 u — строка приложения 2,6 u, 600, белый 0,45 («Violin Journey» — 800, 0,6), межстрочный 3,2 u, до 5 u от правого края, не больше двух строк; стекло #131318 · 0,72; отступ 5 u слева и снизу</td><td>отступ 4 u</td></tr>
+<tr><td>Нота</td><td colspan="2">капсула 4,4 u; зазор 0,6 u; подпись 2,8 u, 800, #0B0B10, отступ 1,6 u — только если подпись + 3,2 u влезает; под чертой — 1,0, остальные — 0,62; с 0.90 рисуется только правее черты, подпись стоит от начала видимой части и видна, пока та её вмещает</td></tr>
 <tr><td>Высота</td><td colspan="2">диапазон записи ± 1 полутон, не уже 8 полутонов (расширяется вокруг середины)</td></tr>
-<tr><td>Черта и ярлык</td><td colspan="2">черта — середина кадра, 0,5 u, белая 0,9, от низа ярлыка до 1,5 u ниже полосы; ярлык — стекло, 6,4 u, ширина max(10,24 u; текст + 4 u), низ на 1,2 u выше полосы, текст 3,6 u, 800, цветом зоны; удержание 300 мс, проявление 150 мс</td></tr>
+<tr><td>Черта и ярлык</td><td colspan="2">черта — середина кадра, 0,5 u, белая 0,9, от низа ярлыка до 1,5 u ниже полосы; ярлык — стекло, 6,4 u, ширина max(10,24 u; строка + 4 u), низ на 1,2 u выше полосы, строка по центру черты; удержание 300 мс, проявление 150 мс</td></tr>
+<tr><td>Ярлык с отклонением (0.90)</td><td colspan="2">название 3,6 u, 800, цветом зоны; через 1,4 u — стрелка 2,6 u цветом зоны (вверх / вниз) или точка 1,6 u цвета «в строе»; через 0,8 u — среднее ноты, округлённое, со знаком («+12», «−14», «0»), 3,2 u, 700, белый 0,75, без «ц»</td></tr>
+<tr><td>Рассыпание (0.90)</td><td colspan="2">отрезок капсулы 0,4 u → 3 частицы (около 60 на кадре) в момент, когда он доходит до черты; жизнь 700 мс; старт — у черты, высота — случайная внутри капсулы; скорость −11 u/с (лента) + своя −4…0 u/с по x, −6…+6 u/с по y, падение 14 u/с²; квадрат 0,5–1,0 u, к концу 40 %; непрозрачность 1 → 0, (1 − p)²; скругление — 25 % стороны; «случайное» — хеш (нота, отрезок, частица, номер величины)</td></tr>
+<tr><td>Заставка (0.90)</td><td>затемнение сверху: чёрный 0,55 → прозрачный на 30 u; верх названия — 9 u</td><td>затемнение 24 u; верх названия — 6 u</td></tr>
+<tr><td></td><td colspan="2">колонка min(ширина − 16 u; 84 u); название 6 u, 800, белый, одна строка с многоточием; дата 3,4 u, 600, белый 0,7, на 1,6 u ниже; проявление 300–900 мс (0 → 1 и сдвиг вниз на 1,5 u, 1 − (1 − p)²), держится до 3400 мс, гаснет к 4000 мс</td></tr>
 <tr><td>Время</td><td colspan="2">11 u в секунду</td></tr>
 <tr><td>Итог</td><td colspan="2">+3 с после конца; вуаль #0B0B10 до 0,9 и итог проявляются за 400 мс; колонка min(ширина − 16 u; 84 u); название и дата 3,4 u (600, белый 0,7); балл 18 u (800, белый), «%» 9 u (белый 0,55); «в строе · допуск ±8 ц» 3,4 u; полоска зон 2,2 u; строки по 9 u с чертой 0,2 u (белый 0,1): название 3,4 u (600, белый 0,7), значение 4,8 u (800), стрелка 3,2 u, точка 2 u, «+8» 3,4 u</td></tr>
+<tr><td>Подпись в итоге (0.90)</td><td>низ — 6 u от низа кадра</td><td>низ — 4 u</td></tr>
+<tr><td></td><td colspan="2">по центру кадра; значок 7 u, скругление 1,6 u; через 2 u — текст 2,8 u, 600, белый 0,6, «Violin Journey» — 800, белый 0,9; межстрочный 3,9 u; вместе — не шире колонки, иначе перенос (≤ 2 строк), значок — по центру текста; блок итога — по центру над подписью и отступом 4 u</td></tr>
 </table>
+
+<h2>5. Заставка с названием — первые секунды видео</h2>
+<div class="row">
+  <div><canvas id="openP" class="portrait" width="1080" height="1920"></canvas>
+    <div class="cap">Портрет, t = 1,5 с — заставка на месте: верхнее затемнение 30 u, название 6 u с верхом на 9 u, дата под ним. Лента, черта и бейдж идут с первого кадра.</div></div>
+  <div><canvas id="openP2" class="portrait" width="1080" height="1920"></canvas>
+    <div class="cap">t = 0,6 с — середина проявления (300–900 мс): непрозрачность 0,75 и ещё 0,375 u до места (сдвиг 1,5 u, с замедлением).</div></div>
+  <div><canvas id="openL" class="landscape" width="1920" height="1080"></canvas>
+    <div class="cap">Landscape, t = 1,5 с: затемнение 24 u, верх названия — 6 u. Держится до 3,4 с, гаснет к 4,0 с.</div></div>
+</div>
+
+<h2>6. Рассыпание у черты — крупно</h2>
+<p>Вырез портретного кадра вокруг черты, 40 × 49 u, в натуральных пикселях 1080 × 1920 (в 2,7 раза крупнее раздела 1). Частицы считаются по формуле 5.30 из хеша (нота, отрезок, частица) — кадр зависит только от своего времени. Фиолетовые скобки под полосой — не часть кадра: куда относит частицу за 0,35 и 0,7 с (скорость ленты 11 u/с плюс своя −4…0 u/с).</p>
+<div class="row">
+  <div><canvas id="crop1" class="crop" width="432" height="529"></canvas>
+    <div class="cap">t = 12,2 с — длинная F#4 под чертой: свежая пыль у черты яркая и крупная, к 0,7 с она в 8–10 u левее, осела и почти погасла. Левее — последние крошки G4.</div></div>
+  <div><canvas id="crop2" class="crop" width="432" height="529"></canvas>
+    <div class="cap">t = 12,62 с — G4 только что сменила F#4: у черты зелёная пыль, левее догорает янтарная. Подпись «G4» срезана чертой вместе с капсулой — правее черты торчит её огрызок.</div></div>
+  <div><canvas id="crop3" class="crop" width="432" height="529"></canvas>
+    <div class="cap">t = 15,98 с — пауза через 0,35 с после последней ноты: новых частиц нет, ярлыка нет, пыль A4 гаснет — через 0,35 с её не останется.</div></div>
+</div>
 
 <script>
 const Z = { in: '#47C97E', near: '#E5B03C', off: '#E8565C' };
@@ -183,62 +214,208 @@ function currentAt(t) {
   return held;
 }
 
+/** A 32-bit hash of (note, segment, particle, which value) → [0, 1): the same frame at any frame rate, on any platform. */
+function hash01(n, k, j, v) {
+  let h = Math.imul(n + 1, 0x9E3779B1) ^ Math.imul(k + 1, 0x85EBCA77) ^ Math.imul(j + 1, 0xC2B2AE3D) ^ Math.imul(v + 1, 0x27D4EB2F);
+  h ^= h >>> 16; h = Math.imul(h, 0x7FEB352D); h ^= h >>> 15; h = Math.imul(h, 0x846CA68B); h ^= h >>> 16;
+  return (h >>> 0) / 4294967296;
+}
+const SPEED = 11, SEG = .4, PER_SEG = 3, LIFE = .7; // u/s, u, particles, s
+
+/** The dust of the notes that crossed the playhead in the last 700 ms (5.30). */
+function dust(ctx, u, head, yOf, pill, t) {
+  let count = 0;
+  notes.forEach((n, ni) => {
+    if (n.start > t || n.end + LIFE < t) return;
+    const len = (n.end - n.start) * SPEED - SEG, segs = Math.ceil(len / SEG);
+    for (let k = 0; k < segs; k++) {
+      const t0 = n.start + k * SEG / SPEED, a = t - t0;
+      if (a < 0 || a >= LIFE) continue;
+      for (let j = 0; j < PER_SEG; j++) {
+        const p = a / LIFE;
+        const y0 = yOf(n.midi) - pill / 2 + hash01(ni, k, j, 0) * pill;
+        const vx = -4 * hash01(ni, k, j, 1), vy = -6 + 12 * hash01(ni, k, j, 2), side0 = .5 + .5 * hash01(ni, k, j, 3);
+        const x = head + (-SPEED + vx) * a * u, y = y0 + (vy * a + 7 * a * a) * u;
+        const side = side0 * (1 - .6 * p) * u;
+        ctx.globalAlpha = (1 - p) * (1 - p); // a segment crosses while its note sounds: the capsule's opacity there is 1
+        ctx.fillStyle = Z[zoneOf(n.cents)]; rr(ctx, x - side / 2, y - side / 2, side, side, side * .25);
+        count++;
+      }
+    }
+  });
+  ctx.globalAlpha = 1;
+  return count;
+}
+
+/** An arrow centred at (cx, cy), w wide: the arrow of «Что уходит» scaled. */
+function arrow(ctx, cx, cy, w, up, color) {
+  const k = w / 3.2, h = 4.2 * k, d = up ? 1 : -1, tip = cy - d * h / 2;
+  ctx.fillStyle = color; ctx.beginPath();
+  ctx.moveTo(cx, tip); ctx.lineTo(cx + w / 2, tip + d * 2 * k); ctx.lineTo(cx - w / 2, tip + d * 2 * k); ctx.fill();
+  ctx.fillRect(cx - .5 * k, up ? tip + 1.8 * k : tip - 1.8 * k - 2.4 * k, 1 * k, 2.4 * k);
+}
+const signed = c => { const r = Math.round(c); return r > 0 ? '+' + r : r < 0 ? '−' + -r : '0'; };
+
 /** B — the lane of notes at the moment t. */
-function lane(ctx, W, H, t) {
+function lane(ctx, W, H, t, marks, lang = 'ru') {
   const { u, P, scrim, laneBottom, laneHeight } = layout(W, H);
   const g = ctx.createLinearGradient(0, H - scrim, 0, H);
   g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(.35, 'rgba(0,0,0,.45)'); g.addColorStop(1, 'rgba(0,0,0,.78)');
   ctx.fillStyle = g; ctx.fillRect(0, H - scrim, W, scrim);
-  const pill = 4.4 * u, speed = 11 * u, head = W / 2;
+  const pill = 4.4 * u, speed = SPEED * u, head = W / 2;
   let low = LOW, high = HIGH;
   if (high - low < 8) { const mid = (low + high) / 2; low = mid - 4; high = mid + 4; }
   const yOf = m => laneBottom - pill / 2 - (m - low) / (high - low) * (laneHeight - pill);
-  ctx.font = `800 ${2.8 * u}px Manrope`; ctx.textBaseline = 'middle';
   const now = currentAt(t);
+  // capsules only right of the playhead: what is ahead
+  ctx.save(); ctx.beginPath(); ctx.rect(head, 0, W - head, H); ctx.clip();
+  ctx.font = `800 ${2.8 * u}px Manrope`; ctx.textBaseline = 'middle';
   for (const n of notes) {
     const x1 = head + (n.start - t) * speed, x2 = head + (n.end - t) * speed - .6 * u;
-    if (x2 < 0 || x1 > W) continue;
+    if (x2 < head || x1 > W) continue;
     ctx.globalAlpha = n === now ? 1 : .62;
     ctx.fillStyle = Z[zoneOf(n.cents)]; rr(ctx, x1, yOf(n.midi) - pill / 2, x2 - x1, pill, pill / 2);
-    if (ctx.measureText(n.name).width + 3.2 * u <= x2 - x1) { ctx.fillStyle = '#0B0B10'; ctx.fillText(n.name, x1 + 1.6 * u, yOf(n.midi) + .1 * u); }
+    // the label holds at the start of what is left of the capsule, and goes while that still takes it: no stub of a letter
+    const from = Math.max(x1, head);
+    if (ctx.measureText(n.name).width + 3.2 * u <= x2 - from) { ctx.fillStyle = '#0B0B10'; ctx.fillText(n.name, from + 1.6 * u, yOf(n.midi) + .1 * u); }
   }
-  ctx.globalAlpha = 1;
-  // the tag of the current note above the playhead: glass, the name in the colour of its zone
+  ctx.restore(); ctx.globalAlpha = 1;
+  dust(ctx, u, head, yOf, pill, t);
+  // the tag of the current note above the playhead: glass, the name in the colour of its zone, then its mean deviation
   const tagH = 6.4 * u, tagBottom = laneBottom - laneHeight - 1.2 * u;
   ctx.fillStyle = 'rgba(255,255,255,.9)'; rr(ctx, head - .25 * u, tagBottom, .5 * u, laneBottom + 1.5 * u - tagBottom, .25 * u);
   if (now) {
-    ctx.font = `800 ${3.6 * u}px Manrope`;
-    const w = Math.max(tagH * 1.6, ctx.measureText(now.name).width + 4 * u);
+    const zone = zoneOf(now.cents), num = signed(now.cents), cy = tagBottom - tagH / 2;
+    ctx.font = `800 ${3.6 * u}px Manrope`; const nw = ctx.measureText(now.name).width;
+    ctx.font = `700 ${3.2 * u}px Manrope`; const cw = ctx.measureText(num).width;
+    const sign = zone === 'in' ? 1.6 * u : 2.6 * u, line = nw + 1.4 * u + sign + .8 * u + cw;
+    const w = Math.max(tagH * 1.6, line + 4 * u);
     ctx.fillStyle = 'rgba(19,19,24,.72)'; rr(ctx, head - w / 2, tagBottom - tagH, w, tagH, tagH / 2);
-    ctx.fillStyle = Z[zoneOf(now.cents)]; ctx.textAlign = 'center'; ctx.fillText(now.name, head, tagBottom - tagH / 2 + .15 * u); ctx.textAlign = 'left';
+    // the words stand on one baseline with their capitals centred in the tag; the sign is centred on the capitals
+    let x = head - line / 2; ctx.textBaseline = 'alphabetic';
+    ctx.font = `800 ${3.6 * u}px Manrope`; const base = cy + ctx.measureText('H').actualBoundingBoxAscent / 2;
+    ctx.fillStyle = Z[zone]; ctx.fillText(now.name, x, base); x += nw + 1.4 * u;
+    if (zone === 'in') { ctx.beginPath(); ctx.arc(x + .8 * u, cy, .8 * u, 0, Math.PI * 2); ctx.fill(); }
+    else arrow(ctx, x + 1.3 * u, cy, 2.6 * u, now.cents > 0, Z[zone]);
+    x += sign + .8 * u;
+    ctx.font = `700 ${3.2 * u}px Manrope`; ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.fillText(num, x, base);
   }
-  // the badge: smoked glass, the dot of «в строе», the score of the take
-  const text = 'в строе 82 %';
-  ctx.font = `700 ${3.4 * u}px Manrope`;
-  const bh = 7.2 * u, bw = 2.6 * u + 1.8 * u + 1.4 * u + ctx.measureText(text).width + 2.8 * u;
-  const bx = P.side * u, by = H - P.bottom * u - bh;
+  if (marks) { // annotations of the mockup, not of the frame: where a particle drifts in 0.35 and 0.7 s
+    ctx.fillStyle = '#C4ADFF'; ctx.font = `700 ${1.8 * u}px Manrope`; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    [.35, .7].forEach((a, i) => {
+      const xa = head - SPEED * a * u, xb = head - (SPEED + 4) * a * u, yy = laneBottom + 2.4 * u + i * 3.2 * u;
+      ctx.fillRect(xb, yy, xa - xb, .3 * u); ctx.fillRect(xa - .15 * u, yy - 1 * u, .3 * u, 1.3 * u); ctx.fillRect(xb - .15 * u, yy - 1 * u, .3 * u, 1.3 * u);
+      ctx.fillText(String(a).replace('.', ',') + ' с', (xa + xb) / 2, yy + .7 * u);
+    });
+    ctx.textAlign = 'left';
+  }
+  if (marks) return; // the close-up shows the lane alone
+  // the badge: smoked glass, a spinner of «в строе» turning once a second, «Анализ игры» — as if the playing were being analysed now
+  const L = TEXTS[lang], text = L.badge;
+  ctx.font = `700 ${3.4 * u}px Manrope`; ctx.textBaseline = 'middle';
+  const spin = 2.2 * u, bh = 7.2 * u, bw = 2.6 * u + spin + 1.4 * u + ctx.measureText(text).width + 2.8 * u;
+  const bx = P.side * u, by = H - P.bottom * u - bh, cy = by + bh / 2;
   ctx.fillStyle = 'rgba(19,19,24,.72)'; rr(ctx, bx, by, bw, bh, bh / 2);
-  ctx.fillStyle = Z.in; ctx.beginPath(); ctx.arc(bx + 2.6 * u + .9 * u, by + bh / 2, .9 * u, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.fillText(text, bx + 2.6 * u + 1.8 * u + 1.4 * u, by + bh / 2 + .15 * u);
+  const a0 = (t % 1) * Math.PI * 2;
+  ctx.strokeStyle = Z.in; ctx.lineWidth = .45 * u; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(bx + 2.6 * u + spin / 2, cy, (spin - .45 * u) / 2, a0, a0 + Math.PI * 1.5); ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.fillText(text, bx + 2.6 * u + spin + 1.4 * u, cy + .15 * u);
+  // to its right, at its height: the line of the app, dimmed, in two lines where one does not fit
+  const sx = bx + bw + 2.4 * u, max = W - P.side * u - sx, lineH = 3.2 * u;
+  const lines = signLines(ctx, u, L.sign, max, 2.6).slice(0, 2);
+  lines.forEach((l, i) => {
+    let x = sx; const y = cy - (lines.length * lineH) / 2 + (i + .5) * lineH + .1 * u;
+    for (const w of l.words) {
+      ctx.font = `${w.strong ? 800 : 600} ${2.6 * u}px Manrope`; ctx.fillStyle = w.strong ? 'rgba(255,255,255,.6)' : 'rgba(255,255,255,.45)';
+      ctx.fillText(w.text, x, y); x += ctx.measureText(w.text).width;
+    }
+  });
+  ctx.textBaseline = 'alphabetic';
 }
 
-/** D — the summary over the last frame, k of its fade. */
-function card(ctx, W, H, k, full) {
-  const u = Math.min(W, H) / 100;
+/** The text cut to the width with an ellipsis. */
+function fit(ctx, text, max) {
+  if (ctx.measureText(text).width <= max) return text;
+  while (text.length > 1 && ctx.measureText(text + '…').width > max) text = text.slice(0, -1);
+  return text.trimEnd() + '…';
+}
+const easeOut = p => 1 - (1 - p) * (1 - p);
+
+/** The opening title at the moment t: the top scrim, the name and the date (5.30). */
+function opener(ctx, W, H, t, title, date) {
+  const portrait = W <= H, u = Math.min(W, H) / 100;
+  let k, shift;
+  if (t < .3 || t >= 4) return;
+  if (t < .9) { const e = easeOut((t - .3) / .6); k = e; shift = -1.5 * u * (1 - e); }
+  else if (t < 3.4) { k = 1; shift = 0; }
+  else { k = 1 - easeOut((t - 3.4) / .6); shift = 0; }
+  const sh = (portrait ? 30 : 24) * u, g = ctx.createLinearGradient(0, 0, 0, sh);
+  g.addColorStop(0, `rgba(0,0,0,${.55 * k})`); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, sh);
+  const col = Math.min(W - 16 * u, 84 * u), top = (portrait ? 9 : 6) * u + shift;
+  ctx.globalAlpha = k; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.font = `800 ${6 * u}px Manrope`; ctx.fillStyle = '#fff'; ctx.fillText(fit(ctx, title, col), W / 2, top);
+  ctx.font = `600 ${3.4 * u}px Manrope`; ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillText(date, W / 2, top + (6 + 1.6) * u);
+  ctx.globalAlpha = 1; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+}
+
+const ICON = new Image(); ICON.src = '../../../../store/icon-512.png'; // the app icon, as tools/icon/export.js draws it
+const TEXTS = {
+  ru: { title: 'Менуэт соль мажор · 3 октября', tol: 'в строе · допуск ±8 ц', best: 'Лучшая нота', drift: 'Что уходит', prev: 'Прошлый дубль', none: 'ничего', cents: 'ц',
+        badge: 'Анализ игры', sign: [['Анализируй свою игру в приложении ', 0], ['Violin Journey', 1]] },
+  de: { title: 'Menuett G-Dur · 3. Oktober', tol: 'sauber · Toleranz ±8 ct', best: 'Beste Note', drift: 'Was abweicht', prev: 'Vorheriger Take', none: 'nichts', cents: 'ct',
+        badge: 'Spielanalyse', sign: [['Analysiere dein Spiel in der App ', 0], ['Violin Journey', 1]] },
+};
+
+/** The signature: the words with their weights, wrapped greedily to width, the app's name never broken. */
+function signLines(ctx, u, runs, max, size = 2.8) {
+  const words = [];
+  for (const [text, strong] of runs) {
+    if (strong) { words.push({ text, strong }); continue; }
+    text.split(/(?<= )/).filter(Boolean).forEach(w => words.push({ text: w, strong }));
+  }
+  const width = w => { ctx.font = `${w.strong ? 800 : 600} ${size * u}px Manrope`; return ctx.measureText(w.text).width; };
+  const lines = [[]]; let lw = 0;
+  for (const w of words) {
+    const ww = width(w);
+    if (lw + width({ ...w, text: w.text.trimEnd() }) > max && lines.at(-1).length) { lines.push([]); lw = 0; }
+    lines.at(-1).push(w); lw += ww;
+  }
+  return lines.map(l => { const last = l.at(-1); last.text = last.text.trimEnd(); return { words: l, width: l.reduce((a, w) => a + width(w), 0) }; });
+}
+
+/** D — the summary over the last frame, k of its fade; under it, the signature of the app. */
+function card(ctx, W, H, k, full, lang = 'ru') {
+  const L = TEXTS[lang], portrait = W <= H, u = Math.min(W, H) / 100;
   ctx.fillStyle = `rgba(11,11,16,${.9 * k})`; ctx.fillRect(0, 0, W, H);
   ctx.globalAlpha = k; ctx.textBaseline = 'alphabetic';
   const col = Math.min(W - 16 * u, 84 * u), x0 = (W - col) / 2;
-  const rows = full ? [['Лучшая нота', 'G4', Z.in], ['Что уходит', 'F#5 +24 ц', Z.off, 'up'], ['Прошлый дубль', '74 %', '#fff', '+8']]
-                    : [['Лучшая нота', 'G4', Z.in], ['Что уходит', 'ничего', Z.in, 'dot']];
+  // the signature: the icon and one or two lines of text, centred, its bottom 6 u (landscape 4 u) above the bottom
+  const icon = 7 * u, lineH = 3.9 * u, lines = signLines(ctx, u, L.sign, col - icon - 2 * u).slice(0, 2);
+  const textW = Math.max(...lines.map(l => l.width)), textH = lines.length * lineH, sh = Math.max(icon, textH);
+  const sb = H - (portrait ? 6 : 4) * u, st = sb - sh, sx = (W - (icon + 2 * u + textW)) / 2;
+  ctx.save(); ctx.beginPath(); ctx.roundRect(sx, st + (sh - icon) / 2, icon, icon, 1.6 * u); ctx.clip();
+  ctx.drawImage(ICON, sx, st + (sh - icon) / 2, icon, icon); ctx.restore();
+  ctx.textBaseline = 'middle';
+  lines.forEach((l, i) => {
+    let x = sx + icon + 2 * u; const y = st + (sh - textH) / 2 + (i + .5) * lineH + .1 * u;
+    for (const w of l.words) {
+      ctx.font = `${w.strong ? 800 : 600} ${2.8 * u}px Manrope`; ctx.fillStyle = w.strong ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.6)';
+      ctx.fillText(w.text, x, y); x += ctx.measureText(w.text).width;
+    }
+  });
+  ctx.textBaseline = 'alphabetic';
+  const rows = full ? [[L.best, 'G4', Z.in], [L.drift, `F#5 +24 ${L.cents}`, Z.off, 'up'], [L.prev, '74 %', '#fff', '+8']]
+                    : [[L.best, 'G4', Z.in], [L.drift, L.none, Z.in, 'dot']];
   const rowH = 9 * u;
   const heights = [4.4, 3, 17, 4.4, 4, 2.2, 3];
-  let y = (H - (heights.reduce((a, b) => a + b) * u + rows.length * rowH)) / 2;
+  let y = (st - 4 * u - (heights.reduce((a, b) => a + b) * u + rows.length * rowH)) / 2; // centred above the signature
   ctx.font = `600 ${3.4 * u}px Manrope`; ctx.fillStyle = 'rgba(255,255,255,.7)';
-  ctx.fillText('Менуэт соль мажор · 3 октября', x0, y + 3.4 * u); y += (4.4 + 3) * u;
+  ctx.fillText(fit(ctx, L.title, col), x0, y + 3.4 * u); y += (4.4 + 3) * u;
   ctx.font = `800 ${18 * u}px Manrope`; ctx.fillStyle = '#fff'; ctx.fillText('82', x0 - .8 * u, y + 15 * u);
   const sw = ctx.measureText('82').width;
   ctx.font = `800 ${9 * u}px Manrope`; ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fillText('%', x0 + sw + 1.2 * u, y + 15 * u); y += 17 * u;
-  ctx.font = `600 ${3.4 * u}px Manrope`; ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillText('в строе · допуск ±8 ц', x0, y + 3.4 * u); y += (4.4 + 4) * u;
+  ctx.font = `600 ${3.4 * u}px Manrope`; ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillText(L.tol, x0, y + 3.4 * u); y += (4.4 + 4) * u;
   // the strip of zones over the whole take, pauses taking no room — as the strip of the recording (3.9)
   const played = notes.reduce((a, n) => a + (n.end - n.start), 0); let x = x0;
   ctx.save(); ctx.beginPath(); ctx.roundRect(x0, y, col, 2.2 * u, 1.1 * u); ctx.clip();
@@ -247,12 +424,13 @@ function card(ctx, W, H, k, full) {
   rows.forEach(([label, value, color, extra], i) => {
     if (i > 0) { ctx.fillStyle = 'rgba(255,255,255,.1)'; ctx.fillRect(x0, y, col, .2 * u); }
     const base = y + rowH / 2 + 1.3 * u;
-    ctx.font = `600 ${3.4 * u}px Manrope`; ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillText(label, x0, base);
     // the value at the right edge: [sign] value [+N]
     ctx.font = `800 ${4.8 * u}px Manrope`; const vw = ctx.measureText(value).width;
     let plus = 0; if (extra && extra.startsWith('+')) { ctx.font = `800 ${3.4 * u}px Manrope`; plus = ctx.measureText(' ' + extra).width; }
     const sign = extra === 'up' ? 4.2 * u : extra === 'dot' ? 3.2 * u : 0;
     let vx = x0 + col - plus - vw - sign;
+    // the label at the left, cut with an ellipsis before the value (5.30)
+    ctx.font = `600 ${3.4 * u}px Manrope`; ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillText(fit(ctx, label, vx - x0 - 3 * u), x0, base);
     if (extra === 'up') { // an arrow up: the note sits high
       ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(vx + 1.6 * u, base - 4.2 * u); ctx.lineTo(vx + 3.2 * u, base - 2.2 * u); ctx.lineTo(vx, base - 2.2 * u); ctx.fill();
       ctx.fillRect(vx + 1.1 * u, base - 2.4 * u, 1 * u, 2.4 * u); vx += sign;
@@ -267,14 +445,28 @@ function card(ctx, W, H, k, full) {
 
 function draw(id, f) { const c = document.getElementById(id), ctx = c.getContext('2d'); scene(ctx, c.width, c.height); f(ctx, c.width, c.height); }
 
-const CYR = 'строе Менуэт соль мажор октября';
-Promise.all(['600', '700', '800'].map(w => document.fonts.load(`${w} 20px Manrope`, CYR + ' G4 82 %'))).finally(() => {
-  draw('portrait', (ctx, W, H) => lane(ctx, W, H, 7.2));
-  draw('landscape', (ctx, W, H) => lane(ctx, W, H, 7.2));
-  draw('square', (ctx, W, H) => lane(ctx, W, H, 7.2));
+/** A crop of a portrait frame around the playhead, in the frame's own pixels. */
+function crop(id, t) {
+  const W = 1080, H = 1920, off = document.createElement('canvas'); off.width = W; off.height = H;
+  const octx = off.getContext('2d'); scene(octx, W, H); lane(octx, W, H, t, true);
+  const { u, laneBottom } = layout(W, H), c = document.getElementById(id);
+  c.getContext('2d').drawImage(off, W / 2 - 26 * u, laneBottom - 39.6 * u, 40 * u, 49 * u, 0, 0, c.width, c.height);
+}
+
+const CYR = 'строе Менуэт соль мажор октября Анализ игры Анализируй свою игру в приложении Violin Journey Analysiere dein Spiel Spielanalyse Oktober Toleranz Beste Vorheriger abweicht nichts';
+Promise.all([...['600', '700', '800'].map(w => document.fonts.load(`${w} 20px Manrope`, CYR + ' G4 82 % −+0123456789')),
+             new Promise(r => { if (ICON.complete) r(); else { ICON.onload = r; ICON.onerror = r; } })]).finally(() => {
+  draw('portrait', (ctx, W, H) => lane(ctx, W, H, 12.2));
+  draw('landscape', (ctx, W, H) => lane(ctx, W, H, 8.5));
+  draw('square', (ctx, W, H) => lane(ctx, W, H, 3.6));
   draw('cardP', (ctx, W, H) => card(ctx, W, H, 1, true));
   draw('cardL', (ctx, W, H) => card(ctx, W, H, 1, true));
   draw('cardL2', (ctx, W, H) => card(ctx, W, H, 1, false));
+  draw('cardDe', (ctx, W, H) => card(ctx, W, H, 1, true, 'de'));
+  draw('openP', (ctx, W, H) => { lane(ctx, W, H, 1.5); opener(ctx, W, H, 1.5, 'Менуэт соль мажор', '3 октября'); });
+  draw('openP2', (ctx, W, H) => { lane(ctx, W, H, .6); opener(ctx, W, H, .6, 'Менуэт соль мажор', '3 октября'); });
+  draw('openL', (ctx, W, H) => { lane(ctx, W, H, 1.5); opener(ctx, W, H, 1.5, 'Менуэт соль мажор', '3 октября'); });
+  crop('crop1', 12.2); crop('crop2', 12.62); crop('crop3', 15.98);
   document.body.dataset.ready = '1';
 });
 </script>
