@@ -54,6 +54,7 @@ import com.violinjourney.app.core.ui.components.AppButtonStyle
 import com.violinjourney.app.core.ui.components.AppSheet
 import com.violinjourney.app.core.ui.components.AppSheetButtons
 import com.violinjourney.app.core.ui.components.AppSheetDefaults
+import com.violinjourney.app.core.ui.components.KeepScreenOn
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -179,12 +180,14 @@ fun ShareHost(viewModel: ShareViewModel) {
  * «Поделиться» as a bottom sheet of R1 (spec 3.36.5): one frame, three faces — the choice, the file being made, the failure — each in
  * the place of the one before, with its buttons at the bottom. While a file is made — its progress, or «Готовим…» on «Продолжить» —
  * the sheet holds: no handle (its room stays: the sheet keeps its height, its top edge does not move), a swipe, a tap beside it and
- * «назад» do not close it; the way out is «Отмена» or the file, handed to the system. The choice and the failure a swipe only hides
+ * «назад» do not close it, and the screen stays on; the way out is «Отмена» or the file, handed to the system. The choice and the failure a swipe only hides
  * ([ShareIntent.Dismissed]). Public for the tests of the frame; [ShareHost] puts it on a screen.
  */
 @Composable
 fun ShareSheetFrame(sheet: ShareSheet?, onIntent: (ShareIntent) -> Unit) {
     val holds = sheet is ShareSheet.Preparing || (sheet as? ShareSheet.Choose)?.busy == true
+    // a file being made keeps the screen on: a phone that locks takes the encoder from the app, and a video with notes takes minutes
+    if (holds) KeepScreenOn()
     val landscape = windowIsLandscape()
     AppSheet(
         value = sheet,
