@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.violinjourney.app.core.audio.backing.IosBackingPreview
+import com.violinjourney.app.core.domain.events.BuiltInKind
 import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.core.ui.analytics.AnalyticsViewModel
@@ -29,6 +30,8 @@ import com.violinjourney.app.feature.camera.IosVideoMux
 import com.violinjourney.app.feature.camera.ShotCameraFactory
 import com.violinjourney.app.feature.events.form.EventFormRoute
 import com.violinjourney.app.feature.events.form.EventFormViewModel
+import com.violinjourney.app.feature.events.performances.PerformancesRoute
+import com.violinjourney.app.feature.events.performances.PerformancesViewModel
 import com.violinjourney.app.feature.events.screen.EventRoute
 import com.violinjourney.app.feature.events.screen.EventViewModel
 import com.violinjourney.app.feature.history.HistoryRoute
@@ -166,8 +169,12 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 onOpenSession = navController::navigateToSession,
                 onOpenSound = navController::navigateToSound,
                 onOpenLive = { navController.navigateToTopLevel(TopLevelDestination.LIVE) },
+                onOpenPerformances = navController::navigateToPerformances,
                 viewModel = viewModel {
-                    HistoryViewModel(graph.sessions, graph.repertoire, graph.intonationConfig, graph.clock, graph.audioFiles, graph.backings, graph.events)
+                    HistoryViewModel(
+                        graph.sessions, graph.repertoire, graph.intonationConfig, graph.clock, graph.audioFiles, graph.backings, graph.events,
+                        graph.eventsConfig,
+                    )
                 },
                 onShare = share::start,
                 shareHost = { ShareHost(share) },
@@ -285,6 +292,18 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                     navController.popBackStack()
                 },
                 viewModel = viewModel { EventFormViewModel(createSavedStateHandle(), graph.events, graph.eventsConfig, graph.clock) },
+            )
+        }
+        // «Выступления» (spec 3.35, 3.36.9): above the tabs; `-openRoute performances` opens it as it is. A row opens its event,
+        // «Добавить выступление» the form of a performance of today, whose «Сохранить» puts the new one's screen in its place
+        composable(Routes.PERFORMANCES) {
+            PerformancesRoute(
+                onBack = navController::popBackStack,
+                onOpenEvent = navController::navigateToEvent,
+                onAddPerformance = { navController.navigateToEventForm(Routes.eventForm(kind = BuiltInKind.PERFORMANCE)) },
+                viewModel = viewModel {
+                    PerformancesViewModel(graph.events, graph.sessions, graph.repertoire, graph.videoFiles, graph.eventsConfig, graph.clock)
+                },
             )
         }
         // «Снять под минусовку» (spec 3.32): the app's own camera, over everything
@@ -574,6 +593,11 @@ private fun NavHostController.navigateToEvent(eventId: Long) {
 /** The form of an event, [route] built by `Routes.eventForm`: new from the sheet of a day, an edit from the screen of the event. */
 private fun NavHostController.navigateToEventForm(route: String) {
     navigate(route) { launchSingleTop = true }
+}
+
+/** «Выступления» (spec 3.36.9): from the row «Выступления» of the tab «Записи». */
+private fun NavHostController.navigateToPerformances() {
+    navigate(Routes.PERFORMANCES) { launchSingleTop = true }
 }
 
 /**

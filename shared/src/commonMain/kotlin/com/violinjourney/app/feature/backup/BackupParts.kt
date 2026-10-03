@@ -25,7 +25,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,9 +57,7 @@ import com.violinjourney.app.core.ui.components.AppDock
 import com.violinjourney.app.core.ui.components.DialogTone
 import com.violinjourney.app.core.ui.components.DockScope
 import com.violinjourney.app.core.ui.components.ExactLines
-import com.violinjourney.app.core.ui.components.FaceArrival
 import com.violinjourney.app.core.ui.components.LocalDockInset
-import com.violinjourney.app.core.ui.components.SettleAfterDoubleTap
 import com.violinjourney.app.core.ui.components.WholeWords
 import com.violinjourney.app.core.ui.components.WholeWordsFit
 import com.violinjourney.app.core.ui.components.currentDockMetrics
@@ -275,23 +272,6 @@ internal fun <T> heldWhile(own: Boolean, value: T): T {
 
 /** What a face holds: written in composition, read right after — never observed. */
 private class Held<T>(var value: T)
-
-/**
- * The presses of the bottom zone of a face (spec 5.29 R8, review of stage 122): for the time of a double tap of the system from its first
- * frame ([SettleAfterDoubleTap]) a face does not take them, as a face of a sheet (R3) and a moment of the journey (R7) do not. A face that
- * came in the place of another — the choice after «Ещё раз», «Остановить» after «Восстановить» into an empty app — has its button where
- * the one pressed stood, and the second tap of that finger would ask for a second «Сохранить как…» or stop what has just begun. The face a
- * screen opens on holds too (the lead's fix of stage 122, verified): the screen comes in under the finger that opened it — «Сохранить в…»
- * of the copy stands where «Сначала сохранить текущие данные» of the passport stood, and the second tap of that finger would put up a
- * «Сохранить как…» over a screen not seen yet.
- */
-@Composable
-internal fun <T> zonePresses(onIntent: (T) -> Unit): (T) -> Unit {
-    val arrival = remember { FaceArrival(inPlace = true) }
-    SettleAfterDoubleTap(arrival)
-    val latest = rememberUpdatedState(onIntent)
-    return remember(arrival) { { intent -> if (!arrival.holds) latest.value(intent) } }
-}
 
 /**
  * [text] whose numbers keep to the word after them ([BackupFacts.keptNumbers]; spec 5.29 R6: «число и единица не разрываются») — where

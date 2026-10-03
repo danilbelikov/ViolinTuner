@@ -61,12 +61,12 @@ import com.violinjourney.app.shared.resources.backup_count_pieces_one
 import com.violinjourney.app.shared.resources.backup_count_sessions_few
 import com.violinjourney.app.shared.resources.backup_count_sessions_many
 import com.violinjourney.app.shared.resources.backup_count_sessions_one
-import com.violinjourney.app.shared.resources.backup_count_takes_few
-import com.violinjourney.app.shared.resources.backup_count_takes_many
-import com.violinjourney.app.shared.resources.backup_count_takes_one
 import com.violinjourney.app.shared.resources.backup_count_trophies_few
 import com.violinjourney.app.shared.resources.backup_count_trophies_many
 import com.violinjourney.app.shared.resources.backup_count_trophies_one
+import com.violinjourney.app.shared.resources.backup_count_video_few
+import com.violinjourney.app.shared.resources.backup_count_video_many
+import com.violinjourney.app.shared.resources.backup_count_video_one
 import com.violinjourney.app.shared.resources.backup_done
 import com.violinjourney.app.shared.resources.backup_failed_phone_space_title
 import com.violinjourney.app.shared.resources.backup_failed_space_inside
@@ -188,7 +188,8 @@ class BackupScreenTest {
                 Formats.fileSize(60 * MB),
             ).joinToString(dot)
             words["videoCaption"] = listOf(
-                stringResource(Formats.plural(6, Res.string.backup_count_takes_one, Res.string.backup_count_takes_few, Res.string.backup_count_takes_many), 6),
+                // «6 видео», not «6 дублей»: the videos of events are no takes (spec 3.36.9, «Меняет» 3.36.8)
+                stringResource(Formats.plural(6, Res.string.backup_count_video_one, Res.string.backup_count_video_few, Res.string.backup_count_video_many), 6),
                 Formats.fileSize(3_200 * MB),
             ).joinToString(dot)
             ViolinTheme {

@@ -22,6 +22,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -48,6 +49,12 @@ object ScreenHeaderDefaults {
 
     /** Where the title starts without a button, and where it ends: the field of the screens of the redesign. */
     val TitleSide: Dp = 16.dp
+
+    /** The title of the screens of R8 (5.29 R8, «Общее»); the screens of the events say theirs at 18 (5.29 R9, «Общее»). */
+    val TitleSize: TextUnit = 20.sp
+
+    /** The line of the title: 1.3 of its size. */
+    const val TITLE_LINE = 1.3f
 }
 
 /**
@@ -55,10 +62,17 @@ object ScreenHeaderDefaults {
  * that is done («Копия сохранена» of a copy, 3.20) — 48, then the [title]: 20 sp / 800 on one line with an ellipsis, a heading for a
  * reader, which reads it whole («Aus Kopie wiederherstellen»). 56 high, 48 in a window wider than high — by the window
  * ([LocalWindowInfo]), not by the box it stands in. Without a button ([onBack] null) the title starts at 16 from the edge; without a
- * title only the button stands. «Настройки» (stage 121) and the screens of a copy and a restore (stage 122) stand under it.
+ * title only the button stands. «Настройки» (stage 121) and the screens of a copy and a restore (stage 122) stand under it, and
+ * «Выступления» (stage 99) with a title of 18 sp ([titleSize]), as the bars of the screens of the events (5.29 R9, «Общее»).
  */
 @Composable
-fun ScreenHeader(title: String?, onBack: (() -> Unit)?, modifier: Modifier = Modifier, close: Boolean = false) {
+fun ScreenHeader(
+    title: String?,
+    onBack: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+    close: Boolean = false,
+    titleSize: TextUnit = ScreenHeaderDefaults.TitleSize,
+) {
     val colors = MaterialTheme.colorScheme
     val window = LocalWindowInfo.current.containerSize
     val lying = window.width > window.height
@@ -93,7 +107,12 @@ fun ScreenHeader(title: String?, onBack: (() -> Unit)?, modifier: Modifier = Mod
                 color = colors.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.01).em),
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontSize = titleSize,
+                    lineHeight = titleSize * ScreenHeaderDefaults.TITLE_LINE,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = (-0.01).em,
+                ),
             )
         }
     }

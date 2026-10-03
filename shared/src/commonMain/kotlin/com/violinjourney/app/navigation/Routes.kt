@@ -67,6 +67,9 @@ object Routes {
     const val EVENT = "event"
     const val EVENT_PATTERN = "$EVENT/{${EventViewModel.ARG_EVENT_ID}}"
     const val EVENT_FORM = "eventForm"
+
+    /** «Выступления» (spec 3.35, 3.36.9): above the tabs; the way in is the row «Выступления» of the tab «Записи». */
+    const val PERFORMANCES = "performances"
     const val EVENT_FORM_PATTERN = "$EVENT_FORM?${EventFormViewModel.ARG_EVENT_ID}={${EventFormViewModel.ARG_EVENT_ID}}" +
         "&${EventFormViewModel.ARG_DATE}={${EventFormViewModel.ARG_DATE}}" +
         "&${EventFormViewModel.ARG_KIND}={${EventFormViewModel.ARG_KIND}}" +

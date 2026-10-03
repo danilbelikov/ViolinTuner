@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.WindowInfo
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -24,6 +25,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -35,10 +37,22 @@ import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.Zone
+import com.violinjourney.app.core.domain.events.BuiltInKind
+import com.violinjourney.app.core.domain.events.CalendarEvent
+import com.violinjourney.app.core.domain.events.EventsConfig
+import com.violinjourney.app.core.domain.events.KindRef
+import com.violinjourney.app.core.domain.events.KindRules
+import com.violinjourney.app.core.domain.events.PerformancesLine
 import com.violinjourney.app.core.domain.session.SessionSummary
+import com.violinjourney.app.core.ui.components.DockMetrics
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.feature.history.components.RecordTileSize
 import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.dot_separator
+import com.violinjourney.app.shared.resources.history_chart_description
+import com.violinjourney.app.shared.resources.history_empty_text
+import com.violinjourney.app.shared.resources.history_empty_title
 import com.violinjourney.app.shared.resources.history_empty_video_title
 import com.violinjourney.app.shared.resources.history_filter_all
 import com.violinjourney.app.shared.resources.history_filter_live
@@ -47,6 +61,13 @@ import com.violinjourney.app.shared.resources.history_filter_video
 import com.violinjourney.app.shared.resources.history_open_live
 import com.violinjourney.app.shared.resources.history_show_all
 import com.violinjourney.app.shared.resources.nav_history
+import com.violinjourney.app.shared.resources.performances_row_in_days_few
+import com.violinjourney.app.shared.resources.performances_row_in_days_many
+import com.violinjourney.app.shared.resources.performances_row_in_days_one
+import com.violinjourney.app.shared.resources.performances_row_past_few
+import com.violinjourney.app.shared.resources.performances_row_past_many
+import com.violinjourney.app.shared.resources.performances_row_past_one
+import com.violinjourney.app.shared.resources.performances_title
 import com.violinjourney.app.shared.resources.selection_delete_records_few
 import com.violinjourney.app.shared.resources.selection_delete_records_many
 import com.violinjourney.app.shared.resources.selection_delete_records_one
@@ -55,6 +76,7 @@ import com.violinjourney.app.shared.resources.session_delete_confirm
 import com.violinjourney.app.shared.resources.session_delete_title
 import com.violinjourney.app.shared.resources.video_delete_text
 import com.violinjourney.app.testing.assertWholeOnOneLine
+import com.violinjourney.app.testing.assertWordsWhole
 import com.violinjourney.app.testing.numbers
 import com.violinjourney.app.testing.textLayout
 import java.util.Locale
@@ -110,7 +132,8 @@ class HistoryTabTest {
         val density = LocalDensity.current
         val window = with(density) { Window(IntSize(width.roundToPx(), height.roundToPx())) }
         CompositionLocalProvider(LocalWindowInfo provides window, LocalDensity provides Density(density.density, fontScale)) {
-            Box(Modifier.requiredSize(width, height)) { content() }
+            // tagged: a window wider than the phone held upright is centred on it, far left of the root — measure from its left
+            Box(Modifier.requiredSize(width, height).testTag(WINDOW)) { content() }
         }
     }
 
@@ -128,12 +151,32 @@ class HistoryTabTest {
             words[VIDEO_TEXT] = stringResource(Res.string.video_delete_text, Formats.fileSize(VIDEO_BYTES))
             words[DELETE] = stringResource(Res.string.session_delete_confirm)
             CHIP_WORDS.forEachIndexed { index, word -> words[chipKey(index)] = stringResource(word) }
+            words[PERFORMANCES] = stringResource(Res.string.performances_title)
+            words[STRIP] = stringResource(Res.string.history_chart_description)
+            words[EMPTY_TITLE] = stringResource(Res.string.history_empty_title)
+            words[EMPTY_TEXT] = stringResource(Res.string.history_empty_text)
+            // «через 27 дней · 3 прошло»: the line of the row that is never cut
+            words[TERM] = stringResource(
+                Formats.plural(DAYS, Res.string.performances_row_in_days_one, Res.string.performances_row_in_days_few, Res.string.performances_row_in_days_many),
+                DAYS,
+            ) + stringResource(Res.string.dot_separator) + stringResource(
+                Formats.plural(PAST, Res.string.performances_row_past_one, Res.string.performances_row_past_few, Res.string.performances_row_past_many),
+                PAST,
+            )
+            // «13 прошло»: the start of the caption of only those past
+            words[PAST_WORDS] = stringResource(
+                Formats.plural(PAST_ONLY, Res.string.performances_row_past_one, Res.string.performances_row_past_few, Res.string.performances_row_past_many),
+                PAST_ONLY,
+            )
             ViolinTheme { InWindow(width, height, fontScale) { HistoryScreen(shown.value, onIntent = { intents += it }, zone = UTC) } }
         }
         compose.waitForIdle()
     }
 
     private fun word(key: String): String = words.getValue(key)
+
+    /** The box the screen is laid out in, in the root: a window of 892 or 640 on a phone held upright starts left of the root. */
+    private fun window() = compose.onNodeWithTag(WINDOW).getUnclippedBoundsInRoot()
 
     private fun picked(count: Int) =
         Formats.plural(count, Res.string.selection_delete_records_one, Res.string.selection_delete_records_few, Res.string.selection_delete_records_many)
@@ -302,6 +345,188 @@ class HistoryTabTest {
         compose.onAllNodesWithText(word(ONE_TITLE)).assertCountEquals(0)
     }
 
+    /** The row «Выступления» of [line] over [state], as the view model gives it on 27 September 2026 (spec 3.36.9). */
+    private fun withRow(state: HistoryState, line: PerformancesLine = AHEAD) = state.copy(
+        performances = HistoryPerformances(line, KindRules.lookOf(KindRef.BuiltIn(BuiltInKind.PERFORMANCE), emptyList(), EventsConfig()), TODAY),
+    )
+
+    /** The row: one button, its description begins with «Выступления». */
+    private fun row() = compose.onNode(hasContentDescription(word(PERFORMANCES), substring = true) and hasClickAction())
+
+    /**
+     * Spec 3.36.9, 5.29 R9: the row «Выступления» is the first under the line of the title — 4 under it — and the strip stands 8 under
+     * the row; at least 64 high, in the field of the list; a tap opens «Выступления».
+     */
+    @Test
+    fun uprightTheRowOfPerformancesIsFirstUnderTheTitleAndOverTheStrip() {
+        show(withRow(stateOf(sessions)))
+        val row = row().getUnclippedBoundsInRoot()
+        val strip = compose.onNode(hasContentDescription(word(STRIP), substring = true)).getUnclippedBoundsInRoot()
+        assertEquals("4 under the line of the title: $row", (TITLE_ROW + ROW_TOP).value, row.top.value, HALF_DP)
+        assertTrue("at least 64 high: $row", row.bottom - row.top >= ROW_MIN)
+        assertEquals("in the field of the list: $row", FIELD.value, row.left.value, HALF_DP)
+        assertEquals("the strip 8 under the row: $strip, the row $row", (row.bottom + STRIP_TOP).value, strip.top.value, HALF_DP)
+        row().performClick()
+        assertEquals(listOf<HistoryIntent>(HistoryIntent.PerformancesClicked), intents)
+    }
+
+    /** Spec 3.36.9: lying the row stands in the left column under the title, over the strip — at 892 × 412. */
+    @Test
+    fun lyingTheRowStandsInTheLeftColumnUnderTheTitle() = theRowStandsInTheLeftColumn(width = 892.dp, height = 412.dp)
+
+    /** The same in the window of a phone of 640 × 360 lying, under its bars: its left column is half of what is left (5.29 R5). */
+    @Test
+    fun lyingInA640By360WindowTheRowStandsInTheLeftColumnToo() = theRowStandsInTheLeftColumn(width = 640.dp, height = 308.dp)
+
+    private fun theRowStandsInTheLeftColumn(width: Dp, height: Dp) {
+        show(withRow(stateOf(sessions)), width = width, height = height)
+        // from the left and the top of the window of the test: one wider than the phone held upright is centred on it (5.29 R5 lesson)
+        val window = window()
+        val row = row().getUnclippedBoundsInRoot()
+        val strip = compose.onNode(hasContentDescription(word(STRIP), substring = true)).getUnclippedBoundsInRoot()
+        // the left column of the tab lying: 360, but no wider than half of what the two leave (5.29 R5; `HistoryColumns` is internal)
+        val column = minOf(LEFT_COLUMN, (width - COLUMNS_GAP * 3) / 2)
+        assertEquals("4 under the title of 52: $row in $window", (TITLE_ROW_LYING + ROW_TOP).value, (row.top - window.top).value, HALF_DP)
+        assertEquals("from the field of the screen: $row in $window", FIELD.value, (row.left - window.left).value, HALF_DP)
+        assertEquals("as wide as the left column ($column): $row in $window", (FIELD + column).value, (row.right - window.left).value, HALF_DP)
+        assertEquals("the strip 8 under it: $strip", (row.bottom + STRIP_TOP).value, strip.top.value, HALF_DP)
+        // the window of the test is wider than the phone held upright: the row is pressed by its action, not by a touch
+        row().performSemanticsAction(SemanticsActions.OnClick)
+        assertEquals(listOf<HistoryIntent>(HistoryIntent.PerformancesClicked), intents)
+    }
+
+    /**
+     * Spec 3.36.9 and plan D44: the row is there in an empty tab too, under the title, and the block of the tab stands in the middle of
+     * what the row leaves above the zone — one element of the list: the block does not slide down by the height of the row (in the
+     * middle of the room from the title, it would stand 34 lower than the middle of the room from the row).
+     */
+    @Test
+    fun inAnEmptyTabTheRowStandsUnderTheTitleAndTheBlockInTheMiddleOfWhatIsLeft() {
+        show(withRow(stateOf(emptyList()), PerformancesLine.None))
+        val row = row().getUnclippedBoundsInRoot()
+        assertEquals("4 under the title: $row", (TITLE_ROW + ROW_TOP).value, row.top.value, HALF_DP)
+        val title = compose.onNodeWithText(word(EMPTY_TITLE)).getUnclippedBoundsInRoot()
+        val text = compose.onNodeWithText(word(EMPTY_TEXT)).getUnclippedBoundsInRoot()
+        val button = compose.onNodeWithText(word(OPEN_LIVE)).getUnclippedBoundsInRoot()
+        // the block: the tile of 72, 16 over the title, the title, 8, the words
+        val blockTop = title.top - EMPTY_TITLE_TOP - RecordTileSize.EMPTY.circle
+        val zoneTop = button.top - DockMetrics.Regular.top
+        assertEquals(
+            "the block in the middle between the row (${row.bottom}) and the zone ($zoneTop): $blockTop … ${text.bottom}",
+            (blockTop - row.bottom).value, (zoneTop - text.bottom).value, 1f,
+        )
+    }
+
+    /**
+     * Plan D44: while picking the row goes as the strip and the chips go when the last card is deleted — it fades out (150) where it
+     * stood, and is gone after: in the frames of the fade the plate of its sign is drawn neither as it was nor as what takes its place.
+     */
+    @Test
+    fun whilePickingTheRowFadesOutWhereItStoodAndIsGone() {
+        show(withRow(stateOf(sessions)))
+        val row = row().getUnclippedBoundsInRoot()
+        // the middle of the plate of the sign: 14 into the row, 20 into the plate of 40, in the middle of the row's height
+        val x = row.left + ROW_PADDING + PLATE / 2
+        val y = (row.top + row.bottom) / 2
+        val plate = pixelAt(x, y)
+        // the ground of the tab beside the row, in the side field where nothing is drawn: what a row gone at once would leave at the plate
+        val ground = pixelAt(row.left / 2, y)
+        assertNotEquals("the plate is drawn on a ground of its own", ground, plate)
+
+        compose.mainClock.autoAdvance = false
+        shown.value = withRow(stateOf(sessions)).copy(selection = Selection(active = true))
+        // some 60 ms into the fade of 150: the row half gone; the strip coming up under it (250) is still lower than the plate
+        repeat(FADING_FRAMES) { compose.mainClock.advanceTimeByFrame() }
+        val fading = pixelAt(x, y)
+        compose.mainClock.advanceTimeBy(FADE_OVER_MS)
+        val after = pixelAt(x, y)
+        compose.mainClock.autoAdvance = true
+        compose.waitForIdle()
+
+        assertNotEquals("the fade has begun: the plate is not drawn as it was", plate, fading)
+        // a row taken away at once (no fade) would leave the bare ground there: the strip coming up is still lower (review of stage 99)
+        assertNotEquals("in the frames of the fade the row is still drawn — not the bare ground", ground, fading)
+        assertNotEquals("the fade is not over in four frames: what takes the place is not drawn yet", after, fading)
+        compose.onAllNodes(hasContentDescription(word(PERFORMANCES), substring = true) and hasClickAction()).assertCountEquals(0)
+    }
+
+    /**
+     * 5.29 R9 «Уточнено на этапе 99», review of stage 99: lying, picking takes the row away as upright does — the strip of the left column
+     * comes up into its place over 250 instead of jumping there once the fade of 150 is over; picking closed, the row stands at once and the
+     * strip goes down the same way. A window wider than high that fits the phone held upright (410 × 360), the strip's place read frame by
+     * frame: some 60 ms in, it is on its way — neither where it stood nor where it ends.
+     */
+    @Test
+    fun lyingWhilePickingTheStripComesUpIntoThePlaceOfTheRowAndGoesBackDown() {
+        show(withRow(stateOf(sessions)), width = 410.dp, height = 360.dp)
+        // by its tag: dimmed while picking, the strip says nothing to TalkBack — its description is gone for the frames read here
+        val strip = compose.onNodeWithTag(STRIP_TAG)
+        val below = strip.getUnclippedBoundsInRoot().top
+
+        compose.mainClock.autoAdvance = false
+        shown.value = withRow(stateOf(sessions)).copy(selection = Selection(active = true))
+        repeat(FADING_FRAMES) { compose.mainClock.advanceTimeByFrame() }
+        val goingUp = strip.getUnclippedBoundsInRoot().top
+        compose.mainClock.advanceTimeBy(FADE_OVER_MS)
+        val up = strip.getUnclippedBoundsInRoot().top
+
+        shown.value = withRow(stateOf(sessions))
+        repeat(FADING_FRAMES) { compose.mainClock.advanceTimeByFrame() }
+        val goingDown = strip.getUnclippedBoundsInRoot().top
+        compose.mainClock.advanceTimeBy(FADE_OVER_MS)
+        val down = strip.getUnclippedBoundsInRoot().top
+        compose.mainClock.autoAdvance = true
+        compose.waitForIdle()
+
+        assertTrue("picking takes the place of the row: $below → $up", up < below)
+        assertTrue("on its way up, not jumped: $below, $goingUp, $up", goingUp < below && goingUp > up)
+        assertEquals("back where it stood: $down", below.value, down.value, HALF_DP)
+        assertTrue("on its way down, not jumped: $up, $goingDown, $down", goingDown > up && goingDown < down)
+    }
+
+    /**
+     * Spec 3.36.9, 5.29 R9: on 360 at the font 1.3 the term of the row and the count of those over stand whole — wrapping at a space
+     * where they must — and the long name of the nearest gives way with an ellipsis; in German and in French.
+     */
+    @Test
+    fun theTermOfTheRowStandsWholeAtALargeFontInGerman() = theTermStandsWhole("de")
+
+    @Test
+    fun theTermOfTheRowStandsWholeAtALargeFontInFrench() = theTermStandsWhole("fr")
+
+    private fun theTermStandsWhole(language: String) {
+        speaking(language)
+        val long = AHEAD.copy(nearest = AHEAD.nearest.copy(title = LONG_NAME))
+        show(withRow(stateOf(sessions), long), width = 360.dp, height = 640.dp, fontScale = 1.3f)
+        assertWordsWhole(compose.onNodeWithText(word(TERM), useUnmergedTree = true), "$language: ${word(TERM)}")
+        val name = compose.onNodeWithText(LONG_NAME, useUnmergedTree = true)
+        val layout = name.textLayout()
+        assertTrue("$language: the name gives way with an ellipsis — ${layout.numbers(name)}", layout.lineCount == 1 && layout.isLineEllipsized(0))
+    }
+
+    /**
+     * 5.29 R9 «Уточнено на этапе 99» (review of stage 99): «13 прошло · последнее 27 декабря 2025» on 360 at the font 1.0 wraps (≈ 240 dp
+     * in the 212 the caption has) — before the date, never inside it: the day is not torn from its month, nor the year from them.
+     */
+    @Test
+    fun onlyThosePastTheDateOfTheLastStandsWholeWhereTheCaptionWraps() {
+        speaking("ru")
+        show(withRow(stateOf(sessions), PerformancesLine.OnlyPast(count = PAST_ONLY, lastDate = LAST)), width = 360.dp, height = 640.dp)
+        val caption = compose.onNode(hasText(word(PAST_WORDS), substring = true), useUnmergedTree = true)
+        val layout = caption.textLayout()
+        // the date as the formats write it, whatever spaces the row put in it
+        val text = layout.layoutInput.text.text.replace(NO_BREAK_SPACE, ' ')
+        val date = Formats.recordDate(LAST, withYear = true)
+        val start = text.indexOf(date)
+        assertTrue("the date of the last one, with its year, is in «$text»", start >= 0)
+        assertTrue("the caption wraps on 360 — the case asked about: ${layout.numbers(caption)}", layout.lineCount > 1)
+        assertEquals(
+            "«$date» on one line: ${layout.numbers(caption)}",
+            layout.getLineForOffset(start), layout.getLineForOffset(start + date.length - 1),
+        )
+        assertWordsWhole(caption, text)
+    }
+
     /** The video take 1 with the size of its file, as the view model gives it. */
     private fun withVideoWeight(state: HistoryState) =
         state.copy(cards = state.cards.map { if (it.id == 1L) it.copy(videoBytes = VIDEO_BYTES) else it })
@@ -329,6 +554,47 @@ class HistoryTabTest {
         val TODAY = LocalDate(2026, 9, 27)
         const val MINUET = "Менуэт соль мажор"
 
+        /** The autumn concert of the mockups: 24 October, 27 days after the day of the test, three performances over. */
+        const val DAYS = 27
+        const val PAST = 3
+        val AHEAD = PerformancesLine.Ahead(
+            CalendarEvent(
+                id = 1, kind = KindRef.BuiltIn(BuiltInKind.PERFORMANCE), date = LocalDate(2026, 10, 24), startMinutes = 18 * 60 + 30,
+                durationMinutes = 90, title = "Осенний концерт", place = "Малый зал музыкальной школы", notes = "", seriesId = null,
+                detached = false, createdAtEpochMs = 1,
+            ),
+            days = DAYS,
+            pastCount = PAST,
+        )
+        const val LONG_NAME = "Отборочный тур Международного конкурса юных скрипачей имени Л. Когана"
+
+        /** Only those past: thirteen, the last of them in December of the year before the day of the test — written with its year. */
+        const val PAST_ONLY = 13
+        val LAST = LocalDate(2025, 12, 27)
+        const val NO_BREAK_SPACE = '\u00A0'
+
+        /** The line of the title (56 upright, 52 lying), the row 4 under it and at least 64, the strip 8 under the row (5.29 R5, R9). */
+        val TITLE_ROW = 56.dp
+        val TITLE_ROW_LYING = 52.dp
+        val ROW_TOP = 4.dp
+        val ROW_MIN = 64.dp
+        val STRIP_TOP = 8.dp
+
+        /** The tag of the strip, outside its dimming (`HistoryScreen.kt`, `HISTORY_STRIP_TAG`). */
+        const val STRIP_TAG = "history strip"
+
+        /** The row's field at its start and its plate of the sign. */
+        val ROW_PADDING = 14.dp
+        val PLATE = 40.dp
+
+        val LEFT_COLUMN = 360.dp
+        val COLUMNS_GAP = 16.dp
+
+        /** The block of an empty tab: 16 between its tile and its title (HistoryScreen). */
+        val EMPTY_TITLE_TOP = 16.dp
+        const val HALF_DP = 0.5f
+        const val FADING_FRAMES = 4
+
         /** The field of the list: 16 from each edge of the screen (spec 5.29 R5). */
         val FIELD = 16.dp
 
@@ -339,6 +605,13 @@ class HistoryTabTest {
         const val VIDEO_BYTES = 214_000_000L
         val CHIP_WORDS = listOf(Res.string.history_filter_all, Res.string.history_filter_takes, Res.string.history_filter_video, Res.string.history_filter_live)
         const val TITLE = "title"
+        const val PERFORMANCES = "performances"
+        const val STRIP = "strip"
+        const val EMPTY_TITLE = "emptyTitle"
+        const val EMPTY_TEXT = "emptyText"
+        const val TERM = "term"
+        const val PAST_WORDS = "pastWords"
+        const val WINDOW = "window"
         const val SELECT = "select"
         const val OPEN_LIVE = "openLive"
         const val SHOW_ALL = "showAll"

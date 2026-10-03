@@ -50,6 +50,7 @@ import com.violinjourney.app.shared.resources.card_menu
 import com.violinjourney.app.shared.resources.card_menu_delete
 import com.violinjourney.app.shared.resources.card_menu_share
 import com.violinjourney.app.shared.resources.card_menu_sound
+import com.violinjourney.app.shared.resources.dot_separator
 import com.violinjourney.app.shared.resources.event_kind_performance_word
 import com.violinjourney.app.shared.resources.record_tile_no_sound
 import com.violinjourney.app.shared.resources.record_tile_only_video
@@ -287,6 +288,47 @@ class RecordCardTest {
     }
 
     /**
+     * The line of a record of an event in «Записи» (spec 3.36.9, plan 8.6): «19:02 · 3:40 · выступление · без звука» — one line, the word of
+     * the kind of its event after the length and «без звука» after it. On a phone of 360 at a large font a long name of a kind of one's
+     * own gives way first: the words end in an ellipsis, the time and the length stand whole.
+     */
+    @Test
+    fun theLineOfARecordOfAnEventSaysTheKindOfItsEventAndItsWordsGiveWayFirst() {
+        val concert = SessionEvent(4, "Осенний концерт", LocalDate(2026, 10, 24), KindRef.BuiltIn(BuiltInKind.PERFORMANCE), null)
+        val rehearsal = SessionEvent(6, "Сводная", LocalDate(2026, 10, 25), KindRef.Custom(9), LONG_KIND)
+        val sound = soundTake.copy(id = 9, pieceTitle = null, pieceId = null, hasAudio = false, event = concert, durationMs = 220_000)
+        val long = sound.copy(id = 10, event = rehearsal, durationMs = 1_565_000)
+        compose.setContent {
+            words[PERFORMANCE] = stringResource(Res.string.event_kind_performance_word)
+            words[NO_SOUND] = stringResource(Res.string.record_tile_no_sound)
+            words[SEPARATOR] = stringResource(Res.string.dot_separator)
+            ViolinTheme {
+                Column {
+                    RecordCard(card = sound, title = SHORT, start = CONCERT_TIME, onClick = {}, actions = actions)
+                    CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, LARGE_FONT)) {
+                        Box(Modifier.requiredWidth(FIELD)) {
+                            RecordCard(card = long, title = REHEARSAL, start = REHEARSAL_TIME, onClick = {}, actions = actions)
+                        }
+                    }
+                }
+            }
+        }
+        val separator = words.getValue(SEPARATOR)
+        val noSound = words.getValue(NO_SOUND)
+        // the word of the kind of the event where a take says «дубль», «без звука» after it, in one line
+        val concertText = separator + words.getValue(PERFORMANCE) + separator + noSound
+        // whole, not only on one line: a text of `maxLines = 1` is always one line, an ellipsis would cut «без звука» (review of stage 99)
+        assertWholeOnOneLine(compose.onNodeWithText(concertText, useUnmergedTree = true), concertText)
+        // a long kind of one's own on 360 at a large font: the words give way, the time and the length do not
+        val longWordsNode = compose.onNodeWithText(separator + LONG_KIND + separator + noSound, useUnmergedTree = true)
+        val longWords = longWordsNode.textLayout()
+        assertTrue("the words give way: ${longWords.numbers(longWordsNode)}", longWords.isLineEllipsized(0))
+        assertWholeOnOneLine(compose.onNodeWithText(REHEARSAL_TIME, useUnmergedTree = true), REHEARSAL_TIME)
+        val length = separator + Formats.duration(long.durationMs)
+        assertWholeOnOneLine(compose.onNodeWithText(length, useUnmergedTree = true), length)
+    }
+
+    /**
      * On the screen of its event a record has a chevron at its end where other lists have «⋯» (spec 3.36.9, 5.29 R9: 24 in the third level
      * of text) — seen in the pixels of the card: the box of 24, 12 from its end, has ink there and none in «Записи» without «⋯».
      */
@@ -345,6 +387,13 @@ class RecordCardTest {
         const val VIDEO_TILE = "videoTile"
         const val PERFORMANCE = "performance"
         const val ORCHESTRA = "Оркестр ДК"
+        const val SEPARATOR = "separator"
+
+        /** A name of a kind of one's own as long as a name may be (24, `EventsConfig.maxKindNameLength`). */
+        const val LONG_KIND = "Сводный оркестр гимназии"
+        const val REHEARSAL = "Сводная"
+        const val CONCERT_TIME = "19:02"
+        const val REHEARSAL_TIME = "20:15"
         const val SHORT = "Концерт"
         const val EVENT_CARD = "event"
         const val RECORDS_CARD = "records"

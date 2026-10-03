@@ -18,6 +18,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.violinjourney.app.BuildConfig
+import com.violinjourney.app.core.domain.events.BuiltInKind
 import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.core.ui.analytics.HiltAnalyticsViewModel
@@ -34,8 +35,10 @@ import com.violinjourney.app.feature.camera.HiltCaptureViewModel
 import com.violinjourney.app.feature.camera.CaptureViewModel
 import com.violinjourney.app.feature.events.HiltEventFormViewModel
 import com.violinjourney.app.feature.events.HiltEventViewModel
+import com.violinjourney.app.feature.events.HiltPerformancesViewModel
 import com.violinjourney.app.feature.events.form.EventFormRoute
 import com.violinjourney.app.feature.events.form.EventFormViewModel
+import com.violinjourney.app.feature.events.performances.PerformancesRoute
 import com.violinjourney.app.feature.events.screen.EventRoute
 import com.violinjourney.app.feature.events.screen.EventViewModel
 import com.violinjourney.app.feature.history.HiltHistoryViewModel
@@ -155,6 +158,7 @@ fun AppNavHost(
                 onOpenSession = navController::navigateToSession,
                 onOpenSound = navController::navigateToSound,
                 onOpenLive = { navController.navigateToTopLevel(TopLevelDestination.LIVE) },
+                onOpenPerformances = navController::navigateToPerformances,
                 viewModel = hiltViewModel<HiltHistoryViewModel>(),
                 onShare = shareViewModel::start,
                 shareHost = { ShareHost(shareViewModel) },
@@ -283,6 +287,16 @@ fun AppNavHost(
                     navController.popBackStack()
                 },
                 viewModel = hiltViewModel<HiltEventFormViewModel>(),
+            )
+        }
+        // «Выступления» (spec 3.35, 3.36.9): above the tabs; a row opens its event, «Добавить выступление» the form of a performance of
+        // today — «Сохранить» puts the new one's screen in the form's place, so «назад» from it comes back here
+        composable(Routes.PERFORMANCES) {
+            PerformancesRoute(
+                onBack = navController::popBackStack,
+                onOpenEvent = navController::navigateToEvent,
+                onAddPerformance = { navController.navigateToEventForm(Routes.eventForm(kind = BuiltInKind.PERFORMANCE)) },
+                viewModel = hiltViewModel<HiltPerformancesViewModel>(),
             )
         }
         // «Снять под минусовку» (spec 3.32): the app's own camera, over everything
@@ -552,6 +566,11 @@ fun NavHostController.navigateToEvent(eventId: Long) {
 /** The form of an event, [route] built by `Routes.eventForm`: new from the sheet of a day, an edit from the screen of the event. */
 fun NavHostController.navigateToEventForm(route: String) {
     navigate(route) { launchSingleTop = true }
+}
+
+/** «Выступления» (spec 3.36.9): from the row «Выступления» of the tab «Записи». */
+fun NavHostController.navigateToPerformances() {
+    navigate(Routes.PERFORMANCES) { launchSingleTop = true }
 }
 
 /**

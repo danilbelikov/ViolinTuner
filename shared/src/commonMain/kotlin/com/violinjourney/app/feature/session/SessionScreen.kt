@@ -59,6 +59,7 @@ import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.icons.IconSizes
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.feature.events.eventKindWord
 import com.violinjourney.app.feature.history.components.RecordDeleteDialog
 import com.violinjourney.app.feature.history.components.sessionTitle
 import com.violinjourney.app.feature.session.components.DashedPlate
@@ -87,6 +88,7 @@ import com.violinjourney.app.shared.resources.record_meta
 import com.violinjourney.app.shared.resources.record_tile_only_video
 import com.violinjourney.app.shared.resources.session_action_rename
 import com.violinjourney.app.shared.resources.session_back
+import com.violinjourney.app.shared.resources.session_event_subtitle
 import com.violinjourney.app.shared.resources.session_menu_piece
 import com.violinjourney.app.shared.resources.session_not_found
 import com.violinjourney.app.shared.resources.session_rename_confirm
@@ -440,8 +442,9 @@ private const val BEST_IDLE_SCALE = 0.9f
 
 /**
  * The bar (spec 3.36.5, 5.29 R5): «назад», the name in one line and under it what the recording is — «дубль · 18:42 · 2:05», «видео ·
- * 18:42 · 2:05», «09:15 · 0:36» — after the sign of the backing for a take made under one; at the right what is done with it whole:
- * the star of a take, «Поделиться» while its sound plays, «⋯». While it is read, and when it is not found, the bar has no actions.
+ * 18:42 · 2:05», «09:15 · 0:36», of an event «выступление · 19:02 · 3:40» (3.36.9) — after the sign of the backing for a take made under
+ * one; at the right what is done with it whole: the star of a take, «Поделиться» while its sound plays, «⋯». While it is read, and when it
+ * is not found, the bar has no actions.
  */
 @Composable
 private fun TopBar(title: String, loaded: SessionState.Loaded?, zone: TimeZone, height: Dp, onIntent: (SessionIntent) -> Unit) {
@@ -475,17 +478,23 @@ private fun TopBar(title: String, loaded: SessionState.Loaded?, zone: TimeZone, 
     }
 }
 
-/** What the recording is, under its name — and, for TalkBack, «под минусовку» where the sign of the backing stands before it. */
+/**
+ * What the recording is, under its name ([SessionSubtitle]) — «выступление · 19:02 · 3:40» of a recording of an event, of its video too
+ * (spec 3.36.9) — and, for TalkBack, «под минусовку» where the sign of the backing stands before it.
+ */
 @Composable
 private fun Subtitle(content: SessionContent, zone: TimeZone) {
     val colors = MaterialTheme.colorScheme
     val time = Formats.timeOfDay(content.startedAtEpochMs, zone)
     val length = Formats.duration(content.durationMs)
-    val words = when {
-        content.hasVideo -> stringResource(Res.string.session_video_subtitle, time, length)
-        content.pieceId != null -> stringResource(Res.string.session_take_subtitle, time, length)
+    // «выступление», «урок», the name of a kind of one's own as written
+    val eventWord = content.event?.let { eventKindWord(it.kind, it.ownName) }
+    val words = when (SessionSubtitle.wordOf(content)) {
+        SubtitleWord.EVENT_KIND -> stringResource(Res.string.session_event_subtitle, eventWord.orEmpty(), time, length)
+        SubtitleWord.VIDEO -> stringResource(Res.string.session_video_subtitle, time, length)
+        SubtitleWord.TAKE -> stringResource(Res.string.session_take_subtitle, time, length)
         // a free recording: no «с Live» — where it was made is not kept (spec 3.15)
-        else -> stringResource(Res.string.record_meta, time, length)
+        SubtitleWord.NONE -> stringResource(Res.string.record_meta, time, length)
     }
     val backing = if (content.underBacking) stringResource(Res.string.backing_take_mark) else null
     val spoken = listOfNotNull(words, backing).joinToString(", ")

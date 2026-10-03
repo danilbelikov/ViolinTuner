@@ -42,6 +42,7 @@ import com.violinjourney.app.core.ui.components.DockScope
 import com.violinjourney.app.core.ui.components.ElementTopBar
 import com.violinjourney.app.core.ui.components.LocalDockInset
 import com.violinjourney.app.core.ui.components.MenuDanger
+import com.violinjourney.app.core.ui.components.arrivalPresses
 import com.violinjourney.app.core.ui.components.currentDockMetrics
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.feature.events.EventsDimens
@@ -84,21 +85,26 @@ fun EventScreen(
 ) {
     val colors = MaterialTheme.colorScheme
     val recording by remember(take) { derivedStateOf { take.value.recording } }
+    // the screen comes in under the finger that opened it — a row of «Выступления», of a sheet of a day, the reminder, «Сохранить» of the
+    // form: the second tap of a double tap would land on a cross of the programme or «Добавить запись» — its presses are not heard for the
+    // time of a double tap from its first frame (5.29 R9, review of stage 99). Only presses: what the sheets and the system hand back
+    // (a file, a video) comes as it comes.
+    val onPress = arrivalPresses(onIntent)
     BoxWithConstraints(modifier.fillMaxSize().background(colors.surface)) {
         val landscape = maxWidth > maxHeight
         val barHeight = if (landscape) EventsDimens.BarHeightLying else EventsDimens.BarHeight
         when (state) {
             EventState.Loading -> Column(Modifier.fillMaxSize()) {
-                ElementTopBar(title = "", titleVisible = false, height = barHeight, onBack = { onIntent(EventIntent.BackClicked) }, onEdit = null, loaded = false)
+                ElementTopBar(title = "", titleVisible = false, height = barHeight, onBack = { onPress(EventIntent.BackClicked) }, onEdit = null, loaded = false)
             }
             EventState.NotFound -> Column(Modifier.fillMaxSize()) {
-                ElementTopBar(title = "", titleVisible = false, height = barHeight, onBack = { onIntent(EventIntent.BackClicked) }, onEdit = null, loaded = false)
+                ElementTopBar(title = "", titleVisible = false, height = barHeight, onBack = { onPress(EventIntent.BackClicked) }, onEdit = null, loaded = false)
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(text = stringResource(Res.string.event_not_found), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge)
                 }
             }
             is EventState.Loaded -> {
-                val blocks = EventBlockScope(state, onIntent, recording, zone)
+                val blocks = EventBlockScope(state, onPress, recording, zone)
                 if (landscape) LandscapeLayout(blocks, take, maxWidth) else PortraitLayout(blocks, take)
                 EventSheetHost(state, onIntent)
                 if (state.dialog == EventDialog.DeleteOne) {

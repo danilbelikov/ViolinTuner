@@ -2,9 +2,12 @@ package com.violinjourney.app.feature.history
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,13 +38,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.testTag
 import com.violinjourney.app.core.ui.components.AppButton
 import com.violinjourney.app.core.ui.components.AppButtonStyle
 import com.violinjourney.app.core.ui.components.AppChip
@@ -51,10 +57,13 @@ import com.violinjourney.app.core.ui.components.TabTitle
 import com.violinjourney.app.core.ui.components.currentDockMetrics
 import com.violinjourney.app.core.ui.components.dimmedWhen
 import com.violinjourney.app.core.ui.icons.AppIcons
+import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.core.ui.theme.AppShapes
+import com.violinjourney.app.feature.events.EventsDimens
 import com.violinjourney.app.feature.history.components.CardActions
 import com.violinjourney.app.feature.history.components.DailyChart
 import com.violinjourney.app.feature.history.components.DayHeader
+import com.violinjourney.app.feature.history.components.PerformancesRow
 import com.violinjourney.app.feature.history.components.RecordTile
 import com.violinjourney.app.feature.history.components.RecordTileSize
 import com.violinjourney.app.feature.history.components.SelectionBar
@@ -88,6 +97,12 @@ import org.jetbrains.compose.resources.stringResource
 // The tab «Записи» of R5 (spec 3.36.5, 5.29 R5; records.html 1).
 private val ScreenPadding = 16.dp
 private val MaxContentWidth = 560.dp
+
+/**
+ * The tag of the strip — outside its dimming: while picking, the dimmed strip says nothing to TalkBack, and a test that follows its place
+ * frame by frame has nothing else to find it by (`HistoryTabTest`).
+ */
+internal const val HISTORY_STRIP_TAG = "history strip"
 
 /** The line of the title: as high as the selection bar that lies over it while picking (56; lying 52). */
 private val TitleRowHeight = SelectionBarHeight.Portrait
@@ -125,6 +140,9 @@ private const val CARD_COLLAPSE_MS = 250
 /** Kinds of rows of the list of records: a composition is reused only for a row of its own kind. */
 private const val DAY_HEADER = "dayHeader"
 private const val RECORD_CARD = "recordCard"
+
+/** The key of the row «Выступления» in the list upright — of the row alone, and of the row over the block of an empty tab. */
+private const val PERFORMANCES = "performances"
 
 /**
  * The columns of the tab lying (spec 3.36.5): the title, the strip and the chips on the left, 360 as before; the list on the right,
@@ -182,13 +200,26 @@ fun HistoryScreen(
 /**
  * Upright: one column up to 560. One list whatever there is (spec 3.36.5, 5.12): the last card deleted fades out and closes as every
  * deleted card does, and the strip and the chips fade with it, instead of an empty tab taking the place of the list at once. An empty
- * tab has the bottom zone with «Открыть Live» over the tabs — the zone is there only then ([AppDock] `pinned`).
+ * tab has the bottom zone with «Открыть Live» over the tabs — the zone is there only then ([AppDock] `pinned`). The row «Выступления»
+ * (spec 3.36.9) is the first under the title, 4 under it, the strip 8 under the row; in an empty tab the row and the block of the tab
+ * are one element of the list — the block stands in the middle of what the row leaves ([RowOverEmptyTab]). While picking the row goes
+ * as the strip and the chips go when the last card is deleted — it fades out where it stands, without shrinking; no motion of its own
+ * (plan D44): what was under it comes up with the shift the cards take after a deletion.
  */
 @Composable
 private fun PortraitLayout(state: HistoryState, onIntent: (HistoryIntent) -> Unit, zone: TimeZone, cardActions: CardActions?) {
     val title = stringResource(Res.string.nav_history)
     val selecting = state.selection.active
     val empty = state.nothingAtAll
+    val performances = state.performances
+    // «убрать анимации» — at once
+    val reduceMotion = LocalReduceMotion.current
+    val rowFadeOut = if (reduceMotion) null else tween<Float>(CARD_FADE_OUT_MS)
+    // The strip and the chips follow the row as the cards do (their shift after a deletion, 250): a list draws what leaves it under the
+    // rest (LazyLayoutItemAnimator), so a strip that jumped into the place of the row at once would hide its fade. Nothing above them
+    // moved before the row (R5): their frames there are the same.
+    val belowTheRow = if (reduceMotion) null else tween<IntOffset>(CARD_COLLAPSE_MS)
+    val openPerformances = { onIntent(HistoryIntent.PerformancesClicked) }
     AppDock(
         dock = { OpenLiveButton(onIntent, compact = compact) },
         modifier = Modifier.widthIn(max = MaxContentWidth).fillMaxSize(),
@@ -208,20 +239,29 @@ private fun PortraitLayout(state: HistoryState, onIntent: (HistoryIntent) -> Uni
                 }
                 when {
                     state.loading -> Unit
-                    empty -> item(key = "emptyAll") {
-                        // in the middle of what is left between the title and the zone; scrolls when it is more (a large font on 360 × 640)
-                        Column(Modifier.fillMaxWidth().heightIn(min = room), verticalArrangement = Arrangement.Center) {
-                            EmptyAll()
-                        }
+                    empty -> item(key = PERFORMANCES) {
+                        // in the middle of what is left between the row and the zone; scrolls when it is more (a large font on 360 × 640)
+                        RowOverEmptyTab(performances?.takeUnless { selecting }, onClick = openPerformances, room = room)
                     }
                     else -> {
+                        if (performances != null && !selecting) {
+                            item(key = PERFORMANCES) {
+                                PerformancesRow(
+                                    performances = performances,
+                                    onClick = openPerformances,
+                                    modifier = Modifier
+                                        .animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = rowFadeOut)
+                                        .padding(top = EventsDimens.RecordsRowTop),
+                                )
+                            }
+                        }
                         item(key = "strip") {
-                            StripCard(state, Modifier.animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = tween(CARD_FADE_OUT_MS)).padding(top = StripTop).dimmedWhen(selecting))
+                            StripCard(state, Modifier.animateItem(fadeInSpec = null, placementSpec = belowTheRow, fadeOutSpec = tween(CARD_FADE_OUT_MS)).padding(top = StripTop).testTag(HISTORY_STRIP_TAG).dimmedWhen(selecting))
                         }
                         item(key = "chips") {
                             KindChips(
                                 state.filter, onSelect = { onIntent(HistoryIntent.FilterSelected(it)) },
-                                Modifier.animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = tween(CARD_FADE_OUT_MS)).padding(top = ChipsTop, bottom = ChipsBottom).dimmedWhen(selecting),
+                                Modifier.animateItem(fadeInSpec = null, placementSpec = belowTheRow, fadeOutSpec = tween(CARD_FADE_OUT_MS)).padding(top = ChipsTop, bottom = ChipsBottom).dimmedWhen(selecting),
                             )
                         }
                         records(state, onIntent, zone, cardActions)
@@ -237,12 +277,15 @@ private fun PortraitLayout(state: HistoryState, onIntent: (HistoryIntent) -> Uni
  * the strip and the chips dimmed while picking, when the bar lies over the whole width; on the right the list, from under the bar.
  * No bottom zone: the main action is to open a recording. An empty tab — the title alone on the left, and on the right in the middle
  * the tile, the words and «Открыть Live» as the main button of the column. The list on the right is one whatever there is, as upright:
- * the last card deleted fades out, and the strip and the chips on the left fade with it.
+ * the last card deleted fades out, and the strip and the chips on the left fade with it. The row «Выступления» (spec 3.36.9) stands in
+ * the left column under the title — in an empty tab too — and while picking goes as upright: it fades out where it stands and the strip
+ * and the chips come up into its place over 250 (plan D44, 5.29 R9).
  */
 @Composable
 private fun LandscapeLayout(state: HistoryState, onIntent: (HistoryIntent) -> Unit, zone: TimeZone, cardActions: CardActions?, leftWidth: Dp) {
     val selecting = state.selection.active
     val empty = state.nothingAtAll
+    val reduceMotion = LocalReduceMotion.current
     Row(Modifier.fillMaxSize().padding(start = ScreenPadding)) {
         Column(
             Modifier
@@ -255,10 +298,32 @@ private fun LandscapeLayout(state: HistoryState, onIntent: (HistoryIntent) -> Un
                 stringResource(Res.string.nav_history), canSelect = state.canSelect,
                 onSelect = { onIntent(HistoryIntent.Select(SelectionIntent.SelectClicked)) }, landscape = true,
             )
+            // the row comes with the list read, at once — no animation then: it is composed shown. While picking it goes as upright: it
+            // fades out (150) where it stands, unclipped, while its place closes over 250 and the strip and the chips under it come up into
+            // it; after picking it stands at once and they go down the same way (5.29 R9, review of stage 99); «убрать анимации» — at once
+            if (!state.loading) {
+                state.performances?.let { performances ->
+                    AnimatedVisibility(
+                        visible = !selecting,
+                        enter = if (reduceMotion) EnterTransition.None else expandVertically(tween(CARD_COLLAPSE_MS), expandFrom = Alignment.Top, clip = false),
+                        exit = if (reduceMotion) {
+                            ExitTransition.None
+                        } else {
+                            fadeOut(tween(CARD_FADE_OUT_MS)) + shrinkVertically(tween(CARD_COLLAPSE_MS), shrinkTowards = Alignment.Top, clip = false)
+                        },
+                    ) {
+                        PerformancesRow(
+                            performances = performances,
+                            onClick = { onIntent(HistoryIntent.PerformancesClicked) },
+                            modifier = Modifier.padding(top = EventsDimens.RecordsRowTop),
+                        )
+                    }
+                }
+            }
             // they come with the list read at once, and go with the last card — fading as it does
             AnimatedVisibility(visible = !state.loading && !empty, enter = EnterTransition.None, exit = fadeOut(tween(CARD_FADE_OUT_MS))) {
                 Column {
-                    StripCard(state, Modifier.padding(top = StripTop).dimmedWhen(selecting))
+                    StripCard(state, Modifier.padding(top = StripTop).testTag(HISTORY_STRIP_TAG).dimmedWhen(selecting))
                     KindChips(state.filter, onSelect = { onIntent(HistoryIntent.FilterSelected(it)) }, Modifier.padding(top = ChipsTop, bottom = ChipsBottom).dimmedWhen(selecting))
                 }
             }
@@ -292,6 +357,32 @@ private fun LandscapeLayout(state: HistoryState, onIntent: (HistoryIntent) -> Un
 
 /** Nothing recorded at all: no strip and no chips — a word of what will be here, and the way to Live. */
 private val HistoryState.nothingAtAll: Boolean get() = !loading && totalCount == 0
+
+/**
+ * An empty tab upright (spec 3.36.9, plan D44): the row «Выступления» first, 4 under the title, and the block of the tab in the middle of
+ * what the row leaves of [room] — the room between the title and the zone — one element of the list, so the block does not slide down by
+ * the height of the row. Where the block is taller than what is left (a large font on 360 × 640), it comes right under the row and
+ * scrolls. Without the row ([performances] null) — the block alone in the middle of [room], as before.
+ */
+@Composable
+private fun RowOverEmptyTab(performances: HistoryPerformances?, onClick: () -> Unit, room: Dp) {
+    Layout(
+        content = {
+            if (performances != null) PerformancesRow(performances, onClick = onClick, modifier = Modifier.padding(top = EventsDimens.RecordsRowTop))
+            EmptyAll()
+        },
+    ) { measurables, constraints ->
+        val loose = constraints.copy(minHeight = 0)
+        val row = if (measurables.size > 1) measurables.first().measure(loose) else null
+        val block = measurables.last().measure(loose)
+        val above = row?.height ?: 0
+        val space = maxOf(room.roundToPx() - above, block.height)
+        layout(constraints.maxWidth, above + space) {
+            row?.placeRelative(0, 0)
+            block.placeRelative(0, above + (space - block.height) / 2)
+        }
+    }
+}
 
 /** «Выбрать» only while the chip shows cards (spec 3.36.5); gone under the bar while picking. */
 private val HistoryState.canSelect: Boolean get() = !loading && cards.isNotEmpty() && !selection.active

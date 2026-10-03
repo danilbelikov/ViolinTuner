@@ -15,6 +15,9 @@ import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.audio.playback.PlayerState
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.Zone
+import com.violinjourney.app.core.domain.events.BuiltInKind
+import com.violinjourney.app.core.domain.events.KindRef
+import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.domain.session.SessionAnalyzer
 import com.violinjourney.app.core.domain.session.SessionDetails
 import com.violinjourney.app.core.domain.session.SessionSample
@@ -31,6 +34,7 @@ import com.violinjourney.app.feature.session.components.VideoSurfaceCallbacks
 import com.violinjourney.app.feature.sound.SoundCaption
 import kotlin.math.abs
 import kotlin.math.sin
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
@@ -109,6 +113,30 @@ private fun TakePreview() = Screen(Sound)
 @Composable
 private fun FreePreview() = Screen(
     SessionState.Loaded(contentOf(piece = false), player = Player.copy(processed = false), sound = Off, waveform = Wave),
+)
+
+/** «Осенний концерт» of 24 October (spec 3.36.9): its recordings are named by it and say the word of its kind under the name. */
+private val Concert = SessionEvent(4, "Осенний концерт", LocalDate(2026, 10, 24), KindRef.BuiltIn(BuiltInKind.PERFORMANCE), ownName = null)
+
+@Preview(name = "Запись события: «Осенний концерт · 24 октября», «выступление · 18:42 · 2:05», без «К произведению»", locale = "ru", device = "spec:width=412dp,height=892dp")
+@Composable
+private fun EventRecordPreview() = Screen(
+    SessionState.Loaded(contentOf(piece = false).copy(event = Concert), player = Player, sound = Hall, waveform = Wave),
+)
+
+@Preview(name = "Видео события: слово вида и у видео — «выступление · 18:42 · 2:05»", locale = "ru", device = "spec:width=412dp,height=892dp")
+@Composable
+private fun EventVideoPreview() = Screen(
+    SessionState.Loaded(contentOf(piece = false).copy(event = Concert, hasVideo = true), player = Player, sound = Hall, waveform = Wave, video = Video),
+)
+
+@Preview(name = "Запись события своего вида: имя вида, как написано — «Оркестр ДК · 18:42 · 2:05»", locale = "ru", device = "spec:width=412dp,height=892dp")
+@Composable
+private fun EventOwnKindPreview() = Screen(
+    SessionState.Loaded(
+        contentOf(piece = false).copy(event = SessionEvent(5, "Сводная", LocalDate(2026, 9, 27), KindRef.Custom(9), ownName = "Оркестр ДК")),
+        player = Player, sound = Hall, waveform = Wave,
+    ),
 )
 
 @Preview(name = "Запись · свои настройки, которые ничего не делают: «Звук · выключен» во всю ширину, без A/B", locale = "ru", device = "spec:width=412dp,height=892dp")

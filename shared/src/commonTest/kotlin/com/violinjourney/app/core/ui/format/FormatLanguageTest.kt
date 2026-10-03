@@ -150,6 +150,32 @@ class FormatLanguageTest {
     }
 
     /**
+     * The tile of a date of «Выступления» (review of stage 99): under its day the Russian month is the form of a date — «18 / мая», as the
+     * mockups write the exam, not «18 / май» — which differs from the standing form in March, May, June and July; the dot of a short form
+     * is dropped. The other languages keep theirs (de «Mär», not «März»).
+     */
+    @Test
+    fun `the month on the tile of a date is the form of a date in Russian`() {
+        val days = listOf(3, 5, 6, 7, 9).map { LocalDate(2026, it, 18) }
+        assertEquals(listOf("мар", "мая", "июн", "июл", "сент"), days.map(Formats::shortMonth))
+    }
+
+    /**
+     * A date in words that wrap (5.29 R9, review of stage 99: «число и слово при этом не разрываются»): its spaces are no-break ones — the
+     * words break before it, never between its day, its month and its year; a language without spaces in its dates keeps them as they are.
+     */
+    @Test
+    fun `a date in words that wrap never breaks inside`() {
+        val october = LocalDate(2026, 10, 24)
+        val december = LocalDate(2025, 12, 27)
+        assertEquals("24 октября", Formats.recordDateWhole(october, withYear = false))
+        assertEquals("27 декабря 2025", Formats.recordDateWhole(december, withYear = true))
+        use("de"); assertEquals("24. Oktober", Formats.recordDateWhole(october, withYear = false))
+        use("en"); assertEquals("December 27, 2025", Formats.recordDateWhole(december, withYear = true))
+        use("ja"); assertEquals("10月24日", Formats.recordDateWhole(october, withYear = false))
+    }
+
+    /**
      * The dates of the answers of the sheet of a repeat (plan D31): of one month its name once — after the last day, or before the first
      * in English, Korean, Chinese and Japanese — and of two months each date whole; «、» between them in Chinese and Japanese.
      */

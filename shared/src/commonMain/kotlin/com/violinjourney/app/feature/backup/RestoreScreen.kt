@@ -35,6 +35,7 @@ import com.violinjourney.app.core.time.today
 import com.violinjourney.app.core.ui.components.AppButton
 import com.violinjourney.app.core.ui.components.AppButtonStyle
 import com.violinjourney.app.core.ui.components.ScreenHeader
+import com.violinjourney.app.core.ui.components.arrivalPresses
 import com.violinjourney.app.core.ui.components.currentDockMetrics
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
@@ -175,8 +176,8 @@ fun RestoreScreen(
         Crossfade(targetState = face, animationSpec = tween(SWAP_MS), modifier = Modifier.fillMaxSize(), label = "restoreFace") { target ->
             val shown = heldWhile(faceOf(screen) == target, screen)
             val job = shown.job
-            // every face, the first one too: the screen itself comes under the finger that opened it (zonePresses)
-            val onZone = zonePresses(onIntent)
+            // every face, the first one too: the screen itself comes under the finger that opened it (arrivalPresses)
+            val onZone = arrivalPresses(onIntent)
             when (target) {
                 RestoreFace.PASSPORT -> Passport(shown, zone, today, onZone)
                 RestoreFace.PROGRESS -> if (job is BackupJob.Restoring) Progress(job, onZone, goesOnInBackground)

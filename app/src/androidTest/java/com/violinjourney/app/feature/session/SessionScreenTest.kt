@@ -10,6 +10,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
@@ -56,6 +58,9 @@ import com.violinjourney.app.core.audio.playback.PlayerState
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.Note
 import com.violinjourney.app.core.domain.ViolinString
+import com.violinjourney.app.core.domain.events.BuiltInKind
+import com.violinjourney.app.core.domain.events.KindRef
+import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.domain.session.SessionAnalyzer
 import com.violinjourney.app.core.domain.session.SessionDetails
 import com.violinjourney.app.core.domain.session.SessionSample
@@ -63,6 +68,7 @@ import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.core.domain.sound.BuiltInPreset
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.feature.events.eventKindWord
 import com.violinjourney.app.feature.session.components.NotePlace
 import com.violinjourney.app.feature.session.components.NoteSheetButtons
 import com.violinjourney.app.feature.session.components.NoteSheetContent
@@ -78,6 +84,7 @@ import com.violinjourney.app.shared.resources.card_menu_delete
 import com.violinjourney.app.shared.resources.session_action_rename
 import com.violinjourney.app.shared.resources.session_card_per_string
 import com.violinjourney.app.shared.resources.session_drift_open
+import com.violinjourney.app.shared.resources.session_event_subtitle
 import com.violinjourney.app.shared.resources.session_menu_piece
 import com.violinjourney.app.shared.resources.session_note_duration
 import com.violinjourney.app.shared.resources.session_note_min_max
@@ -87,6 +94,7 @@ import com.violinjourney.app.shared.resources.session_percent
 import com.violinjourney.app.shared.resources.session_player_play
 import com.violinjourney.app.shared.resources.session_summary_in_tune
 import com.violinjourney.app.shared.resources.session_take_subtitle
+import com.violinjourney.app.shared.resources.session_video_subtitle
 import com.violinjourney.app.shared.resources.sound_caption_everyone
 import com.violinjourney.app.shared.resources.sound_session_icon
 import com.violinjourney.app.shared.resources.sound_session_row
@@ -102,6 +110,7 @@ import com.violinjourney.app.testing.textLayout
 import java.util.Locale
 import kotlin.math.abs
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.stringResource
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -179,6 +188,11 @@ class SessionScreenTest {
             words[VIOLIN] = stringResource(Res.string.backing_heard_violin)
             words[BACKING_MARK] = stringResource(Res.string.backing_take_mark)
             words[SUBTITLE] = stringResource(Res.string.session_take_subtitle, Formats.timeOfDay(STARTED, UTC), Formats.duration(TAKE.durationMs))
+            // «выступление · 19:02 · 3:40»: the word of the kind of its event first (spec 3.36.9)
+            words[EVENT_SUBTITLE] = stringResource(
+                Res.string.session_event_subtitle, eventKindWord(CONCERT.kind, CONCERT.ownName), Formats.timeOfDay(STARTED, UTC), Formats.duration(TAKE.durationMs),
+            )
+            words[VIDEO_SUBTITLE] = stringResource(Res.string.session_video_subtitle, Formats.timeOfDay(STARTED, UTC), Formats.duration(TAKE.durationMs))
             words[SIZE] = stringResource(Res.string.video_size, stringResource(Res.string.video_resolution, FULL_HD), Formats.fileSize(BIG_VIDEO))
             words[PICTURE] = stringResource(Res.string.video_description)
             words[LISTEN] = stringResource(Res.string.video_listen_place)
@@ -314,6 +328,32 @@ class SessionScreenTest {
     @Test
     fun aFreeRecordingHasNoPieceToGoTo() {
         show(PLAYING.copy(content = TAKE.copy(pieceId = null, pieceTitle = null)))
+        compose.onNodeWithContentDescription(word(MORE)).performClick()
+        compose.onNodeWithText(word(RENAME)).assertIsDisplayed()
+        compose.onAllNodesWithText(word(PIECE)).assertCountEquals(0)
+    }
+
+    /**
+     * Spec 3.36.9, «Экран записи» (plan 8.6, review of stage 99): the line under the name of a recording of an event begins with the word of
+     * the kind of its event — «выступление · 19:02 · 3:40», in this order — and a video of an event says it too, not «видео · …»; «⋯» has
+     * no «К произведению» — a recording of an event belongs to no piece.
+     */
+    @Test
+    fun theLineUnderTheNameOfARecordingOfAnEventSaysTheKindOfItsEvent() {
+        var shown by mutableStateOf<SessionState>(PLAYING.copy(content = TAKE.copy(pieceId = null, pieceTitle = null, event = CONCERT)))
+        show({ shown })
+        compose.onNodeWithContentDescription(word(EVENT_SUBTITLE)).assertIsDisplayed()
+        compose.onAllNodesWithContentDescription(word(SUBTITLE)).assertCountEquals(0)
+
+        // its video: the kind of the event too, not «видео · …»
+        shown = PLAYING.copy(
+            content = TAKE.copy(pieceId = null, pieceTitle = null, hasVideo = true, event = CONCERT),
+            video = VideoUi(width = 1920, height = 1080, showing = true, sizeBytes = SMALL_VIDEO),
+        )
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription(word(EVENT_SUBTITLE)).assertIsDisplayed()
+        compose.onAllNodesWithContentDescription(word(VIDEO_SUBTITLE)).assertCountEquals(0)
+
         compose.onNodeWithContentDescription(word(MORE)).performClick()
         compose.onNodeWithText(word(RENAME)).assertIsDisplayed()
         compose.onAllNodesWithText(word(PIECE)).assertCountEquals(0)
@@ -593,6 +633,8 @@ class SessionScreenTest {
         const val VIOLIN = "violin"
         const val BACKING_MARK = "backingMark"
         const val SUBTITLE = "subtitle"
+        const val EVENT_SUBTITLE = "eventSubtitle"
+        const val VIDEO_SUBTITLE = "videoSubtitle"
         const val SIZE = "size"
         const val PICTURE = "picture"
         const val LISTEN = "listen"
@@ -624,6 +666,9 @@ class SessionScreenTest {
         val SHEET_WORDS_ON_360 = 320.dp
         const val F_SHARP_5 = 78
         const val STARTED = 1_789_000_000_000L
+
+        /** The autumn concert of the mockups: a recording of it says «выступление» under its name. */
+        val CONCERT = SessionEvent(3, "Осенний концерт", LocalDate(2026, 10, 24), KindRef.BuiltIn(BuiltInKind.PERFORMANCE), null)
         val UTC = TimeZone.UTC
 
         /** The panel of the player upright on a phone: 12 over «play» (5.29 R5). */

@@ -7,26 +7,32 @@ import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.backing.BackingRepository
 import com.violinjourney.app.core.domain.backing.takesUnderBacking
 import com.violinjourney.app.core.domain.events.EventRepository
+import com.violinjourney.app.core.domain.events.EventsConfig
+import com.violinjourney.app.core.domain.events.Performances
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.io.sizeBytes
 import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.core.time.ticksAt
 import com.violinjourney.app.core.time.today
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDate
 
 open class HistoryViewModel(
     private val repository: SessionRepository,
@@ -35,8 +41,12 @@ open class HistoryViewModel(
     private val clock: WallClock,
     private val audioFiles: SessionAudioFiles,
     private val backings: BackingRepository,
-    /** The events of the recordings (spec 3.35): a recording of one is named by it until it is given a name of its own. */
+    /**
+     * The events (spec 3.35): a recording of one is named by it until it is given a name of its own; the performances among them make
+     * the caption of the row «Выступления» (spec 3.36.9).
+     */
     private val events: EventRepository,
+    private val eventsConfig: EventsConfig,
     /** Where the list is built: off the main thread — sorting, dates and the sizes of the videos grow with the records. */
     private val background: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
@@ -85,11 +95,26 @@ open class HistoryViewModel(
         )
     }.flowOn(background)
 
+    /**
+     * The row «Выступления» (spec 3.36.9), apart from the list — it changes with the events and the time, the list does not: anew whenever
+     * the events or their kinds change, and by itself at the end of the nearest performance and at midnight ([Performances.nextChangeAt],
+     * plan D42), never in between ([ticksAt], plan D9).
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val performances: Flow<HistoryPerformances> = combine(events.events, events.kinds, ::Pair)
+        .flatMapLatest { (all, kinds) ->
+            // the zone is read at each wake: a flight changes it under an open screen
+            clock.ticksAt { at -> Performances.nextChangeAt(all, at, clock.zone, eventsConfig) }
+                .map { at -> HistoryReducer.performancesOf(all, kinds, at, clock.zone, eventsConfig) }
+        }
+        .distinctUntilChanged()
+
+    // The first state waits for the events too: the row comes with the strip and the chips, never after them (spec 3.36.9).
     val state: StateFlow<HistoryState> =
-        combine(listed, selection) { shown, selection ->
+        combine(listed, selection, performances) { shown, selection, performances ->
             visibleIds = shown.cards.map { it.id }
             shownCards = shown.cards
-            shown.copy(selection = SelectionRules.prune(selection, visibleIds))
+            shown.copy(selection = SelectionRules.prune(selection, visibleIds), performances = performances)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
@@ -98,6 +123,15 @@ open class HistoryViewModel(
 
     private val effectChannel = Channel<HistoryEffect>(Channel.BUFFERED)
     val effects: Flow<HistoryEffect> = effectChannel.receiveAsFlow()
+
+    /**
+     * The row «Выступления» has been pressed: they are on their way, and the row is not heard until the tab is in sight again
+     * ([HistoryIntent.Shown]). The second tap of a double tap that falls through to the tab going away — while «Выступления» are read
+     * nothing of them takes it — would wait in the channel of a route that stopped collecting and open them again after «назад» (5.29 R9,
+     * review of stage 99; as «Сначала сохранить текущие данные» of the passport, stage 122). `launchSingleTop` cannot see it: the first
+     * screen is long gone from the top by then.
+     */
+    private var performancesOpened = false
 
     fun onIntent(intent: HistoryIntent) {
         when (intent) {
@@ -111,6 +145,12 @@ open class HistoryViewModel(
                 viewModelScope.launch { repertoire.setBestTake(pieceId, if (card.best) null else card.id) }
             }
             HistoryIntent.OpenLiveClicked -> effectChannel.trySend(HistoryEffect.OpenLive)
+            // the row is gone while picking (spec 3.36.9): a tap that reaches it then is not heard
+            HistoryIntent.PerformancesClicked -> if (!selection.value.active && !performancesOpened) {
+                performancesOpened = true
+                effectChannel.trySend(HistoryEffect.OpenPerformances)
+            }
+            HistoryIntent.Shown -> performancesOpened = false
         }
     }
 

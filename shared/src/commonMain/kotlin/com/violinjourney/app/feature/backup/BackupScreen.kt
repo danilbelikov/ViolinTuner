@@ -59,6 +59,7 @@ import com.violinjourney.app.core.ui.components.OneLineText
 import com.violinjourney.app.core.ui.components.ScreenHeader
 import com.violinjourney.app.core.ui.components.WholeWords
 import com.violinjourney.app.core.ui.components.WholeWordsFit
+import com.violinjourney.app.core.ui.components.arrivalPresses
 import com.violinjourney.app.core.ui.components.currentDockMetrics
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
@@ -71,12 +72,12 @@ import com.violinjourney.app.shared.resources.backup_can_leave_text
 import com.violinjourney.app.shared.resources.backup_can_leave_title
 import com.violinjourney.app.shared.resources.backup_cancel_action
 import com.violinjourney.app.shared.resources.backup_close
-import com.violinjourney.app.shared.resources.backup_count_takes_few
-import com.violinjourney.app.shared.resources.backup_count_takes_many
-import com.violinjourney.app.shared.resources.backup_count_takes_one
 import com.violinjourney.app.shared.resources.backup_count_trophies_few
 import com.violinjourney.app.shared.resources.backup_count_trophies_many
 import com.violinjourney.app.shared.resources.backup_count_trophies_one
+import com.violinjourney.app.shared.resources.backup_count_video_few
+import com.violinjourney.app.shared.resources.backup_count_video_many
+import com.violinjourney.app.shared.resources.backup_count_video_one
 import com.violinjourney.app.shared.resources.backup_done
 import com.violinjourney.app.shared.resources.backup_failed_gone_text
 import com.violinjourney.app.shared.resources.backup_failed_gone_title
@@ -189,8 +190,8 @@ fun BackupScreen(state: BackupState, fileName: String, onIntent: (BackupIntent) 
         Crossfade(targetState = face, animationSpec = tween(SWAP_MS), modifier = Modifier.fillMaxSize(), label = "backupFace") { target ->
             val shown = heldWhile(faceOf(screen) == target, screen)
             val job = shown.job
-            // every face, the first one too: the screen itself comes under the finger that opened it (zonePresses)
-            val onZone = zonePresses(onIntent)
+            // every face, the first one too: the screen itself comes under the finger that opened it (arrivalPresses)
+            val onZone = arrivalPresses(onIntent)
             when (target) {
                 CopyFace.CHOOSE -> Choose(shown, fileName, onIntent, onZone)
                 CopyFace.NOTHING -> NothingToSave()
@@ -217,7 +218,7 @@ fun BackupScreen(state: BackupState, fileName: String, onIntent: (BackupIntent) 
  * shares, the parts, and what is left out a card of its consequences. The zone: «Сохранить в…» — «Сохраняем…» while a short copy goes, not
  * pressed — and «Отправить…» up to 200 МБ, or why not; while a take is recorded the reason stands over the dimmed «Сохранить в…» and the
  * rest is gone. Until the parts are counted a spinner stands for the total, the parts are not there and the zone holds the height of a
- * button empty. [onZone] — the presses of the zone ([zonePresses]); the parts take theirs straight.
+ * button empty. [onZone] — the presses of the zone ([arrivalPresses]); the parts take theirs straight.
  */
 @Composable
 private fun Choose(state: BackupState, fileName: String, onIntent: (BackupIntent) -> Unit, onZone: (BackupIntent) -> Unit) {
@@ -306,7 +307,8 @@ private fun Choose(state: BackupState, fileName: String, onIntent: (BackupIntent
                 part = BackupPart.VIDEO,
                 title = stringResource(Res.string.backup_part_video),
                 caption = listOf(
-                    plural(counts.videos, Res.string.backup_count_takes_one, Res.string.backup_count_takes_few, Res.string.backup_count_takes_many),
+                    // «6 видео», not «6 дублей»: the videos of events are no takes (spec 3.36.9, «Меняет» 3.36.8)
+                    plural(counts.videos, Res.string.backup_count_video_one, Res.string.backup_count_video_few, Res.string.backup_count_video_many),
                     weightOf(BackupPart.VIDEO),
                 ).joinToString(dot),
                 included = BackupPart.VIDEO in state.parts,

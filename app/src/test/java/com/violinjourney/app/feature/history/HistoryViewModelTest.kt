@@ -5,9 +5,14 @@ import com.violinjourney.app.core.domain.backing.BackingOutput
 import com.violinjourney.app.core.domain.backing.FakeBackingRepository
 import com.violinjourney.app.core.domain.backing.TakeBacking
 import com.violinjourney.app.core.domain.events.BuiltInKind
+import com.violinjourney.app.core.domain.events.CalendarEvent
+import com.violinjourney.app.core.domain.events.EventRepository
+import com.violinjourney.app.core.domain.events.EventsConfig
 import com.violinjourney.app.core.domain.events.FakeEventRepository
 import com.violinjourney.app.core.domain.events.KindRef
+import com.violinjourney.app.core.domain.events.PerformancesLine
 import com.violinjourney.app.core.domain.events.SessionEvent
+import com.violinjourney.app.core.domain.events.StoredKind
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
@@ -16,15 +21,19 @@ import com.violinjourney.app.core.domain.session.SessionAnalyzer
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.session.SessionSample
 import com.violinjourney.app.core.time.FixedWallClock
+import com.violinjourney.app.core.time.MutableWallClock
 import com.violinjourney.app.core.time.WallClock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -33,6 +42,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -107,7 +117,7 @@ class HistoryViewModelTest {
     }
 
     private fun TestScope.viewModel(): HistoryViewModel {
-        val viewModel = HistoryViewModel(watched, repertoire, config, clock, files, backings, events, background = StandardTestDispatcher(testScheduler))
+        val viewModel = HistoryViewModel(watched, repertoire, config, clock, files, backings, events, EventsConfig(), background = StandardTestDispatcher(testScheduler))
         backgroundScope.launch { viewModel.state.collect {} }
         return viewModel
     }
@@ -479,5 +489,141 @@ class HistoryViewModelTest {
         viewModel.onIntent(HistoryIntent.BestToggled(free)) // not a take: nothing to mark
         runCurrent()
         assertEquals(emptyList<Long>(), best())
+    }
+
+    /** A performance — or an event of [kind] — on [date] at [start] (minutes from midnight; null — «весь день») for [duration] minutes. */
+    private fun performance(id: Long, date: LocalDate, start: Int? = null, duration: Int? = null, title: String = "", kind: BuiltInKind = BuiltInKind.PERFORMANCE) =
+        CalendarEvent(id, KindRef.BuiltIn(kind), date, start, duration, title, place = "", notes = "", seriesId = null, detached = false, createdAtEpochMs = id)
+
+    /**
+     * Spec 3.36.9: the row «Выступления» is there always — in a tab without recordings too — and comes with the strip and the chips,
+     * never before them: the first state waits for the events. Its caption by how things stand: none at all, the nearest ahead with the
+     * days to it and how many are over, only those over; the plate in the colour the kind «Выступление» was given.
+     */
+    @Test
+    fun `the row of performances comes with the list and says how things stand`() = runTest {
+        val viewModel = viewModel()
+        assertNull("not while the list is read", viewModel.state.value.performances)
+        runCurrent()
+        val none = viewModel.state.value.performances!!
+        assertEquals(PerformancesLine.None, none.line)
+        assertEquals("the colour of the kind by default", EventsConfig().defaultColorOf(BuiltInKind.PERFORMANCE), none.look.color)
+        assertEquals(LocalDate(2026, 9, 17), none.today)
+        assertEquals("a tab without recordings has it too", 0, viewModel.state.value.totalCount)
+
+        val autumn = performance(1, LocalDate(2026, 10, 14), start = 18 * 60, duration = 90, title = "Осенний концерт")
+        val spring = performance(2, LocalDate(2026, 5, 16), start = 15 * 60, duration = 60)
+        events.events.value = listOf(autumn, spring, performance(3, LocalDate(2026, 9, 18), kind = BuiltInKind.LESSON))
+        events.storedKinds.value = listOf(StoredKind.Recolor(BuiltInKind.PERFORMANCE, 4))
+        runCurrent()
+        val ahead = viewModel.state.value.performances!!
+        assertEquals(PerformancesLine.Ahead(autumn, days = 27, pastCount = 1), ahead.line)
+        assertEquals("the colour given to the kind", 4, ahead.look.color)
+
+        events.events.value = listOf(spring)
+        runCurrent()
+        assertEquals(PerformancesLine.OnlyPast(count = 1, lastDate = LocalDate(2026, 5, 16)), viewModel.state.value.performances!!.line)
+    }
+
+    /**
+     * Spec 3.36.9: «При загрузке её нет, как полоски и чипов» — the row never comes after the strip and the chips. The events read later
+     * than the list (as Room may answer them): until they are there the tab is still loading — no list without the row is shown — and the
+     * first state that shows the list has the row too.
+     */
+    @Test
+    fun `the row comes with the strip and the chips even when the events are read later than the list`() = runTest {
+        save(daysAgo = 0)
+        val late = MutableSharedFlow<List<CalendarEvent>>(replay = 1)
+        val slow = object : EventRepository by events {
+            override val events: Flow<List<CalendarEvent>> = late
+        }
+        val viewModel = HistoryViewModel(watched, repertoire, config, clock, files, backings, slow, EventsConfig(), background = StandardTestDispatcher(testScheduler))
+        val seen = mutableListOf<HistoryState>()
+        backgroundScope.launch { viewModel.state.collect { seen += it } }
+        runCurrent()
+        assertTrue("the list read, the events not yet: still loading", viewModel.state.value.loading)
+        assertNull(viewModel.state.value.performances)
+
+        late.emit(listOf(performance(1, LocalDate(2026, 10, 14), start = 18 * 60, duration = 90, title = "Осенний концерт")))
+        runCurrent()
+        val shown = viewModel.state.value
+        assertFalse(shown.loading)
+        assertEquals(1, shown.totalCount)
+        assertTrue("the row with the list", shown.performances?.line is PerformancesLine.Ahead)
+        assertTrue("no state showed the list without the row: $seen", seen.none { !it.loading && it.performances == null })
+    }
+
+    /**
+     * 5.29 R9 «Уточнено на этапе 99», review of stage 99: a double tap of the row opens «Выступления» once — the second tap, fallen through
+     * to the tab going away while they are read, waits for nothing in the channel; back in sight ([HistoryIntent.Shown]), the row is heard
+     * again.
+     */
+    @Test
+    fun `the row opens performances once for a double tap and again once the tab is in sight`() = runTest {
+        val viewModel = viewModel()
+        runCurrent()
+        val effects = mutableListOf<HistoryEffect>()
+        backgroundScope.launch { viewModel.effects.collect { effects += it } }
+
+        viewModel.onIntent(HistoryIntent.PerformancesClicked)
+        viewModel.onIntent(HistoryIntent.PerformancesClicked)
+        runCurrent()
+        assertEquals(listOf<HistoryEffect>(HistoryEffect.OpenPerformances), effects)
+
+        viewModel.onIntent(HistoryIntent.Shown)
+        viewModel.onIntent(HistoryIntent.PerformancesClicked)
+        runCurrent()
+        assertEquals(listOf<HistoryEffect>(HistoryEffect.OpenPerformances, HistoryEffect.OpenPerformances), effects)
+    }
+
+    /** Spec 3.36.9: the row opens «Выступления»; while picking it is gone, and a tap that reaches it then is not heard. */
+    @Test
+    fun `the row of performances opens them and is not heard while picking`() = runTest {
+        val recording = save(daysAgo = 0)
+        val viewModel = viewModel()
+        runCurrent()
+        val effects = mutableListOf<HistoryEffect>()
+        backgroundScope.launch { viewModel.effects.collect { effects += it } }
+
+        viewModel.select(SelectionIntent.CardLongPressed(recording))
+        viewModel.onIntent(HistoryIntent.PerformancesClicked)
+        runCurrent()
+        assertEquals(emptyList<HistoryEffect>(), effects)
+
+        viewModel.select(SelectionIntent.Closed)
+        viewModel.onIntent(HistoryIntent.PerformancesClicked)
+        runCurrent()
+        assertEquals(listOf<HistoryEffect>(HistoryEffect.OpenPerformances), effects)
+    }
+
+    /**
+     * Plan D42: the row moves on by itself while the tab is open — the concert of today goes over at its end («3 прошло» grows, the next
+     * one is the nearest), and at midnight the days to the next one are one fewer — without the list being built again.
+     */
+    @Test
+    fun `the row moves on at the end of a concert and at midnight by itself`() = runTest {
+        val moscow = TimeZone.of("Europe/Moscow")
+        val wall = MutableWallClock(Instant.parse("2026-09-17T16:59:59Z").toEpochMilliseconds(), moscow) // 19:59:59 in Moscow
+        val tonight = performance(1, LocalDate(2026, 9, 17), start = 18 * 60 + 30, duration = 90, title = "Осенний концерт")
+        val november = performance(2, LocalDate(2026, 11, 20), start = 19 * 60)
+        events.events.value = listOf(tonight, november)
+        save(daysAgo = 0)
+        val viewModel = HistoryViewModel(watched, repertoire, config, wall, files, backings, events, EventsConfig(), background = StandardTestDispatcher(testScheduler))
+        backgroundScope.launch { viewModel.state.collect {} }
+        runCurrent()
+        val cards = viewModel.state.value.cards
+        assertEquals(PerformancesLine.Ahead(tonight, days = 0, pastCount = 0), viewModel.state.value.performances!!.line)
+
+        wall.nowMs += 1_000 // 20:00 — the concert is over
+        advanceTimeBy(1_000)
+        runCurrent()
+        assertEquals(PerformancesLine.Ahead(november, days = 64, pastCount = 1), viewModel.state.value.performances!!.line)
+
+        wall.nowMs += 4 * 3_600_000L // midnight
+        advanceTimeBy(4 * 3_600_000L)
+        runCurrent()
+        assertEquals(PerformancesLine.Ahead(november, days = 63, pastCount = 1), viewModel.state.value.performances!!.line)
+        assertFalse("nothing went back to loading", viewModel.state.value.loading)
+        assertTrue("the cards are the ones built before", cards === viewModel.state.value.cards)
     }
 }

@@ -7,6 +7,7 @@ import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
+import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
 
 /**
@@ -44,6 +45,10 @@ object Formats {
 
     /** No-break space: a grouped number never wraps in the middle. */
     private const val GROUP_SEPARATOR = "\u00A0"
+
+    /** The same space, put in the place of the spaces of a date that must not wrap ([recordDateWhole]). */
+    private const val NO_BREAK_SPACE = '\u00A0'
+
     /** «45 мин», «45 min», «45분». */
     private fun minutes(n: Long) = "$n${language.unitSpace}${language.minute}"
     private fun hours(n: Any) = "$n${language.unitSpace}${language.hour}"
@@ -184,6 +189,12 @@ object Formats {
     /** "20 сентября"; a date of another year says which: "20 сентября 2025" (spec 3.21). */
     fun recordDate(date: LocalDate, withYear: Boolean): String = date(if (withYear) language.dayMonthYear else language.dayMonth, date)
 
+    /**
+     * [recordDate] that never breaks inside — its spaces no-break ones: a date standing in words that wrap, «3 прошло · последнее 24
+     * октября» of the row «Выступления» (5.29 R9: «число и слово при этом не разрываются»). The words break before it, never in it.
+     */
+    fun recordDateWhole(date: LocalDate, withYear: Boolean): String = recordDate(date, withYear).replace(' ', NO_BREAK_SPACE)
+
     /** The header of a day in «Записи»: "20 сентября, воскресенье" / "20 сентября 2025, суббота". */
     fun recordDayHeader(date: LocalDate, withYear: Boolean): String =
         date(if (withYear) language.dayMonthYearWeekday else language.dayMonthWeekday, date)
@@ -218,8 +229,12 @@ object Formats {
     /** «сб 24 октября»: the short weekday, the day and the whole month. */
     fun weekdayDayMonth(date: LocalDate): String = weekdayInside(date(language.weekdayDayMonth, date))
 
-    /** «окт»: the short month alone, without the language's dot — the tile of a date in «Выступления». */
-    fun shortMonth(date: LocalDate): String = date(language.shortMonth, date).trimEnd('.')
+    /**
+     * «окт», «мая»: the short month alone, without the language's dot — the tile of a date in «Выступления», under its day; in Russian in
+     * the form of a date ([FormatLanguage.shortMonthNames]).
+     */
+    fun shortMonth(date: LocalDate): String =
+        language.shortMonthNames?.get(date.month.number - 1) ?: date(language.shortMonth, date).trimEnd('.')
 
     /** «понедельник, 28 сентября»: the whole weekday first — what TalkBack says of a date of the form (plan D46). */
     fun weekdayFullDate(date: LocalDate): String = weekdayInside(date(language.weekdayFullDate, date))

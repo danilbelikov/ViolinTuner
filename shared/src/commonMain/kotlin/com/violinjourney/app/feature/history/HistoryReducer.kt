@@ -1,11 +1,20 @@
 package com.violinjourney.app.feature.history
 
 import com.violinjourney.app.core.domain.IntonationConfig
+import com.violinjourney.app.core.domain.events.BuiltInKind
+import com.violinjourney.app.core.domain.events.CalendarEvent
+import com.violinjourney.app.core.domain.events.EventKind
+import com.violinjourney.app.core.domain.events.EventsConfig
+import com.violinjourney.app.core.domain.events.KindRef
+import com.violinjourney.app.core.domain.events.KindRules
+import com.violinjourney.app.core.domain.events.Performances
 import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.domain.session.RecordDays
 import com.violinjourney.app.core.domain.session.SessionSummary
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 /** Stored sessions → history screen (spec 3.11). Pure: "today" and the zone come from outside. */
 object HistoryReducer {
@@ -46,6 +55,18 @@ object HistoryReducer {
                 },
         )
     }
+
+    /**
+     * The row «Выступления» at [now] (spec 3.36.9): its caption — the nearest performance ahead with its term and how many are over,
+     * only those over and the date of the last one, or none at all ([Performances.line]) — and the look of the kind «Выступление» from
+     * [kinds] (its colour may have been changed). Apart from the list: it changes with the events and the time, the list does not.
+     */
+    fun performancesOf(events: List<CalendarEvent>, kinds: List<EventKind>, now: Instant, zone: TimeZone, config: EventsConfig): HistoryPerformances =
+        HistoryPerformances(
+            line = Performances.line(events, now, zone, config),
+            look = KindRules.lookOf(KindRef.BuiltIn(BuiltInKind.PERFORMANCE), kinds, config),
+            today = now.toLocalDateTime(zone).date,
+        )
 
     fun loading(filter: HistoryFilter): HistoryState =
         HistoryState(

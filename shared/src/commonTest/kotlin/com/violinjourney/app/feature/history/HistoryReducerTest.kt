@@ -3,8 +3,14 @@ package com.violinjourney.app.feature.history
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.Zone
 import com.violinjourney.app.core.domain.events.BuiltInKind
+import com.violinjourney.app.core.domain.events.CalendarEvent
+import com.violinjourney.app.core.domain.events.EventsConfig
 import com.violinjourney.app.core.domain.events.KindRef
+import com.violinjourney.app.core.domain.events.KindRules
+import com.violinjourney.app.core.domain.events.KindSign
+import com.violinjourney.app.core.domain.events.PerformancesLine
 import com.violinjourney.app.core.domain.events.SessionEvent
+import com.violinjourney.app.core.domain.events.StoredKind
 import com.violinjourney.app.core.domain.session.SessionSummary
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -209,5 +215,41 @@ class HistoryReducerTest {
         val cards = HistoryReducer.stateOf(listOf(lessonSound, renamed, orphan), HistoryFilter.ALL, today, moscow, config, recordEvents = mapOf(3L to lesson)).cards
         assertEquals(mapOf(21L to lesson, 23L to lesson, 24L to null), cards.associate { it.id to it.event })
         assertEquals(mapOf(21L to null, 23L to "Этюд на уроке", 24L to "Урок · 9 сентября"), cards.associate { it.id to it.title })
+    }
+
+    // The row «Выступления» (spec 3.36.9): Thursday 17 September 2026, 12:00 in Moscow.
+    private val noon = LocalDateTime(2026, 9, 17, 12, 0).toInstant(moscow)
+    private val eventsConfig = EventsConfig()
+
+    private fun performance(id: Long, date: LocalDate, start: Int?, duration: Int?, title: String = "", kind: BuiltInKind = BuiltInKind.PERFORMANCE) =
+        CalendarEvent(id, KindRef.BuiltIn(kind), date, start, duration, title, place = "", notes = "", seriesId = null, detached = false, createdAtEpochMs = id)
+
+    @Test
+    fun `the row of performances says the nearest ahead or only those over or none at all`() {
+        val tonight = performance(1, today, 18 * 60 + 30, 90, title = "Осенний концерт")
+        val spring = performance(2, LocalDate(2026, 5, 16), 15 * 60, 60)
+        val winter = performance(3, LocalDate(2025, 12, 27), null, null)
+        val lessonOfTomorrow = performance(4, LocalDate(2026, 9, 18), 17 * 60, 45, kind = BuiltInKind.LESSON)
+        val eventKinds = KindRules.all(emptyList(), eventsConfig)
+
+        val ahead = HistoryReducer.performancesOf(listOf(winter, tonight, lessonOfTomorrow, spring), eventKinds, noon, moscow, eventsConfig)
+        assertEquals(PerformancesLine.Ahead(tonight, days = 0, pastCount = 2), ahead.line, "a concert of today is ahead until it is over")
+        assertEquals(today, ahead.today)
+        assertEquals(eventsConfig.defaultColorOf(BuiltInKind.PERFORMANCE), ahead.look.color)
+        assertEquals(KindSign.PERFORMANCE, ahead.look.sign)
+
+        val over = HistoryReducer.performancesOf(listOf(winter, spring, lessonOfTomorrow), eventKinds, noon, moscow, eventsConfig)
+        assertEquals(PerformancesLine.OnlyPast(count = 2, lastDate = LocalDate(2026, 5, 16)), over.line)
+
+        assertEquals(PerformancesLine.None, HistoryReducer.performancesOf(listOf(lessonOfTomorrow), eventKinds, noon, moscow, eventsConfig).line, "a lesson is no performance")
+
+        // the kind «Выступление» given another colour: its plate on «Записи» follows it (spec 3.35)
+        val recolored = KindRules.all(listOf(StoredKind.Recolor(BuiltInKind.PERFORMANCE, 6)), eventsConfig)
+        assertEquals(6, HistoryReducer.performancesOf(emptyList(), recolored, noon, moscow, eventsConfig).look.color)
+    }
+
+    @Test
+    fun `a list being read has no row of performances`() {
+        assertNull(HistoryReducer.loading(HistoryFilter.ALL).performances)
     }
 }

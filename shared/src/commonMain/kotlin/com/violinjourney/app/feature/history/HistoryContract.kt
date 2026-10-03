@@ -1,5 +1,7 @@
 package com.violinjourney.app.feature.history
 
+import com.violinjourney.app.core.domain.events.KindLook
+import com.violinjourney.app.core.domain.events.PerformancesLine
 import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.domain.session.DayCount
 import kotlinx.datetime.LocalDate
@@ -64,6 +66,11 @@ data class HistoryState(
     val cards: List<HistoryCard>,
     /** Picking several sessions to delete (spec 3.18); only what [cards] shows can be picked. */
     val selection: Selection = Selection(),
+    /**
+     * The row «Выступления» (spec 3.36.9): the first under the line of the title, in an empty tab too; null while the list or the events
+     * are read — it comes with the strip and the chips. The screen hides it while picking ([selection]).
+     */
+    val performances: HistoryPerformances? = null,
 ) {
     val allSelected: Boolean get() = SelectionRules.allSelected(selection, cards.map { it.id })
 
@@ -75,6 +82,14 @@ data class HistoryState(
 }
 
 data class DayGroup(val date: LocalDate, val today: Boolean, val cards: List<HistoryCard>)
+
+/**
+ * What the row «Выступления» of «Записи» says (spec 3.36.9): its caption by how things stand — the nearest ahead with its term and how
+ * many are over, only those over and the last of them, or none at all — and [look], the sign and the colour of the kind «Выступление»
+ * on its plate (a built-in kind can be given another colour, 3.35). [today] — the day it was worked out on: the last date of another
+ * year is written with its year.
+ */
+data class HistoryPerformances(val line: PerformancesLine, val look: KindLook, val today: LocalDate)
 
 sealed interface HistoryIntent {
     data class FilterSelected(val filter: HistoryFilter) : HistoryIntent
@@ -89,6 +104,18 @@ sealed interface HistoryIntent {
 
     /** «Открыть Live» of an empty tab (spec 3.36.5). «Показать все записи» under an empty filter is [FilterSelected] of «Все». */
     data object OpenLiveClicked : HistoryIntent
+
+    /**
+     * The row «Выступления» (spec 3.36.9): the screen «Выступления» — once until the tab is in sight again ([Shown]). Not heard while
+     * picking — the row is gone then.
+     */
+    data object PerformancesClicked : HistoryIntent
+
+    /**
+     * The tab is in sight again (its route on every `ON_START`): «Выступления» opened from it have been answered, the row is heard anew. A
+     * tap of a double tap that falls through to the tab going away (5.29 R9, review of stage 99) is not.
+     */
+    data object Shown : HistoryIntent
 }
 
 sealed interface HistoryEffect {
@@ -96,4 +123,7 @@ sealed interface HistoryEffect {
 
     /** The tab Live. */
     data object OpenLive : HistoryEffect
+
+    /** «Выступления» (spec 3.36.9), above the tabs. */
+    data object OpenPerformances : HistoryEffect
 }

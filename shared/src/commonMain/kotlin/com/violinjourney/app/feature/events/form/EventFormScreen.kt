@@ -76,6 +76,7 @@ import com.violinjourney.app.core.ui.components.DiscardLoss
 import com.violinjourney.app.core.ui.components.SegmentedSwitch
 import com.violinjourney.app.core.ui.components.TypedLine
 import com.violinjourney.app.core.ui.components.WholeWordsFit
+import com.violinjourney.app.core.ui.components.arrivalPresses
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -168,6 +169,10 @@ private const val TABULAR_FIGURES = "tnum"
 @Composable
 fun EventFormScreen(state: EventFormState, onIntent: (EventFormIntent) -> Unit, modifier: Modifier = Modifier) {
     BackHandler { onIntent(EventFormIntent.CloseClicked) }
+    // the form comes in under the finger that opened it: its «Сохранить» stands where «Добавить выступление» of «Выступления» and the main
+    // button of a sheet of a day stood, and the second tap of a double tap would store an event nobody filled in (5.29 R9, review of
+    // stage 99) — not heard for the time of a double tap from the first frame of the form
+    val onSave = arrivalPresses(onIntent)
     FormFrame(
         // an edit being read has no kind yet: the placeholder's «Урок» would blink into the kind of the event (spec 3.36.9: «шапка и
         // пустая нижняя зона», review of stage 98б)
@@ -178,7 +183,7 @@ fun EventFormScreen(state: EventFormState, onIntent: (EventFormIntent) -> Unit, 
         },
         loading = state.loading,
         onClose = { onIntent(EventFormIntent.CloseClicked) },
-        dock = { mode -> FormDock(mode, stringResource(Res.string.practice_save), onClick = { onIntent(EventFormIntent.SaveClicked) }) },
+        dock = { mode -> FormDock(mode, stringResource(Res.string.practice_save), onClick = { onSave(EventFormIntent.SaveClicked) }) },
         modifier = modifier,
     ) { Fields(state, onIntent) }
     EventFormSheetHost(state, onIntent)

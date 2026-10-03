@@ -184,6 +184,29 @@ class SessionViewModelTest {
         assertEquals("Концерт в ДК · 24 октября", viewModel.loaded().content.title)
     }
 
+    /**
+     * Spec 3.36.9, «Экран записи»: the line under the name of a recording of an event begins with the word of the kind of its event —
+     * «выступление · 19:02 · 3:40» — a video of an event too; a video take says «видео», a take «дубль», a recording of its own nothing.
+     */
+    @Test
+    fun `the line under the name of a recording of an event says the kind of its event`() = runTest {
+        val concert = SessionEvent(3, "Осенний концерт", LocalDate(2026, 10, 24), KindRef.BuiltIn(BuiltInKind.PERFORMANCE), null)
+        events.recordEvents.value = mapOf(3L to concert)
+        val sound = viewModel(saveSession(eventId = 3)).loaded().content
+        assertEquals(SubtitleWord.EVENT_KIND, SessionSubtitle.wordOf(sound))
+        assertEquals("the word is of the kind of its event", KindRef.BuiltIn(BuiltInKind.PERFORMANCE), sound.event?.kind)
+
+        val video = saveSession(eventId = 3)
+        repository.sessions.update { list -> list.map { if (it.id == video) it.copy(videoPath = "concert.mp4") else it } }
+        val videoContent = viewModel(video).loaded().content
+        assertTrue(videoContent.hasVideo)
+        assertEquals("a video of an event says the kind of its event too", SubtitleWord.EVENT_KIND, SessionSubtitle.wordOf(videoContent))
+
+        val pieceId = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        assertEquals(SubtitleWord.TAKE, SessionSubtitle.wordOf(viewModel(saveSession(pieceId = pieceId)).loaded().content))
+        assertEquals(SubtitleWord.NONE, SessionSubtitle.wordOf(viewModel(saveSession()).loaded().content))
+    }
+
     @Test
     fun `loads the session into screen content`() = runTest {
         val content = viewModel(saveSession()).loaded().content

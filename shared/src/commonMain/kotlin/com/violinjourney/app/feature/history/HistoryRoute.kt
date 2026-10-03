@@ -11,6 +11,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
@@ -25,6 +26,8 @@ fun HistoryRoute(
     onOpenSound: (sessionId: Long) -> Unit,
     /** «Открыть Live» of an empty tab: the tab Live (spec 3.36.5). */
     onOpenLive: () -> Unit,
+    /** The row «Выступления»: the screen «Выступления» above the tabs (spec 3.36.9). */
+    onOpenPerformances: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HistoryViewModel,
     /** «Поделиться» of a card (spec 3.17): the platform prepares the file and hands it to other apps. */
@@ -38,13 +41,17 @@ fun HistoryRoute(
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnOpenSession by rememberUpdatedState(onOpenSession)
     val currentOnOpenLive by rememberUpdatedState(onOpenLive)
+    val currentOnOpenPerformances by rememberUpdatedState(onOpenPerformances)
 
+    // in sight again — back from «Выступления», from the background: the row is heard anew
+    LifecycleEventEffect(Lifecycle.Event.ON_START) { viewModel.onIntent(HistoryIntent.Shown) }
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.effects.collect { effect ->
                 when (effect) {
                     is HistoryEffect.OpenSession -> currentOnOpenSession(effect.id)
                     HistoryEffect.OpenLive -> currentOnOpenLive()
+                    HistoryEffect.OpenPerformances -> currentOnOpenPerformances()
                 }
             }
         }

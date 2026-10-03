@@ -38,7 +38,10 @@ data class FormatLanguage(
     val weekdayDay: String,
     /** The short weekday, the day and the whole month: «сб 24 октября», «пн 28 декабря». */
     val weekdayDayMonth: String,
-    /** The short month alone, without a dot: «окт» — the tile of the date of «Выступления». */
+    /**
+     * The short month alone, without a dot: «окт» — the tile of the date of «Выступления», under its day. The standing form («LLL») in the
+     * languages that do not change a month after a day («Sep», not «Sept.»); Russian says it by [shortMonthNames] instead.
+     */
     val shortMonth: String,
     /** The whole weekday, then the day and the whole month: «понедельник, 28 сентября» — TalkBack of the form and the sheet «Дата». */
     val weekdayFullDate: String,
@@ -49,6 +52,13 @@ data class FormatLanguage(
     val monthFirstList: Boolean,
     /** Between the dates of a list: «, », or «、» in Chinese and Japanese. */
     val listSeparator: String,
+    /**
+     * The short months by their number, January first, where the patterns cannot give one form on both platforms. Russian: under a day
+     * the month is in the form of a date — «18 / мая», «8 / мар», as the mockups write the exam (review of stage 99), not the standing
+     * «май», «март» of «LLL» — and «MMM», that form, is «мар.» on Android but «марта», «июня», «июля» on iOS; so the short forms Android
+     * writes for «MMM», without their dot, the same on both. Null — [shortMonth].
+     */
+    val shortMonthNames: List<String>? = null,
 ) {
     /** Where the whole part ends: 7,3 in most languages of the app, 7.3 in English, Korean, Chinese and Japanese. */
     val decimalSeparator: Char = if (tag in POINT_LANGUAGES) '.' else ','
@@ -73,6 +83,7 @@ data class FormatLanguage(
             "d MMMM", "d MMM", "d MMMM, EEEE", "LLLL yyyy", "d MMMM yyyy", "d MMMM yyyy, EEEE", PluralRule.SLAVIC,
             weekdayDate = "EEE d MMM", weekdayCommaDate = "EEE, d MMM", weekdayDay = "EEE d", weekdayDayMonth = "EEE d MMMM", shortMonth = "LLL",
             weekdayFullDate = "EEEE, d MMMM", listedDay = "d", monthFirstList = false, listSeparator = COMMA,
+            shortMonthNames = listOf("янв", "февр", "мар", "апр", "мая", "июн", "июл", "авг", "сент", "окт", "нояб", "дек"),
         )
         val ENGLISH = FormatLanguage(
             "en", "h", "min", "MB", "GB", "under 1 MB", LATIN,

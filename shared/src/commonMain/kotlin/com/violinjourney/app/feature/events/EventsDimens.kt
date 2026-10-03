@@ -7,7 +7,7 @@ import androidx.compose.ui.unit.sp
  * The sizes of the events on the screens (spec 5.29 R9; plan, 9.2): dp and sp in one place, no number in the screens. Those of
  * «Занятия» — the marks of a cell, the legend and the hint, the rows of the sheet of the day, the reminder — since stage 97; the screen
  * of an event, its sheets and the sheet of a repeat since stage 98а; the form, its sheets and the sheet «Вид» since stage 98б; «Выступления»
- * bring theirs with them.
+ * and their row on «Записи» since stage 99.
  */
 internal object EventsDimens {
     // The marks of a cell (5.29 R9, «Клетка»): a plate of the colour of the ground of the grid over the bottom of the circle, the mini
@@ -521,4 +521,115 @@ internal object EventsDimens {
     val ChangeValue = 15.sp
     val ChangeValueHeight = 20.sp
     val ChangeArrow = 18.dp
+
+    // «Выступления» (5.29 R9, «Общее», «Выступления»): the bar of R8 with the name of the bars of the events, one column of 560.
+
+    /** The name of the bar: 18 sp, 800, as the bars of the screen of an event and of the form. */
+    val PerformancesBarTitle = 18.sp
+
+    /** «Впереди» and «Прошли» — labels of R1: 4 over the first, 18 over the second, 2 under each; the rows 8 apart (events-views.html 7). */
+    val PerformancesFirstLabelTop = 4.dp
+    val PerformancesLabelTop = 18.dp
+    val PerformancesLabelBottom = 2.dp
+    val PerformanceRowTop = 8.dp
+
+    /** A row: at least 80 (72 lying), the colour of a card, a corner of 18, fields 12 (10 / 12 lying), 12 between its parts. */
+    val PerformanceRowMin = 80.dp
+    val PerformanceRowMinLying = 72.dp
+    val PerformanceRowCorner = 18.dp
+    val PerformanceRowPadding = 12.dp
+    val PerformanceRowPaddingVLying = 10.dp
+    val PerformanceRowGap = 12.dp
+
+    /**
+     * The plate of the date: 52 × 58 (52 × 52 lying) at least, a corner of 14; the day 20 sp / 800, the month 11 sp / 800 in capitals
+     * 0.04 em apart, the year 10 sp 0.02 em apart. It grows with a large font rather than cut its figures.
+     */
+    val DatePlateWidth = 52.dp
+    val DatePlateHeight = 58.dp
+    val DatePlateHeightLying = 52.dp
+    val DatePlateCorner = 14.dp
+    val DatePlateDay = 20.sp
+    val DatePlateDayHeight = 21.sp
+    val DatePlateMonth = 11.sp
+    val DatePlateMonthHeight = 13.sp
+    const val DATE_PLATE_MONTH_TRACKING = 0.04f
+    val DatePlateYear = 10.sp
+    val DatePlateYearHeight = 12.sp
+    const val DATE_PLATE_YEAR_TRACKING = 0.02f
+
+    /** The name 16 sp / 800 on one line; the chip of the term — 22, a capsule on the kind at 18 %, 8 inside, 12 sp / 800 — 6 from it. */
+    val PerformanceName = 16.sp
+    val PerformanceNameHeight = 21.sp
+    val TermChipHeight = 22.dp
+    val TermChipPadding = 8.dp
+    val TermChipGap = 6.dp
+    val TermChipText = 12.sp
+    val TermChipTextHeight = 16.sp
+
+    /**
+     * The least the name keeps beside the chip, in ems of its size (3 — about three letters and the ellipsis, at any font): «2 записи»
+     * keeps the right of a row while this is left to the name, and goes under the programme where it is not (review of stage 99).
+     */
+    const val PERFORMANCE_NAME_LEAST_EM = 3f
+
+    /** The place and the time, the programme: 13 sp in the second level of text, one line each. */
+    val PerformanceLine = 13.sp
+    val PerformanceLineHeight = 18.sp
+
+    /**
+     * At the end: the thumbnail of the newest video, 64 × 44 at a corner of 10, the sign of a video 18 on it, white on a dark circle of 28
+     * (a light picture would swallow a bare sign; review of stage 99) — or «2 записи», 13 sp.
+     */
+    val ThumbWidth = 64.dp
+    val ThumbHeight = 44.dp
+    val ThumbCorner = 10.dp
+    val ThumbPlay = 18.dp
+    val ThumbPlayPlate = 28.dp
+
+    /**
+     * No performance yet: the plate of the sign 88 at a corner of 28, the sign 40 (64 / 20 / 30 lying); «Здесь будут ваши выступления»
+     * 22 sp / 800 (20 lying) 18 under it (12 lying); the words 15 sp, no wider than 520, 10 under the title (8 lying); 32 from the
+     * edges of the screen — 16 inside its field.
+     */
+    val PerformancesEmptyPlate = 88.dp
+    val PerformancesEmptyPlateLying = 64.dp
+    val PerformancesEmptyPlateCorner = 28.dp
+    val PerformancesEmptyPlateCornerLying = 20.dp
+    val PerformancesEmptySign = 40.dp
+    val PerformancesEmptySignLying = 30.dp
+    val PerformancesEmptyTitle = 22.sp
+    val PerformancesEmptyTitleHeight = 28.sp
+    val PerformancesEmptyTitleLying = 20.sp
+    val PerformancesEmptyTitleHeightLying = 26.sp
+    val PerformancesEmptyTitleTop = 18.dp
+    val PerformancesEmptyTitleTopLying = 12.dp
+    val PerformancesEmptyWords = 15.sp
+    val PerformancesEmptyWordsHeight = 21.sp
+    val PerformancesEmptyWordsTop = 10.dp
+    val PerformancesEmptyWordsTopLying = 8.dp
+    val PerformancesEmptyWordsMax = 520.dp
+    val PerformancesEmptySide = 16.dp
+
+    // The row «Выступления» on «Записи» (5.29 R9, «Строка «Выступления» на «Записях»»).
+
+    /** At least 64, the colour of a card, a corner of 18, fields 8 / 14, 12 between its parts; 4 under the line of the title. */
+    val RecordsRowMin = 64.dp
+    val RecordsRowCorner = 18.dp
+    val RecordsRowPaddingV = 8.dp
+    val RecordsRowPaddingH = 14.dp
+    val RecordsRowGap = 12.dp
+    val RecordsRowTop = 4.dp
+
+    /** The plate of the sign of «Выступление»: 40 at a corner of 12, the sign 20. */
+    val RecordsRowPlate = 40.dp
+    val RecordsRowPlateCorner = 12.dp
+    val RecordsRowSign = 20.dp
+
+    /** «Выступления» 16 sp / 800; the captions 13 sp in the second level of text; the chevron 24 in the third. */
+    val RecordsRowTitle = 16.sp
+    val RecordsRowTitleHeight = 21.sp
+    val RecordsRowCaption = 13.sp
+    val RecordsRowCaptionHeight = 18.sp
+    val RecordsRowChevron = 24.dp
 }

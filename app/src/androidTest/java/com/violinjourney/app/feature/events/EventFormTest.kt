@@ -211,6 +211,32 @@ class EventFormTest {
 
     private fun saveButton() = compose.onNode(hasText(word(SAVE)) and hasClickAction())
 
+    /**
+     * The form comes in under the finger that opened it (5.29 R9, review of stage 99): its «Сохранить» stands where «Добавить выступление»
+     * of «Выступления» — and the main button of a sheet of a day — stood, and the second tap of a double tap, a frame or two after the form
+     * came, saves nothing: a new form is never asleep, and it would store an event nobody filled in. Once the time of a double tap has
+     * passed, «Сохранить» answers.
+     */
+    @Test
+    fun theSecondTapOfTheFingerThatOpenedTheFormSavesNothing() {
+        var opened by mutableStateOf(false)
+        compose.setContent {
+            words[SAVE] = stringResource(Res.string.practice_save)
+            ViolinTheme { TestWindow(DpSize(412.dp, 892.dp)) { if (opened) EventFormScreen(state = state(), onIntent = { intents += it }) } }
+        }
+        compose.waitForIdle()
+        compose.mainClock.autoAdvance = false
+        opened = true
+        repeat(TAP_FRAMES) { compose.mainClock.advanceTimeByFrame() }
+        saveButton().performTouchInput { click() }
+        compose.mainClock.autoAdvance = true
+        compose.waitForIdle()
+        assertEquals("the second tap saved nothing", emptyList<EventFormIntent>(), intents.filter { it == EventFormIntent.SaveClicked })
+        saveButton().performClick()
+        compose.waitForIdle()
+        assertEquals(listOf<EventFormIntent>(EventFormIntent.SaveClicked), intents.filter { it == EventFormIntent.SaveClicked })
+    }
+
     @Test
     fun onAPhoneTheDateAndTheTimeStandSideBySideTheDateWider() {
         show(state(), DpSize(412.dp, 892.dp))
@@ -547,5 +573,8 @@ class EventFormTest {
         /** Gboard upright on a phone of 360 × 640 is some 260 dp. */
         val KEYBOARD = 260.dp
         const val SETTLE_MS = 600L
+
+        /** A double tap: the second tap a frame or two after the form came. */
+        const val TAP_FRAMES = 2
     }
 }

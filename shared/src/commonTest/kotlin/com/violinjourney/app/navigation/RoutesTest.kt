@@ -98,6 +98,17 @@ class RoutesTest {
             ),
             Routes.eventForm(7, focusNotes = true),
         )
+        // «Добавить выступление» of «Выступления» (spec 3.35, plan D28): a new performance — no date, the form takes today
+        assertEquals(
+            fill(
+                Routes.EVENT_FORM_PATTERN,
+                EventFormViewModel.ARG_EVENT_ID to EventFormViewModel.NEW_EVENT,
+                EventFormViewModel.ARG_DATE to "",
+                EventFormViewModel.ARG_KIND to BuiltInKind.PERFORMANCE.name,
+                EventFormViewModel.ARG_FOCUS_NOTES to false,
+            ),
+            Routes.eventForm(kind = BuiltInKind.PERFORMANCE),
+        )
     }
 
     @Test
@@ -116,14 +127,14 @@ class RoutesTest {
             Routes.PIECE_FORM_PATTERN, Routes.SCALE_FORM_PATTERN, Routes.SECTION_PATTERN, Routes.JOURNEY, Routes.JOURNEY_MAP,
             Routes.JOURNEY_PASSPORT, Routes.JOURNEY_STOP_PATTERN, Routes.HOME, Routes.HOME_SHOP_PATTERN, Routes.HOME_ARRANGE, Routes.HOME_HOUSES,
             Routes.SPLASH_AWAY, Routes.SPLASH_HOME, Routes.SETTINGS, Routes.BACKUP, Routes.RESTORE_PATTERN, Routes.EVENT_PATTERN,
-            Routes.EVENT_FORM_PATTERN,
+            Routes.EVENT_FORM_PATTERN, Routes.PERFORMANCES,
         )
         // the keys of screen_open (spec 5.27): a new name here is a new screen in the statistics, on both platforms; the shop by place
         // is the shop — its place is not in the key (5.29 R7)
         val keys = listOf(
             "session", "sound", "piece", "capture", "stand", "pieceForm", "scaleForm", "section", "journey", "journeyMap",
             "journeyPassport", "journeyStop", "home", "homeShop", "homeArrange", "homeHouses", "splashAway", "splashHome",
-            "settings", "backup", "restore", "event", "eventForm",
+            "settings", "backup", "restore", "event", "eventForm", "performances",
         )
         assertEquals(keys, routes.map(::screenKeyOf))
         assertEquals(Routes.SPLASH_HOME, Routes.stop(JourneyRoute.HOME), "the home of the journey opens through its title card")

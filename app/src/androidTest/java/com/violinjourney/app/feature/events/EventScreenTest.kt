@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsActions
@@ -16,6 +18,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertWidthIsAtLeast
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
@@ -175,6 +178,9 @@ class EventScreenTest {
 
     private val idle = TakeState.idle(micPermission = true, bars = 14)
 
+    /** The screen is there: false — not yet, as the screen it is opened from stands before the press that opens it. */
+    private var opened by mutableStateOf(true)
+
     private fun show(
         state: EventState,
         size: DpSize,
@@ -196,7 +202,7 @@ class EventScreenTest {
             words[PLAYED] = stringResource(Res.string.block_played_title)
             ViolinTheme {
                 TestWindow(size, fontScale = fontScale) {
-                    EventScreen(state = state, take = takeState, onIntent = { intents += it }, zone = zone)
+                    if (opened) EventScreen(state = state, take = takeState, onIntent = { intents += it }, zone = zone)
                 }
             }
         }
@@ -229,6 +235,26 @@ class EventScreenTest {
         assertNull("no long press", card.fetchSemanticsNode().config.getOrNull(SemanticsActions.OnLongClick))
         card.performClick()
         assertEquals(listOf<EventIntent>(EventIntent.RecordClicked(9)), intents)
+    }
+
+    /**
+     * The screen comes in under the finger that opened it (5.29 R9, review of stage 99): «Добавить запись» stands where «Сохранить» of the
+     * form stood, a row of the programme where a row of «Выступления» did — the second tap of a double tap, a frame or two after the screen
+     * came, presses nothing; once the time of a double tap has passed, it does.
+     */
+    @Test
+    fun theSecondTapOfTheFingerThatOpenedTheScreenPressesNothing() {
+        opened = false
+        show(state(), DpSize(412.dp, 892.dp))
+        compose.mainClock.autoAdvance = false
+        opened = true
+        repeat(TAP_FRAMES) { compose.mainClock.advanceTimeByFrame() }
+        addButton().performTouchInput { click() }
+        compose.mainClock.autoAdvance = true
+        compose.waitForIdle()
+        assertEquals("the second tap pressed nothing", emptyList<EventIntent>(), intents)
+        addButton().performClick()
+        assertEquals(listOf<EventIntent>(EventIntent.AddRecordClicked), intents)
     }
 
     @Test
@@ -608,5 +634,8 @@ class EventScreenTest {
         const val EDIT = "edit"
         const val ADD_NOTE = "addNote"
         const val CAN_NOTE = "canNote"
+
+        /** A double tap: the second tap a frame or two after the screen came. */
+        const val TAP_FRAMES = 2
     }
 }
