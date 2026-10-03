@@ -11,9 +11,12 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.WindowInfo
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
@@ -51,6 +54,7 @@ import com.violinjourney.app.shared.resources.gift_thanks
 import com.violinjourney.app.shared.resources.home_travel
 import com.violinjourney.app.shared.resources.path_all_trophies
 import com.violinjourney.app.shared.resources.path_name_photo
+import com.violinjourney.app.shared.resources.practice_day_add_event
 import com.violinjourney.app.shared.resources.practice_stop
 import com.violinjourney.app.shared.resources.profile_done
 import com.violinjourney.app.shared.resources.profile_other_photo
@@ -77,8 +81,8 @@ import org.junit.runner.RunWith
  * recap takes the place of «Закончить занятие» — in the same frame each time, never a window of their own that slides away or rises
  * from the bottom. A face that has just come in the place of another does not take the second tap of a double tap (5.29 R3); the
  * recap of a low window stands in two columns with its one «Готово» at the bottom of the right one; the name typed in «Имя и фото»
- * is stored when the sheet is swiped away; a photo on disk is one before it is decoded. The model is the test's: a sheet written
- * once, as the view model writes it.
+ * is stored when the sheet is swiped away; a photo on disk is one before it is decoded; a day to come without events has «Событие в этот
+ * день» as the main button of the frame. The model is the test's: a sheet written once, as the view model writes it.
  *
  * The words are read where the sheet reads them, in the composition: a context read when the test is made may still speak the
  * language of the device, while the activity of the test — and with it the sheet — speaks the one chosen for the app in the system.
@@ -111,7 +115,8 @@ class PracticeSheetHostTest {
         sessions = emptyList(),
         runningSince = null,
         month = YearMonth(2026, 9),
-        selectedDate = null,
+        // the face of a day draws the selected day of the state, as on «Занятия»
+        selectedDate = (sheet as? PracticeSheet.Day)?.date,
         sheet = sheet,
         today = today,
         zone = TimeZone.UTC,
@@ -157,6 +162,7 @@ class PracticeSheetHostTest {
             words[PICK_PHOTO] = stringResource(Res.string.profile_pick_photo)
             words[OTHER_PHOTO] = stringResource(Res.string.profile_other_photo)
             words[REMOVE_PHOTO] = stringResource(Res.string.profile_remove_photo)
+            words[ADD_EVENT] = stringResource(Res.string.practice_day_add_event)
             names = stringArrayResource(Res.array.progress_trophy_names)
             ViolinTheme {
                 // still: the shine of the level bar of «Мой путь» runs now and then for ever; the frame's own motion is Material's
@@ -229,6 +235,17 @@ class PracticeSheetHostTest {
         compose.runOnIdle { assertEquals(listOf<PracticeIntent>(PracticeIntent.TrophiesClosed), intents) }
         swapInPlace(trophiesTop, PracticeSheet.Path, listOf(allTrophies), listOf(trophiesHeading)) { compose.onNodeWithText(allTrophies) }
         compose.runOnIdle { assertEquals("nothing hid either face", 1, intents.size) }
+    }
+
+    /**
+     * A day to come without events (spec 3.36.9, stage 98б): «Событие в этот день» is the main button at the bottom of the frame — making an
+     * event is all there is to do on such a day — and opens the form of an event.
+     */
+    @Test
+    fun aDayToComeWithoutEventsHasTheEventAsTheMainButtonOfTheFrame() {
+        show(PracticeSheet.Day(LocalDate(2026, 10, 3)))
+        compose.onNode(hasText(word(ADD_EVENT)) and hasClickAction()).assertHeightIsAtLeast(48.dp).performClick()
+        compose.runOnIdle { assertEquals(listOf<PracticeIntent>(PracticeIntent.NewEventClicked), intents) }
     }
 
     @Test
@@ -409,5 +426,6 @@ class PracticeSheetHostTest {
         const val PICK_PHOTO = "pickPhoto"
         const val OTHER_PHOTO = "otherPhoto"
         const val REMOVE_PHOTO = "removePhoto"
+        const val ADD_EVENT = "addEvent"
     }
 }

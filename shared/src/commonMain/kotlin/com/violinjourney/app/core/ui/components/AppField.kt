@@ -27,6 +27,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
@@ -94,6 +95,10 @@ private const val ONE_LINE = " "
  * on screen, «Композитор, необязательно» aloud (the forms of R4, 3.36.4); null — the caption as drawn.
  *
  * [typedLine] — where the field notes the line being typed, for a form that keeps it on a keyboard too high for the whole field.
+ *
+ * [counterDescription] — how TalkBack and VoiceOver say the [counter] where its figures are not words: «69 из 80 знаков» for «69 / 80»
+ * (the form of an event, 3.36.9); null — the counter as drawn. [counterColor] — the counter near its limit in the first level of text
+ * (5.29 R9); unspecified — the second level, as always.
  */
 @Composable
 fun AppField(
@@ -114,6 +119,8 @@ fun AppField(
     inSheet: Boolean = false,
     labelDescription: String? = null,
     typedLine: TypedLine? = null,
+    counterDescription: String? = null,
+    counterColor: Color = Color.Unspecified,
 ) {
     val colors = MaterialTheme.colorScheme
     if (typedLine != null) {
@@ -227,7 +234,15 @@ fun AppField(
                             }
                         }
                         if (counter != null) {
-                            Text(counter, color = colors.onSurfaceVariant, maxLines = 1, softWrap = false, style = counterStyle.copy(fontFeatureSettings = TABULAR_FIGURES))
+                            Text(
+                                text = counter,
+                                // said in words where it has them; still a part of the field, as the caption is
+                                modifier = if (counterDescription == null) Modifier else Modifier.clearAndSetSemantics { text = AnnotatedString(counterDescription) },
+                                color = counterColor.takeOrElse { colors.onSurfaceVariant },
+                                maxLines = 1,
+                                softWrap = false,
+                                style = counterStyle.copy(fontFeatureSettings = TABULAR_FIGURES),
+                            )
                         }
                     }
                 }

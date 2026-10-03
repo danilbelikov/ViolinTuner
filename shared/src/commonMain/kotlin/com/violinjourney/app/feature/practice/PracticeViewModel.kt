@@ -361,6 +361,8 @@ open class PracticeViewModel(
             is PracticeIntent.SessionClicked -> openSession(intent.id)
             is PracticeIntent.DayEventClicked -> openEvent(intent.id)
             is PracticeIntent.ReminderEventClicked -> effectChannel.trySend(PracticeEffect.OpenEvent(intent.id))
+            PracticeIntent.NewEventClicked -> openEventForm()
+            is PracticeIntent.EventSaved -> eventSaved(intent.date)
             PracticeIntent.ProfileClicked -> openOver<PracticeSheet.Path> { PracticeSheet.Profile(latestProfile.name, importingPhoto = false) }
             is PracticeIntent.ProfileNameChanged ->
                 updateProfile { it.copy(nameDraft = intent.text.takeCodePoints(Profile.MAX_NAME_LENGTH)) }
@@ -626,6 +628,35 @@ open class PracticeViewModel(
     private fun openEvent(id: Long) {
         ui.update { if (it.sheet is PracticeSheet.Day) it.copy(away = true) else it }
         effectChannel.trySend(PracticeEffect.OpenEvent(id))
+    }
+
+    /**
+     * «Событие в этот день» (spec 3.36.9): the form of an event on the day of the sheet; the sheet steps aside while it is there and rises
+     * again with the screen ([PracticeIntent.Resumed]) — or on the day the event was saved on ([PracticeIntent.EventSaved]).
+     */
+    private fun openEventForm() {
+        var date: LocalDate? = null
+        ui.update { now ->
+            val day = now.sheet as? PracticeSheet.Day
+            date = day?.date?.takeUnless { now.away }
+            if (date != null) now.copy(away = true) else now
+        }
+        date?.let { effectChannel.trySend(PracticeEffect.OpenEventForm(it)) }
+    }
+
+    /**
+     * An event saved by its form lies on [date] (plan D24): the sheet that stepped aside for the form or for the event rises on that day,
+     * and the calendar comes to its month — the current month follows today again. An event opened from the reminder left no sheet: nothing.
+     */
+    private fun eventSaved(date: LocalDate) {
+        val current = today().yearMonth
+        ui.update { now ->
+            if (now.away && now.sheet is PracticeSheet.Day) {
+                now.copy(sheet = PracticeSheet.Day(date), parent = null, month = date.yearMonth.takeIf { it != current })
+            } else {
+                now
+            }
+        }
     }
 
     private fun saveEdit() {

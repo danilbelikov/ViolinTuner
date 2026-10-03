@@ -260,6 +260,14 @@ object SeriesEdits {
         }
     }
 
+    /**
+     * The events whose records keep the name they wore when [plan] is carried out (plan D12): of those it deletes ([gone]), the ones
+     * with records — [recorded], the events of `EventRepository.recordEvents`. The screen reckons their names in the language of the
+     * interface before the plan goes to the storage; an event without records has nothing to name.
+     */
+    fun freezing(plan: EventPlan, events: List<CalendarEvent>, recorded: Set<Long>): Set<Long> =
+        gone(plan, events).filterTo(mutableSetOf()) { it in recorded }
+
     private fun following(events: List<CalendarEvent>, seriesId: Long, cut: LocalDate, keepId: Long?) =
         events.filter { it.seriesId == seriesId && it.date >= cut && !it.detached && it.id != keepId }
 

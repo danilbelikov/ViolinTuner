@@ -98,8 +98,6 @@ internal class EventBlockScope(
     /** A recording runs: what would end it sleeps (spec 3.36.9). */
     val recording: Boolean,
     val zone: TimeZone,
-    /** «Изменить» and «Добавить заметку» open the form — null until the form is there (the second half of stage 98). */
-    val formOpens: Boolean,
 )
 
 /**
@@ -221,14 +219,13 @@ internal fun EventBlockScope.Sections(sections: List<EventSection>, modifier: Mo
 
 /**
  * «Заметки» (spec 3.36.9): the card of the notes of an element (3.15, R4) — six lines, then «ещё», which works while a recording runs.
- * None — a dashed card with the question of the kind and «Добавить заметку», which opens the form on its notes; until the form is there
- * the card asks its question alone, and a kind that asks none has no part of notes at all.
+ * None — a dashed card with the question of the kind and «Добавить заметку», which opens the form on its notes; a kind that asks nothing
+ * (a rehearsal, «Другое», one's own) — «Добавить заметку» alone.
  */
 @Composable
 private fun EventBlockScope.NotesSection() {
     val notes = state.notes
     val ask = state.notesAsk?.let { askOf(it) }
-    if (notes.isBlank() && ask == null && !formOpens) return
     BlockTitle(stringResource(Res.string.piece_field_notes))
     if (notes.isNotBlank()) {
         NotesCard(notes, state.notesCollapsedLines)
@@ -250,14 +247,12 @@ private fun EventBlockScope.NotesSection() {
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = EventsDimens.NotesEmptyText, lineHeight = EventsDimens.NotesEmptyTextHeight),
             )
         }
-        if (formOpens) {
-            AppButton(
-                text = stringResource(Res.string.piece_notes_add),
-                onClick = { onIntent(EventIntent.AddNotesClicked) },
-                modifier = Modifier.dimmedWhen(recording),
-                style = AppButtonStyle.Text,
-            )
-        }
+        AppButton(
+            text = stringResource(Res.string.piece_notes_add),
+            onClick = { onIntent(EventIntent.AddNotesClicked) },
+            modifier = Modifier.dimmedWhen(recording),
+            style = AppButtonStyle.Text,
+        )
     }
 }
 
@@ -457,7 +452,7 @@ private fun EventBlockScope.RecordsLater() {
 
 /**
  * «Можно добавить» (spec 3.36.9): from the day of the event on, when it has no notes, no programme and no records — one card in the place
- * of the three empty parts: «Заметку — что было, что запомнить» (once the form is there), «Что играли — из репертуара» (of a performance
+ * of the three empty parts: «Заметку — что было, что запомнить» (the form at its notes), «Что играли — из репертуара» (of a performance
  * «Программу»), «Запись — звук или видео» (not of a performance: its pinned button does it).
  */
 @Composable
@@ -465,11 +460,9 @@ private fun EventBlockScope.CanAddSection() {
     val colors = MaterialTheme.colorScheme
     BlockTitle(stringResource(Res.string.event_can_add))
     val rows = buildList<@Composable () -> Unit> {
-        if (formOpens) {
-            add {
-                CanAddRow(AppIcons.Pencil, stringResource(Res.string.event_can_add_note), stringResource(Res.string.event_can_add_note_caption)) {
-                    onIntent(EventIntent.AddNotesClicked)
-                }
+        add {
+            CanAddRow(AppIcons.Pencil, stringResource(Res.string.event_can_add_note), stringResource(Res.string.event_can_add_note_caption)) {
+                onIntent(EventIntent.AddNotesClicked)
             }
         }
         add {

@@ -321,7 +321,7 @@ open class EventViewModel(
             val plan = SeriesEdits.deletePlan(event, scope, series, all, clock.instant(), clock.zone, config)
             val named = events.recordEvents.first()
             val gone = SeriesEdits.gone(plan, all)
-            val frozen = gone.mapNotNull { id -> named[id]?.let { id to words.recordTitleOf(it) } }.toMap()
+            val frozen = SeriesEdits.freezing(plan, all, named.keys).associateWith { id -> words.recordTitleOf(named.getValue(id)) }
             events.apply(plan, frozen, clock.today())
             gone.forEach { id ->
                 importer.forget(TakeOwner.Event(id))

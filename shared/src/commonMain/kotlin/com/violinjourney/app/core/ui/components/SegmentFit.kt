@@ -23,8 +23,12 @@ internal object SegmentFit {
 
     enum class Share { Equal, ByWords }
 
-    /** A label at a size: [line] — its width on one line, [word] — the width of its widest word. */
-    class Label(val line: Float, val word: Float)
+    /**
+     * A label at a size: [line] — its width on one line, [word] — the width of its widest word, [twoLines] — the least width that
+     * holds it in the two lines a segment has, its words whole (French «Toutes les deux semaines» needs more than «semaines»: in a
+     * third of 360 at the font 1.3 it went on three lines and the third was cut). Where it is not measured — its widest word.
+     */
+    class Label(val line: Float, val word: Float, val twoLines: Float = word)
 
     /** The size of all the labels and the width of each segment (they add up to the room). */
     data class Plan(val sizeSp: Float, val widths: List<Float>)
@@ -37,7 +41,7 @@ internal object SegmentFit {
         var sizeSp = maxSp
         while (true) {
             val labels = labelsAt(sizeSp)
-            val least = labels.mapIndexed { i, label -> label.word + around[i] + slack }
+            val least = labels.mapIndexed { i, label -> maxOf(label.word, label.twoLines) + around[i] + slack }
             if (share == Share.Equal && least.all { it <= room / labels.size }) return Plan(sizeSp, List(labels.size) { room / labels.size })
             shared(room, labels, least, around, slack)?.let { return Plan(sizeSp, it) }
             if (sizeSp <= MIN_SP) {

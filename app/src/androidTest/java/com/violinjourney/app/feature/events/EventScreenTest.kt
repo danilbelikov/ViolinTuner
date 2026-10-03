@@ -66,6 +66,7 @@ import com.violinjourney.app.shared.resources.event_add_mic
 import com.violinjourney.app.shared.resources.block_played_title
 import com.violinjourney.app.shared.resources.event_add_record
 import com.violinjourney.app.shared.resources.event_add_to_program
+import com.violinjourney.app.shared.resources.event_can_add_note
 import com.violinjourney.app.shared.resources.event_mic_reason
 import com.violinjourney.app.shared.resources.event_program
 import com.violinjourney.app.shared.resources.event_program_remove
@@ -77,7 +78,9 @@ import com.violinjourney.app.shared.resources.event_series_past_short_lesson
 import com.violinjourney.app.shared.resources.event_series_this_lesson
 import com.violinjourney.app.shared.resources.event_rest_on_weekdays
 import com.violinjourney.app.shared.resources.nav_history
+import com.violinjourney.app.shared.resources.piece_edit
 import com.violinjourney.app.shared.resources.piece_field_notes
+import com.violinjourney.app.shared.resources.piece_notes_add
 import com.violinjourney.app.shared.resources.practice_day_add
 import com.violinjourney.app.shared.resources.practice_pair_description
 import com.violinjourney.app.shared.resources.session_take_title
@@ -163,6 +166,13 @@ class EventScreenTest {
         zone = zone, config = config, notesCollapsedLines = 6,
     )
 
+    /** [event] with nothing of its own yet: no programme, no records. */
+    private fun bare(event: CalendarEvent) = EventReducer.loadedOf(
+        event = event, kinds = kinds, series = emptyList(), programIds = emptyList(), pieces = emptyList(), groups = emptyList(),
+        sessions = emptyList(), recordEvent = SessionEvent(event.id, event.title, event.date, event.kind, null), today = today, zone = zone,
+        config = config, notesCollapsedLines = 6,
+    )
+
     private val idle = TakeState.idle(micPermission = true, bars = 14)
 
     private fun show(
@@ -180,6 +190,10 @@ class EventScreenTest {
             words[MORE] = stringResource(Res.string.card_menu)
             words[RUNNING] = stringResource(Res.string.event_recording_description, Formats.timer(RECORDED_SECONDS * 1_000L))
             words[RECORD_TITLE] = stringResource(Res.string.session_take_title, CONCERT, Formats.dayAndMonth(today))
+            words[EDIT] = stringResource(Res.string.piece_edit)
+            words[ADD_NOTE] = stringResource(Res.string.piece_notes_add)
+            words[CAN_NOTE] = stringResource(Res.string.event_can_add_note)
+            words[PLAYED] = stringResource(Res.string.block_played_title)
             ViolinTheme {
                 TestWindow(size, fontScale = fontScale) {
                     EventScreen(state = state, take = takeState, onIntent = { intents += it }, zone = zone)
@@ -371,6 +385,38 @@ class EventScreenTest {
         assertEquals("the row's press goes up to the cross", cross.left.value, press.right.value, 0.6f)
     }
 
+    /** «Изменить» in the bar opens the form of the event (stage 98б). */
+    @Test
+    fun editInTheBarOpensTheForm() {
+        show(state(), DpSize(412.dp, 892.dp))
+        compose.onNode(hasText(word(EDIT)) and hasClickAction()).performClick()
+        assertEquals(listOf<EventIntent>(EventIntent.EditClicked), intents)
+    }
+
+    /**
+     * A rehearsal to come without notes (spec 3.36.9): «Заметки» with «Добавить заметку» alone — a rehearsal asks nothing — which opens
+     * the form at its notes. Before the form was there such a kind had no part of notes at all.
+     */
+    @Test
+    fun aRehearsalWithoutNotesOffersToAddOne() {
+        val rehearsal = concert().copy(kind = KindRef.BuiltIn(BuiltInKind.REHEARSAL), date = LocalDate(2026, 10, 30), title = "", notes = "")
+        show(bare(rehearsal), DpSize(412.dp, 892.dp))
+        heading(word(NOTES))
+        compose.onNode(hasText(word(ADD_NOTE)) and hasClickAction()).performClick()
+        assertEquals(listOf<EventIntent>(EventIntent.AddNotesClicked), intents)
+    }
+
+    /** A lesson of today with nothing yet: «Можно добавить», its first row «Заметку» — the form at its notes. */
+    @Test
+    fun aLessonWithNothingYetOffersANoteFirst() {
+        show(bare(lesson().copy(notes = "")), DpSize(412.dp, 892.dp))
+        val note = compose.onNode(hasText(word(CAN_NOTE)) and hasClickAction())
+        val played = compose.onNode(hasText(word(PLAYED)) and hasClickAction())
+        assertTrue("«${word(CAN_NOTE)}» over «${word(PLAYED)}»", note.getUnclippedBoundsInRoot().bottom <= played.getUnclippedBoundsInRoot().top)
+        note.performClick()
+        assertEquals(listOf<EventIntent>(EventIntent.AddNotesClicked), intents)
+    }
+
     /** The sheet of the deletion of a lesson of a repeat, as the card of a preview lays it, in a room of [room] in a window of [size]. */
     private fun showTheDeletionOfARepeat(size: DpSize, room: Dp) {
         val sheet = EventSheet.DeleteScope(SeriesWord.LESSON, date = LESSON_DAY, weekday = DayOfWeek.MONDAY, from = LocalDate(2026, 10, 26))
@@ -559,5 +605,8 @@ class EventScreenTest {
         const val REST = "rest"
         const val FROM = "from"
         const val CANCEL = "cancel"
+        const val EDIT = "edit"
+        const val ADD_NOTE = "addNote"
+        const val CAN_NOTE = "canNote"
     }
 }

@@ -33,6 +33,19 @@ class SegmentFitTest {
     private fun assertAddsUp(room: Float, plan: SegmentFit.Plan) = assertTrue(abs(plan.widths.sum() - room) < 0.01f, "the widths fill the row: ${plan.widths}")
 
     @Test
+    fun `a label that would take three lines in its share gets the width of two`() {
+        // «Une fois · Chaque semaine · Toutes les deux semaines» (the repeat of an event, French at the font 1.3 on 360): every word
+        // stands in a third, but the last label not in two lines of it — the third gives way to the room of its two lines
+        val labels = { _: Float -> listOf(SegmentFit.Label(60f, 60f), SegmentFit.Label(90f, 50f, twoLines = 50f), SegmentFit.Label(160f, 60f, twoLines = 90f)) }
+        val plan = plan(300f, SegmentFit.Share.Equal, labels)
+        assertTrue(plan.widths[2] >= 90f + 14f + slack, "the last label in two lines: ${plan.widths}")
+        assertAddsUp(300f, plan)
+        // measured without its two lines, as before, it kept an equal third and went on three
+        val before = plan(300f, SegmentFit.Share.Equal) { _ -> listOf(SegmentFit.Label(60f, 60f), SegmentFit.Label(90f, 50f), SegmentFit.Label(160f, 60f)) }
+        assertEquals(List(3) { 100f }, before.widths)
+    }
+
+    @Test
     fun `equal thirds stay while each holds its widest word`() {
         // 412 × 892: the column of 380
         val plan = plan(380f, SegmentFit.Share.Equal, ruAt10)

@@ -350,6 +350,26 @@ class SeriesEditsTest {
         assertEquals(emptySet(), SeriesEdits.gone(EventPlan(EventStep.UpdateNotes(1, "")), changedAlone))
     }
 
+    @Test
+    fun `the names that freeze are those of the events that go and have records - none of a moved one or of one without records`() {
+        val october19 = lesson(LocalDate(2026, 10, 19))
+        val now = moment(LocalDate(2026, 10, 1), 12)
+        // moved to Tuesday for this and following: the old repeat ends on the 18th, its Mondays from the 26th go, the 19th moves
+        val move = change(october19) { copy(date = LocalDate(2026, 10, 20)) }
+        val split = plan(move, EditScope.FOLLOWING, now)
+        val october26 = lesson(LocalDate(2026, 10, 26)).id
+        val november9 = lesson(LocalDate(2026, 11, 9)).id
+        val recorded = setOf(october19.id, october26, november9, lesson(LocalDate(2026, 10, 5)).id)
+        assertEquals(setOf(october26, november9), SeriesEdits.freezing(split, lessons, recorded), "the moved one keeps its event, the 5th is not touched")
+        // only this one: nothing goes, nothing freezes
+        assertEquals(emptySet(), SeriesEdits.freezing(plan(move, EditScope.ONLY_THIS, now), lessons, recorded))
+        // a deletion of this and following: the selected one goes as well, and its records keep their name
+        val deletion = SeriesEdits.deletePlan(october19, EditScope.FOLLOWING, repeat, lessons, now, zone, config)
+        assertEquals(setOf(october19.id, october26, november9), SeriesEdits.freezing(deletion, lessons, recorded))
+        // no records at all: no name to reckon
+        assertEquals(emptySet(), SeriesEdits.freezing(deletion, lessons, emptySet()))
+    }
+
     // ---- the dates of the answers (plan D31)
 
     @Test

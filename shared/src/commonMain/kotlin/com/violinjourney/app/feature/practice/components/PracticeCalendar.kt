@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -305,9 +306,16 @@ private fun MonthTitle(month: YearMonth, currentYear: Int, monthMs: Long, rolled
 /**
  * An arrow of the month: a button of 44 on the card colour at a corner of 14 — the touch of 48 comes from Compose, which lets a
  * smaller target take a touch that lands just beside it. The one that cannot go on is the tertiary text at half its strength.
+ * [container] — what it is filled with: the card colour on «Занятия», one step lighter in a sheet (the months of the form of an event).
  */
 @Composable
-private fun ArrowButton(forward: Boolean, enabled: Boolean, onClick: () -> Unit, description: String) {
+internal fun ArrowButton(
+    forward: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    description: String,
+    container: Color = MaterialTheme.colorScheme.surfaceContainer,
+) {
     val colors = MaterialTheme.colorScheme
     Surface(
         onClick = onClick,
@@ -321,7 +329,7 @@ private fun ArrowButton(forward: Boolean, enabled: Boolean, onClick: () -> Unit,
                 role = Role.Button
             },
         shape = AppShapes.Control,
-        color = colors.surfaceContainer,
+        color = container,
         contentColor = if (enabled) colors.onSurface else ViolinTheme.textTertiary,
     ) {
         Box(contentAlignment = Alignment.Center) {
@@ -368,8 +376,9 @@ private fun FutureMonthTitle(title: String, events: Int, modifier: Modifier) {
     }
 }
 
+/** The names of the weekdays over a grid, Monday first, in the third level of text. */
 @Composable
-private fun Weekdays(modifier: Modifier) {
+internal fun Weekdays(modifier: Modifier) {
     val names = stringArrayResource(Res.array.practice_weekdays)
     Row(modifier = modifier.fillMaxWidth().padding(bottom = WeekdaysBottom)) {
         names.forEach { name ->

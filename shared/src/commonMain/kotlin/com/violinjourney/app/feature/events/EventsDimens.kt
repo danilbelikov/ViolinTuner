@@ -6,7 +6,8 @@ import androidx.compose.ui.unit.sp
 /**
  * The sizes of the events on the screens (spec 5.29 R9; plan, 9.2): dp and sp in one place, no number in the screens. Those of
  * «Занятия» — the marks of a cell, the legend and the hint, the rows of the sheet of the day, the reminder — since stage 97; the screen
- * of an event, its sheets and the sheet of a repeat since stage 98; the form and «Выступления» bring theirs with them.
+ * of an event, its sheets and the sheet of a repeat since stage 98а; the form, its sheets and the sheet «Вид» since stage 98б; «Выступления»
+ * bring theirs with them.
  */
 internal object EventsDimens {
     // The marks of a cell (5.29 R9, «Клетка»): a plate of the colour of the ground of the grid over the bottom of the circle, the mini
@@ -320,4 +321,204 @@ internal object EventsDimens {
     val ScopeBinIcon = 22.dp
     const val SCOPE_BIN_ALPHA = 0.16f
     val ScopeBinBottom = 12.dp
+
+    // The form of an event (5.29 R9, «Форма»): its captions and fields are those of the forms of R4 (`FormCaption`, `AppField`, 14 apart).
+
+    /** «Частое»: four starts at most (the domain counts them with this limit as its argument). */
+    const val FREQUENT_STARTS = 4
+
+    /** The dates the answer «Этот и следующие» names before «и дальше» (plan D31; events-form.html 6 shows two). */
+    const val ANSWER_DATES = 2
+
+    /** The counter of the title appears from 60 characters of its 80, of the teacher or the place from 45 of 60 (decision 36). */
+    const val TITLE_COUNTER_FROM = 60
+    const val PLACE_COUNTER_FROM = 45
+
+    /**
+     * A tile of a kind: 80 wide and at least 80 high, a corner of 18, a frame of 2 (clear, the colour of the kind when chosen), 8 between
+     * the tiles; the sign 24, 6 over its name; the name 12 sp / 700 on two lines at most, smaller down to 10 rather than broken inside a
+     * word. The floor is in dp, as the floor of the number of the stepper of R3: at a large font 10 sp would not hold «Выступление».
+     */
+    val TileSize = 80.dp
+    val TileCorner = 18.dp
+    val TileBorder = 2.dp
+    val TileGap = 8.dp
+    val TileSign = 24.dp
+    val TileSignGap = 6.dp
+    val TileText = 12.sp
+    val TileTextLeast = 10.dp
+    const val TILE_TEXT_LINES = 2
+    const val TILE_TEXT_LINE = 1.2f
+
+    /** The dashed frame of «Свой вид»: 2, its plus 24. */
+    val TileDash = 2.dp
+    val TilePlus = 24.dp
+
+    /** «Своих видов — 20 из 20» in the place of «Свой вид»: 13 sp in the second level of text. */
+    val KindsFullText = 13.sp
+
+    /** The row of the kind under the tiles: 48, the pencil 18, 10 to its words of 14 sp / 700, the chevron 18. */
+    val KindRowMin = 48.dp
+    val KindRowIcon = 18.dp
+    val KindRowGap = 10.dp
+    val KindRowText = 14.sp
+    val KindRowTextHeight = 19.sp
+
+    /** The date and the time side by side, 8 apart, their widths 1.2 : 1; the calendar and the clock 18 in the place of the chevron. */
+    val DateTimeGap = 8.dp
+    const val DATE_SHARE = 1.2f
+    const val TIME_SHARE = 1f
+    val DateTimeIcon = 18.dp
+
+    /**
+     * The end in the caption of «Длительность», «до 17:45»: 13 sp / 700 in the first level of text, at least 8 from the caption — where
+     * the two do not fit one line (past midnight on 320 at 1.3) the end wraps at its right, the caption stays whole.
+     */
+    val EndText = 13.sp
+    val EndGap = 8.dp
+
+    /** The chips of the length: 8 apart, the second row 8 under the first. */
+    val ChoiceGap = 8.dp
+
+    /**
+     * The line under «Повтор»: 13 sp, 8 under the switch; «до…» in the accent, 700 — a span of the line, its touch of 48 the one Compose
+     * gives a small target, the line not grown by it.
+     */
+    val SummaryTop = 8.dp
+    val SummaryText = 13.sp
+    val SummaryTextHeight = 18.sp
+
+    // The sheets of the form (5.29 R9, «Листы формы»): the frame of R1, «Готово» at its bottom.
+
+    /** The value of a sheet — «28 сентября, понедельник», «До 31 декабря», «2 ч 30 мин» — 22 sp / 800; its caption 14 sp. */
+    val SheetValue = 22.sp
+    val SheetValueHeight = 28.sp
+    val SheetValueTop = 6.dp
+    val SheetCaption = 14.sp
+    val SheetCaptionHeight = 20.sp
+    val SheetChipsTop = 14.dp
+
+    /** The month of a sheet with its year: 16 sp / 800, 16 over it and 6 under it; the arrows of 44 with a touch of 48. */
+    val SheetMonth = 16.sp
+    val SheetMonthHeight = 22.sp
+    val SheetMonthTop = 16.dp
+    val SheetMonthBottom = 6.dp
+
+    /** «Весь день»: a row of 56, the switch 52 × 32, its caption 13 sp / 500. */
+    val AllDayRowMin = 56.dp
+    val AllDayText = 16.sp
+    val AllDayTextHeight = 21.sp
+    val AllDayCaption = 13.sp
+    val AllDayCaptionHeight = 18.sp
+    val AllDayGap = 12.dp
+
+    /**
+     * The wheels: two columns 96 × 220, 6 apart, a row of 44 — five seen; the plate of the chosen row 44 at a corner of 14 across them;
+     * the chosen value 28 sp / 800, its neighbours 20 sp / 600, the colon 28 sp / 800; a fade to the colour of the sheet over a third
+     * of their height at each edge.
+     */
+    val WheelWidth = 96.dp
+    val WheelRow = 44.dp
+    const val WHEEL_ROWS = 5
+    val WheelGap = 6.dp
+    val WheelTop = 8.dp
+    val WheelBottom = 4.dp
+    val WheelPlateCorner = 14.dp
+    val WheelChosen = 28.sp
+    val WheelNear = 20.sp
+    const val WHEEL_FADE = 0.32f
+
+    /** The wheels are long lists round and round: this many turns, the start in the middle of them. */
+    const val WHEEL_TURNS = 400
+
+    /** The end under the wheels, 14 sp; «Частое» 13 sp / 700, 14 over it; its chips not narrower than 60. */
+    val WheelEnd = 14.sp
+    val WheelEndHeight = 20.sp
+    val FrequentTop = 14.dp
+    val FrequentChipsTop = 8.dp
+    val FrequentChipMin = 60.dp
+
+    /** «Весь день» on: the words in the place of the wheels, 14 sp at 1.45. */
+    val AllDayNote = 14.sp
+    val AllDayNoteHeight = 20.3.sp
+    val AllDayNoteTop = 12.dp
+
+    /** «Длительность»: the stepper's number 32 sp (2 ч 30 мин does not fit 40), its hint 13 sp in the middle, 12 under it. */
+    const val DURATION_VALUE_SP = 32
+    val DurationStepperTop = 12.dp
+    val SheetHint = 13.sp
+    val SheetHintHeight = 18.85.sp
+    val SheetHintTop = 12.dp
+
+    // The sheet «Вид» (5.29 R9, «Лист «Вид»»).
+
+    /** The preview: a plate of 56 at a corner of 18, the sign 28; the name 22 sp / 800 at −0.01 em, its caption 13 sp; the day 54 × 52. */
+    val PreviewPlate = 56.dp
+    val PreviewPlateCorner = 18.dp
+    val PreviewSign = 28.dp
+    val PreviewGap = 12.dp
+    const val PREVIEW_TRACKING = -0.01f
+    val PreviewCaption = 13.sp
+    val PreviewCaptionHeight = 18.sp
+    val PreviewCellWidth = 54.dp
+    val PreviewCellHeight = 52.dp
+    val PreviewTop = 12.dp
+
+    /** «Удалить вид…» in the head of the sheet: 48, the bin 18, 15 sp / 700 in the colour of danger. */
+    val KindDeleteMin = 48.dp
+    val KindDeleteIcon = 18.dp
+    val KindDeleteText = 15.sp
+
+    /** Why a built-in kind is not renamed: 14 sp at 1.45. */
+    val KindNote = 14.sp
+    val KindNoteHeight = 20.3.sp
+    val KindPartTop = 16.dp
+    val KindPartBottom = 8.dp
+
+    /**
+     * The colours: a grid of 4 × 2, 8 apart in a row and 4 between the rows, a target of 48 with a circle of 36; the chosen one — a ring
+     * of 3 in the colour of the sheet and one of 2 in the first level of text around the circle, a tick of 20 in the colour of the ground.
+     */
+    const val SWATCHES_IN_ROW = 4
+    val SwatchTarget = 48.dp
+    val SwatchCircle = 36.dp
+    val SwatchGapH = 8.dp
+    val SwatchGapV = 4.dp
+    val SwatchRingInner = 3.dp
+    val SwatchRingOuter = 2.dp
+    val SwatchTick = 20.dp
+    const val SWATCH_TICK_LINE = 2.6f
+
+    /**
+     * The signs of one's own: cells of 48 on the ground of the screen at a corner of 14, the sign 24 in the second level; the chosen one —
+     * an inner ring of 2 and the sign in the colour of the kind; one another kind wears — a dot of 5, 7 from the bottom right corner.
+     * Six in a row 8 apart from a row of 328, 4 apart from 308, else four in a row 8 apart ([com.violinjourney.app.feature.events.form.KindSheetMath]).
+     */
+    val SignCell = 48.dp
+    val SignCellCorner = 14.dp
+    val SignIcon = 24.dp
+    val SignRing = 2.dp
+    val SignDot = 5.dp
+    val SignDotInset = 7.dp
+    val SignRowWide = 328.dp
+    val SignRowTight = 308.dp
+    val SignGapWide = 8.dp
+    val SignGapTight = 4.dp
+    const val SIGNS_WIDE = 6
+    const val SIGNS_NARROW = 4
+
+    // The plate «что меняется» of an edit of a repeat (5.29 R9, «Листы повтора»): the ground of the screen, a corner of 14, at least 48,
+    // 10 / 14 inside, 10 between its parts, 12 over it; its caption 13 sp / 700, the values 15 sp — the old one 600 in the second level,
+    // the arrow 18 in the third, the new one 700 in the first.
+
+    val ChangeMin = 48.dp
+    val ChangeCorner = 14.dp
+    val ChangePaddingV = 10.dp
+    val ChangePaddingH = 14.dp
+    val ChangeGap = 10.dp
+    val ChangeTop = 12.dp
+    val ChangeLabel = 13.sp
+    val ChangeValue = 15.sp
+    val ChangeValueHeight = 20.sp
+    val ChangeArrow = 18.dp
 }

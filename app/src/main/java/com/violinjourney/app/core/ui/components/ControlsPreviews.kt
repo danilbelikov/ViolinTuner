@@ -243,6 +243,19 @@ private fun ChoiceChipsPreview() = ViolinTheme {
     }
 }
 
+@Preview(name = "Chips · choice with the pencil of 16 before its words: «Другая…» and a length of one's own, chosen (stage 98б)", widthDp = 412, heightDp = 120, locale = "ru")
+@Composable
+private fun ChoiceIconChipsPreview() = ViolinTheme {
+    Row(
+        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(20.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        AppChip.Choice("Другая…", selected = false, onClick = {}, icon = AppIcons.Pencil)
+        AppChip.Choice("2 ч 30 мин", selected = true, onClick = {}, icon = AppIcons.Pencil)
+        AppChip.Choice("Без длительности", selected = false, onClick = {})
+    }
+}
+
 @Preview(name = "Chips · fr, 360", widthDp = 360, heightDp = 170, locale = "fr")
 @Composable
 private fun ChipsFrPreview() = Kit {

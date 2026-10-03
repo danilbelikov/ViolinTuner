@@ -312,6 +312,17 @@ class EventViewModelTest {
         assertTrue(viewModel.takeState.value.recording)
     }
 
+    /** «Изменить» opens the form of the event; «Добавить заметку» and the row «Заметку» of «Можно добавить» open it on its notes. */
+    @Test
+    fun `the edit and the notes open the form of the event - the notes in focus`() = runTest {
+        val id = lesson(LocalDate(2026, 10, 25))
+        val (viewModel, effects) = screen(id)
+        viewModel.onIntent(EventIntent.EditClicked)
+        viewModel.onIntent(EventIntent.AddNotesClicked)
+        runCurrent()
+        assertEquals(listOf(EventEffect.OpenForm(id, focusNotes = false), EventEffect.OpenForm(id, focusNotes = true)), effects)
+    }
+
     @Test
     fun `while a sound is recorded the ways that would end it do not answer`() = runTest {
         val id = concert()

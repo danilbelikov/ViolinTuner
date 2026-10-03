@@ -1,4 +1,4 @@
-package com.violinjourney.app.feature.practice.components
+package com.violinjourney.app.core.ui.components
 
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
@@ -46,17 +46,23 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-// The stepper of «Закончить занятие» and «Время за день» (spec 3.36.3, 5.29 R3).
+// The stepper of «Закончить занятие» and «Время за день» (spec 3.36.3, 5.29 R3), and of the sheet «Длительность» of an event (3.36.9).
 private val ButtonSize = 64.dp
 private val GlyphSize = 28.dp
 private val ValueGap = 12.dp
 private const val DISABLED_ALPHA = 0.38f
-private const val VALUE_SIZE = 40
+
+/** The size of the number of R3: 40 sp. The sheet «Длительность» of an event draws it 32 (5.29 R9: «2 ч 30 мин» in 40 does not fit). */
+const val STEPPER_VALUE_SIZE = 40
 private const val VALUE_STEP = 2
 private const val VALUE_TRACKING = -0.03
 
-/** The line of the number, whatever size it is drawn at: 1.05 of 40 sp — the row does not change its height with the number. */
-private const val VALUE_LINE_HEIGHT = 42
+/**
+ * The line of the number, whatever size it is drawn at: 21/20 of the full size — 42 sp of 40 — so the row does not change its height
+ * with the number. Whole numbers, so that 42 of 40 stays 42 exactly.
+ */
+private const val VALUE_LINE_TWENTIETHS = 21
+private const val TWENTIETHS = 20f
 
 /**
  * The smallest the number gets, whatever the size of the system font: «11 Std. 55 Min.» and «11 小时 55 分钟» (≈ 6.8 em of Manrope
@@ -72,12 +78,12 @@ private const val REPEAT_DELAY_MS = 400L
 private const val REPEAT_PERIOD_MS = 120L
 
 /**
- * «− 47 мин +» (spec 3.36.3, 5.29 R3): «−» and «+» of 64 in circles of surfaceContainerHigh, the number 40 sp / 800 in tabular figures
- * between them — smaller down to 22 dp rather than on two lines or cut, on a line of one height at any size — and under it the
- * [caption] («17:55 — 18:42 · было 47 мин»), up to two lines. The place of the caption is held by [captionReserve], the longest the
- * caption of this sheet can be, drawn unseen: a caption that appears or grows, or a number that gets smaller, never moves the buttons
- * under a finger. A tap steps once when the finger lifts, holding repeats; a button at its
- * limit is dimmed to 0.38. TalkBack reads the number with its caption as one [valueDescription].
+ * «− 47 мин +» (spec 3.36.3, 5.29 R3): «−» and «+» of 64 in circles of surfaceContainerHigh, the number [valueSize] sp / 800 in tabular
+ * figures between them — 40 of R3, 32 in the sheet «Длительность» of an event (5.29 R9) — smaller down to 22 dp rather than on two lines
+ * or cut, on a line of one height at any size — and under it the [caption] («17:55 — 18:42 · было 47 мин»), up to two lines. The place
+ * of the caption is held by [captionReserve], the longest the caption of this sheet can be, drawn unseen: a caption that appears or
+ * grows, or a number that gets smaller, never moves the buttons under a finger. A tap steps once when the finger lifts, holding repeats;
+ * a button at its limit is dimmed to 0.38. TalkBack reads the number with its caption as one [valueDescription].
  */
 @Composable
 fun Stepper(
@@ -91,10 +97,11 @@ fun Stepper(
     caption: String? = null,
     captionReserve: String? = caption,
     valueDescription: String = value,
+    valueSize: Int = STEPPER_VALUE_SIZE,
 ) {
     val colors = MaterialTheme.colorScheme
     val density = LocalDensity.current
-    val smallest = remember(density) { smallestValueSp(with(density) { MinValueSize.toSp() }.value).sp }
+    val smallest = remember(density, valueSize) { smallestValueSp(with(density) { MinValueSize.toSp() }.value, valueSize).sp }
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(ValueGap),
@@ -114,11 +121,11 @@ fun Stepper(
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 softWrap = false,
-                autoSize = TextAutoSize.StepBased(minFontSize = smallest, maxFontSize = VALUE_SIZE.sp, stepSize = VALUE_STEP.sp),
+                autoSize = TextAutoSize.StepBased(minFontSize = smallest, maxFontSize = valueSize.sp, stepSize = VALUE_STEP.sp),
                 style = MaterialTheme.typography.displaySmall.copy(
-                    fontSize = VALUE_SIZE.sp,
+                    fontSize = valueSize.sp,
                     // in sp, not em: a smaller number keeps the line, the column and the buttons beside it where they were
-                    lineHeight = VALUE_LINE_HEIGHT.sp,
+                    lineHeight = (valueSize * VALUE_LINE_TWENTIETHS / TWENTIETHS).sp,
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = VALUE_TRACKING.em,
                     fontFeatureSettings = TABULAR_FIGURES,
@@ -137,13 +144,13 @@ fun Stepper(
 }
 
 /**
- * The smallest size of the number in sp, given [floorSp] — [MinValueSize] in the sp of the screen: not above it, on the grid of
- * [VALUE_STEP] down from [VALUE_SIZE], so that the full size stays 40 sp exactly — the sizes of `TextAutoSize.StepBased` are its
- * smallest plus whole steps.
+ * The smallest size of the number in sp, given [floorSp] — [MinValueSize] in the sp of the screen — and the full size [valueSp]: not
+ * above the floor, on the grid of [VALUE_STEP] down from the full size, so that the full size stays 40 sp (or 32) exactly — the sizes of
+ * `TextAutoSize.StepBased` are its smallest plus whole steps.
  */
-internal fun smallestValueSp(floorSp: Float): Float {
-    val steps = ceil((VALUE_SIZE - floorSp) / VALUE_STEP).coerceIn(0f, (VALUE_SIZE / VALUE_STEP).toFloat())
-    return VALUE_SIZE - steps * VALUE_STEP
+internal fun smallestValueSp(floorSp: Float, valueSp: Int = STEPPER_VALUE_SIZE): Float {
+    val steps = ceil((valueSp - floorSp) / VALUE_STEP).coerceIn(0f, (valueSp / VALUE_STEP).toFloat())
+    return valueSp - steps * VALUE_STEP
 }
 
 @Composable

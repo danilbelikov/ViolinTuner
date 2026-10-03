@@ -126,6 +126,9 @@ object AppChip {
      *
      * [onLongClick] — a long press does something besides the choice: a preset of the user's own on «Звук» offers to remove it
      * (spec 3.17, 3.36.5); [onLongClickLabel] is what TalkBack says of it. The chip still reads as a radio button, chosen or not.
+     *
+     * [icon] — 16 before the words, in their colour, 6 from them: the pencil of «Другая…» and of a length of one's own in the form of an
+     * event (spec 3.36.9, 5.29 R9). Silent: the words say what the chip is.
      */
     @Composable
     fun Choice(
@@ -137,6 +140,7 @@ object AppChip {
         enabled: Boolean = true,
         onLongClick: (() -> Unit)? = null,
         onLongClickLabel: String? = null,
+        icon: ImageVector? = null,
     ) {
         val colors = MaterialTheme.colorScheme
         val chosen = selected == true
@@ -168,11 +172,13 @@ object AppChip {
                 .then(press)
                 .padding(horizontal = ChipPadding),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
+            horizontalArrangement = Arrangement.spacedBy(ChipGap, Alignment.CenterHorizontally),
         ) {
+            val words = if (chosen) colors.onPrimaryContainer else colors.onSurfaceVariant
+            if (icon != null) AppIcon(icon, contentDescription = null, size = FilterIcon, tint = words)
             Text(
                 text = text,
-                color = if (chosen) colors.onPrimaryContainer else colors.onSurfaceVariant,
+                color = words,
                 style = choiceWords(),
                 maxLines = 1,
             )
@@ -181,16 +187,18 @@ object AppChip {
 
     /**
      * The narrowest a [Choice] can be with each of [texts] whole on its line: its fields and the widest of them — for chips of one width
-     * in a row, which must not cut their words at a large font (the goal of «Что играем», spec 5.29 R6).
+     * in a row, which must not cut their words at a large font (the goal of «Что играем», spec 5.29 R6). [withIcon] — the chips carry
+     * the [Choice] `icon` before their words: its 16 and the gap of 6 are counted too.
      */
     @Composable
-    fun choiceWidthFor(texts: List<String>): Dp {
+    fun choiceWidthFor(texts: List<String>, withIcon: Boolean = false): Dp {
         val words = choiceWords()
         val measurer = rememberTextMeasurer()
         val density = LocalDensity.current
-        return remember(texts, words, measurer, density) {
+        return remember(texts, words, measurer, density, withIcon) {
             val widest = texts.maxOfOrNull { measurer.measure(it, words, softWrap = false, maxLines = 1).size.width } ?: 0
-            with(density) { widest.toDp() } + ChipPadding * 2 + OneLineSlack
+            val icon = if (withIcon) FilterIcon + ChipGap else 0.dp
+            with(density) { widest.toDp() } + icon + ChipPadding * 2 + OneLineSlack
         }
     }
 

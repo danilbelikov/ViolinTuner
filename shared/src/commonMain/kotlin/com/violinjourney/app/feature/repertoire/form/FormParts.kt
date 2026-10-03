@@ -47,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -58,6 +59,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -77,6 +79,7 @@ import com.violinjourney.app.core.ui.components.appFieldLeastHeight
 import com.violinjourney.app.core.ui.components.currentDockMetrics
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
+import com.violinjourney.app.core.ui.icons.IconSizes
 import com.violinjourney.app.core.ui.theme.AppShapes
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.repertoire.components.ReasonPlate
@@ -386,11 +389,28 @@ internal fun FormCaption(caption: Caption, modifier: Modifier = Modifier, conten
  * in the second level, the [value] of 16 sp / 800 on the right on one line — nothing without one — and the chevron of 24 in the third
  * level; it opens its sheet. The label keeps its width, the value gives way with an ellipsis (a long name of one's own section). One
  * button for TalkBack: «Тональность, G-dur».
+ *
+ * The date and the time of an event (spec 3.36.9, 5.29 R9): no [label] — the value stands on the left — and in the place of the chevron
+ * the [trailing] icon of [trailingSize] (the calendar, the clock of 18), the time in the accent in tabular figures ([valueStyle], laid
+ * over the style of the value); [description] — what TalkBack says of a row without a label: «Дата, понедельник, 28 сентября».
  */
 @Composable
-internal fun ChoiceRow(label: String, value: String?, onClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun ChoiceRow(
+    label: String?,
+    value: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    trailing: ImageVector = AppIcons.ChevronRight,
+    trailingSize: Dp = IconSizes.Standalone,
+    valueStyle: TextStyle = TextStyle.Default,
+    description: String? = null,
+) {
     val colors = MaterialTheme.colorScheme
-    val description = if (value.isNullOrEmpty()) label else label + SAID_SEPARATOR + value
+    val said = description ?: when {
+        label == null -> value.orEmpty()
+        value.isNullOrEmpty() -> label
+        else -> label + SAID_SEPARATOR + value
+    }
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -399,29 +419,31 @@ internal fun ChoiceRow(label: String, value: String?, onClick: () -> Unit, modif
             .background(colors.surfaceContainer)
             .clickable(role = Role.Button, onClick = onClick)
             .clearAndSetSemantics {
-                contentDescription = description
+                contentDescription = said
                 role = Role.Button
             }
             .padding(start = ChoiceStart, end = ChoiceEnd, top = ChoiceVertical, bottom = ChoiceVertical),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ChoiceGap),
     ) {
-        Text(
-            text = label,
-            color = colors.onSurfaceVariant,
-            maxLines = 1,
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
-        )
+        if (label != null) {
+            Text(
+                text = label,
+                color = colors.onSurfaceVariant,
+                maxLines = 1,
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
+            )
+        }
         Text(
             text = value.orEmpty(),
             modifier = Modifier.weight(1f),
-            color = colors.onSurface,
-            textAlign = TextAlign.End,
+            color = valueStyle.color.takeOrElse { colors.onSurface },
+            textAlign = if (label == null) TextAlign.Start else TextAlign.End,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.ExtraBold),
+            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.ExtraBold).merge(valueStyle),
         )
-        AppIcon(AppIcons.ChevronRight, contentDescription = null, tint = ViolinTheme.textTertiary)
+        AppIcon(trailing, contentDescription = null, tint = ViolinTheme.textTertiary, size = trailingSize)
     }
 }
 

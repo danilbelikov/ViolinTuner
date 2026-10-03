@@ -20,12 +20,12 @@ import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PE
 import com.violinjourney.app.core.domain.practice.RunningPractice
 import com.violinjourney.app.core.ui.components.AppSheetCard
 import com.violinjourney.app.core.ui.components.AppSheetDefaults
+import com.violinjourney.app.core.ui.components.Stepper
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.practice.components.EditTimeButtons
 import com.violinjourney.app.feature.practice.components.EditTimeSheetContent
 import com.violinjourney.app.feature.practice.components.ForgottenButtons
 import com.violinjourney.app.feature.practice.components.ForgottenSheetContent
-import com.violinjourney.app.feature.practice.components.Stepper
 import com.violinjourney.app.feature.practice.components.SummaryButtons
 import com.violinjourney.app.feature.practice.components.SummarySheetContent
 import kotlin.math.absoluteValue

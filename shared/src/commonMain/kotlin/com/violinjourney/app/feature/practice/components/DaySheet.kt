@@ -57,8 +57,9 @@ private const val MIN_TIME_SIZE = 22
  * «Записи этого дня» with their cards, if there are any. A day to come: no time and no «Изменить» — its time is not edited (3.35) —
  * but «Время появится, когда день наступит.» and its events right under it, without a title; without events — «Событий нет» and what
  * a day holds. TalkBack names the sheet by its date. A face of the frame of «Занятия» ([PracticeSheetHost]): a swipe only hides it
- * (DayHidden); many events and records scroll inside the frame. [onAddEvent] — «Событие в этот день» dashed at the bottom (the form of
- * an event: stage 98; the previews show it now); the main button of a day to come without events is the frame's, under the content.
+ * (DayHidden); many events and records scroll inside the frame. [onAddEvent] — «Событие в этот день» dashed at the bottom: the form of
+ * an event with the date of the sheet; the main button of a day to come without events is the frame's, under the content
+ * ([AddEventButtons]).
  */
 @Composable
 fun DaySheetContent(

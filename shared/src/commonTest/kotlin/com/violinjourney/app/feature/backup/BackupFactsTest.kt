@@ -82,6 +82,24 @@ class BackupFactsTest {
         assertEquals(facts(Fact.SESSIONS to 64, Fact.PIECES to 12, Fact.DAYS to 41), BackupFacts.lost(counts))
     }
 
+    /**
+     * Events go with a restore too (review of stage 98б): an app with only a calendar is not empty — and the question names what goes,
+     * «12 событий»; a kind of one's own is said by its events, and by itself only where there is none. No card names them (D39).
+     */
+    @Test
+    fun `a calendar is data - a loss names its events and the kinds without events`() {
+        val calendar = BackupCounts(events = 12, ownKinds = 2)
+        assertFalse(calendar.isEmpty, "a calendar alone is something to keep")
+        assertFalse(BackupCounts(ownKinds = 1).isEmpty, "a kind of one's own alone too")
+        assertTrue(BackupCounts().isEmpty)
+        assertEquals(facts(Fact.EVENTS to 12), BackupFacts.lost(calendar), "the kinds are said by their events")
+        assertEquals(facts(Fact.KINDS to 2), BackupFacts.lost(BackupCounts(ownKinds = 2)))
+        assertEquals(facts(Fact.SESSIONS to 64, Fact.PIECES to 12, Fact.DAYS to 41, Fact.EVENTS to 30), BackupFacts.lost(counts.copy(events = 30, ownKinds = 1)))
+        assertEquals(facts(Fact.LEVEL to 1), BackupFacts.nowChips(calendar), "no chip of «Сейчас в приложении» names them")
+        assertEquals(facts(Fact.LEVEL to 1), BackupFacts.passportChips(manifest(counts = calendar)).facts, "nor of the passport")
+        assertTrue(BackupFacts.savedChips(manifest(counts = calendar)).facts.isEmpty(), "nor of a copy saved")
+    }
+
     @Test
     fun `videos and pages are chips only when they are in the copy`() {
         // the counts of a passport are of the whole app: six videos in the app are not six videos in a copy without video

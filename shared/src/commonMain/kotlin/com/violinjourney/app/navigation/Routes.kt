@@ -1,10 +1,12 @@
 package com.violinjourney.app.navigation
 
+import com.violinjourney.app.core.domain.events.BuiltInKind
 import com.violinjourney.app.core.domain.journey.JourneyRoute
 import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.feature.backup.RestoreViewModel
 import com.violinjourney.app.feature.camera.CaptureViewModel
+import com.violinjourney.app.feature.events.form.EventFormViewModel
 import com.violinjourney.app.feature.events.screen.EventViewModel
 import com.violinjourney.app.feature.home.HomeViewModel
 import com.violinjourney.app.feature.journey.StopViewModel
@@ -16,6 +18,7 @@ import com.violinjourney.app.feature.repertoire.scale.ScaleFormViewModel
 import com.violinjourney.app.feature.repertoire.stand.StandViewModel
 import com.violinjourney.app.feature.session.SessionViewModel
 import com.violinjourney.app.feature.sound.SoundViewModel
+import kotlinx.datetime.LocalDate
 
 /**
  * The routes of the screens above the tabs, one table for both graphs — `AppNavHost` on Android and `IosNavHost` on
@@ -63,6 +66,17 @@ object Routes {
     const val RESTORE_PATTERN = "$RESTORE?${RestoreViewModel.ARG_URI}={${RestoreViewModel.ARG_URI}}"
     const val EVENT = "event"
     const val EVENT_PATTERN = "$EVENT/{${EventViewModel.ARG_EVENT_ID}}"
+    const val EVENT_FORM = "eventForm"
+    const val EVENT_FORM_PATTERN = "$EVENT_FORM?${EventFormViewModel.ARG_EVENT_ID}={${EventFormViewModel.ARG_EVENT_ID}}" +
+        "&${EventFormViewModel.ARG_DATE}={${EventFormViewModel.ARG_DATE}}" +
+        "&${EventFormViewModel.ARG_KIND}={${EventFormViewModel.ARG_KIND}}" +
+        "&${EventFormViewModel.ARG_FOCUS_NOTES}={${EventFormViewModel.ARG_FOCUS_NOTES}}"
+
+    /**
+     * The date an event saved by its form lies on (plan D24): written into the saved state of the entry of «Занятия» before the form goes,
+     * taken by «Занятия» when they come back — the sheet of that day rises, the calendar on its month.
+     */
+    const val RESULT_EVENT_DATE = "eventSavedDate"
 
     fun session(sessionId: Long): String = "$SESSION/$sessionId"
 
@@ -73,6 +87,16 @@ object Routes {
 
     /** The screen of an event (spec 3.35, 3.36.9): from a row of the sheet of the day and of the reminder on «Занятия». */
     fun event(eventId: Long): String = "$EVENT/$eventId"
+
+    /**
+     * The form of an event (spec 3.35, 3.36.9): [eventId] null — a new one, on [date] (the day of a sheet; none — today) and of [kind]
+     * («Добавить выступление»; none — the kind of the last event created); an edit at its notes when [focusNotes] («Добавить заметку»).
+     */
+    fun eventForm(eventId: Long? = null, date: LocalDate? = null, kind: BuiltInKind? = null, focusNotes: Boolean = false): String =
+        "$EVENT_FORM?${EventFormViewModel.ARG_EVENT_ID}=${eventId ?: EventFormViewModel.NEW_EVENT}" +
+            "&${EventFormViewModel.ARG_DATE}=${date?.toString().orEmpty()}" +
+            "&${EventFormViewModel.ARG_KIND}=${kind?.name.orEmpty()}" +
+            "&${EventFormViewModel.ARG_FOCUS_NOTES}=$focusNotes"
 
     fun capture(pieceId: Long): String = "$CAPTURE/$pieceId"
 

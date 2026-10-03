@@ -22,10 +22,10 @@ internal val DashedFrameCorner = 18.dp
 
 /**
  * The frame of the trophy that comes next — the tile in «Мой путь» and the row in «Трофеи» (spec 3.36.2, 3.36.3): the one highlight of
- * its list, drawn inside the bounds in [color].
+ * its list, drawn inside the bounds in [color]. [width] — the line: 1.5, or 2 of the tile «Свой вид» of the form of an event (5.29 R9).
  */
-internal fun Modifier.dashedFrame(color: Color, corner: Dp = DashedFrameCorner): Modifier = drawBehind {
-    val stroke = DashWidth.toPx()
+internal fun Modifier.dashedFrame(color: Color, corner: Dp = DashedFrameCorner, width: Dp = DashWidth): Modifier = drawBehind {
+    val stroke = width.toPx()
     drawRoundRect(
         color = color,
         topLeft = Offset(stroke / 2, stroke / 2),

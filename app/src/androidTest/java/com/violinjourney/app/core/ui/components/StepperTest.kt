@@ -1,4 +1,4 @@
-package com.violinjourney.app.feature.practice.components
+package com.violinjourney.app.core.ui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer

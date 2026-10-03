@@ -703,6 +703,66 @@ class PracticeViewModelTest {
     }
 
     @Test
+    fun `an event in this day opens the form with the date of the sheet once and the sheet comes back with it`() = runTest {
+        val (viewModel, effects) = viewModel()
+        viewModel.onIntent(PracticeIntent.NewEventClicked)
+        runCurrent()
+        assertTrue("no sheet — no day to make an event on", effects.isEmpty())
+
+        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 28)))
+        runCurrent()
+        // a double tap: the second lands on a sheet that has stepped aside
+        viewModel.onIntent(PracticeIntent.NewEventClicked)
+        viewModel.onIntent(PracticeIntent.NewEventClicked)
+        runCurrent()
+        assertEquals(listOf(PracticeEffect.OpenEventForm(LocalDate(2026, 9, 28))), effects)
+        assertTrue("the sheet steps aside while the form is on the screen", viewModel.state.value.sheetsAway)
+
+        // ✕ of the form: the same sheet rises again
+        viewModel.onIntent(PracticeIntent.Resumed)
+        runCurrent()
+        assertFalse(viewModel.state.value.sheetsAway)
+        assertEquals(PracticeSheet.Day(LocalDate(2026, 9, 28)), viewModel.state.value.sheet)
+    }
+
+    @Test
+    fun `an event saved by the form brings the sheet of its date up on its month`() = runTest {
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 28)))
+        runCurrent()
+        viewModel.onIntent(PracticeIntent.NewEventClicked)
+        runCurrent()
+        // the date was changed in the form: the event lies on 26 October
+        viewModel.onIntent(PracticeIntent.EventSaved(LocalDate(2026, 10, 26)))
+        viewModel.onIntent(PracticeIntent.Resumed)
+        runCurrent()
+        val state = viewModel.state.value
+        assertEquals(PracticeSheet.Day(LocalDate(2026, 10, 26)), state.sheet)
+        assertEquals(YearMonth(2026, 10), state.month)
+        assertFalse(state.sheetsAway)
+        // a date of the current month: the calendar follows today again
+        viewModel.onIntent(PracticeIntent.DayEventClicked(5))
+        runCurrent()
+        viewModel.onIntent(PracticeIntent.EventSaved(LocalDate(2026, 9, 30)))
+        viewModel.onIntent(PracticeIntent.Resumed)
+        runCurrent()
+        assertEquals(PracticeSheet.Day(LocalDate(2026, 9, 30)), viewModel.state.value.sheet)
+        assertEquals(YearMonth(2026, 9), viewModel.state.value.month)
+    }
+
+    @Test
+    fun `an event saved from the reminder brings up no sheet`() = runTest {
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.ReminderEventClicked(5))
+        runCurrent()
+        viewModel.onIntent(PracticeIntent.EventSaved(LocalDate(2026, 10, 26)))
+        viewModel.onIntent(PracticeIntent.Resumed)
+        runCurrent()
+        assertNull(viewModel.state.value.sheet)
+        assertEquals(YearMonth(2026, 9), viewModel.state.value.month)
+    }
+
+    @Test
     fun `a row of the reminder opens the screen of its event and leaves the sheets alone`() = runTest {
         val (viewModel, effects) = viewModel()
         viewModel.onIntent(PracticeIntent.ReminderEventClicked(5))

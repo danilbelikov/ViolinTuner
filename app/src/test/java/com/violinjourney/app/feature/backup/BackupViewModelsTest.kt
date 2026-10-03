@@ -355,6 +355,36 @@ class BackupViewModelsTest {
         assertEquals(listOf<RestoreEffect>(RestoreEffect.OpenBackup, RestoreEffect.OpenBackup), effects)
     }
 
+    /**
+     * An app with only a calendar (review of stage 98б): the copy offers to save it — not «Пока нечего сохранять» — and a restore over it
+     * asks «Заменить данные?» first instead of replacing it silently (spec 3.20, item 2).
+     */
+    @Test
+    fun `a calendar alone is data - the copy saves it and a restore over it asks first`() = runTest {
+        val calendar = FakeBackupStore(folder.newFolder(), now, BackupCounts(events = 3))
+        val manager = BackupManager(
+            calendar, documents, prefs, {}, BackupConfig(), clock, { testScheduler.currentTime }, StandardTestDispatcher(testScheduler),
+            analytics = NoOpAnalytics(),
+        )
+        val copy = BackupViewModel(manager, calendar, BackupConfig(), watch, importer(), audioImporter(), SavedStateHandle())
+        val picks = collected(copy.effects)
+        advanceUntilIdle()
+        assertFalse("not «nothing to save»", copy.state.value.nothingToSave)
+        copy.onIntent(BackupIntent.SaveClicked)
+        assertEquals(listOf<BackupEffect>(BackupEffect.PickPlace), picks)
+        manager.saveTo("content://downloads/1", BackupPart.entries.toSet(), "копия.zip")
+        advanceUntilIdle()
+        manager.dismiss()
+
+        val restore = RestoreViewModel(manager, calendar, watch, importer(), audioImporter(), SavedStateHandle(mapOf(RestoreViewModel.ARG_URI to "content://downloads/1")))
+        advanceUntilIdle()
+        assertFalse((restore.state.value.stage as RestoreStage.Ready).current.counts.isEmpty)
+        restore.onIntent(RestoreIntent.RestoreClicked)
+        advanceUntilIdle()
+        assertEquals("asked first", RestoreDialog.REPLACE, restore.state.value.dialog)
+        assertEquals("nothing replaced yet", BackupJob.Idle, manager.job.value)
+    }
+
     @Test
     fun `the screen of a restore takes no press once it is closing`() = runTest {
         // An empty app — the main way in, from «У меня есть копия данных»: «Восстановить» there asks nothing

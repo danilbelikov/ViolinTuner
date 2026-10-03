@@ -70,9 +70,7 @@ import org.jetbrains.compose.resources.stringResource
  * window), what is read — the head and the notes; at the right, beyond a rule, the rest in the same order, the bottom zone as wide as that
  * column and under the records it adds to (the exception of 3.36.1 rule 2). Each column scrolls by itself. Stateless; [take] comes apart
  * from [state] because it changes twenty times a second while a sound is recorded: only the bar of the recording reads it whole.
- *
- * [formOpens] — «Изменить», «Добавить заметку» and «Заметку» of «Можно добавить» open the form of the event; until it is there (the
- * second half of stage 98) they are not shown.
+ * «Изменить», «Добавить заметку» and «Заметку» of «Можно добавить» open the form of the event.
  */
 @Composable
 fun EventScreen(
@@ -83,7 +81,6 @@ fun EventScreen(
     // asked once: a new zone on every recomposition is a new object, and every card of a record would recompose with it
     zone: TimeZone = remember { TimeZone.currentSystemDefault() },
     import: EventImport = EventImport(MediaImport.Idle, ImportWords.VIDEO_RECORD),
-    formOpens: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
     val recording by remember(take) { derivedStateOf { take.value.recording } }
@@ -101,7 +98,7 @@ fun EventScreen(
                 }
             }
             is EventState.Loaded -> {
-                val blocks = EventBlockScope(state, onIntent, recording, zone, formOpens)
+                val blocks = EventBlockScope(state, onIntent, recording, zone)
                 if (landscape) LandscapeLayout(blocks, take, maxWidth) else PortraitLayout(blocks, take)
                 EventSheetHost(state, onIntent)
                 if (state.dialog == EventDialog.DeleteOne) {
@@ -187,7 +184,7 @@ object EventLayout {
 }
 
 /**
- * The bar of the event ([ElementTopBar]): «назад», the name once the large one has scrolled away, «Изменить» once the form is there, and
+ * The bar of the event ([ElementTopBar]): «назад», the name once the large one has scrolled away, «Изменить» — the form of the event — and
  * «⋯» with «Удалить…» coral with the bin — the one item of its menu. «Изменить» and «⋯» sleep while a recording runs.
  */
 @Composable
@@ -199,7 +196,7 @@ private fun TopBar(blocks: EventBlockScope, titleVisible: Boolean, height: Dp) {
         titleVisible = titleVisible,
         height = height,
         onBack = { onIntent(EventIntent.BackClicked) },
-        onEdit = if (blocks.formOpens) ({ onIntent(EventIntent.EditClicked) }) else null,
+        onEdit = { onIntent(EventIntent.EditClicked) },
         editable = !blocks.recording,
         more = {
             Box {

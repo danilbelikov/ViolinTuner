@@ -76,6 +76,9 @@ import com.violinjourney.app.shared.resources.backup_chip_no_video
 import com.violinjourney.app.shared.resources.backup_count_days_few
 import com.violinjourney.app.shared.resources.backup_count_days_many
 import com.violinjourney.app.shared.resources.backup_count_days_one
+import com.violinjourney.app.shared.resources.backup_count_kinds_few
+import com.violinjourney.app.shared.resources.backup_count_kinds_many
+import com.violinjourney.app.shared.resources.backup_count_kinds_one
 import com.violinjourney.app.shared.resources.backup_count_level
 import com.violinjourney.app.shared.resources.backup_count_pages_few
 import com.violinjourney.app.shared.resources.backup_count_pages_many
@@ -101,6 +104,9 @@ import com.violinjourney.app.shared.resources.backup_remaining_minutes
 import com.violinjourney.app.shared.resources.backup_remaining_seconds
 import com.violinjourney.app.shared.resources.backup_total_value
 import com.violinjourney.app.shared.resources.dot_separator
+import com.violinjourney.app.shared.resources.event_count_few
+import com.violinjourney.app.shared.resources.event_count_many
+import com.violinjourney.app.shared.resources.event_count_one
 import com.violinjourney.app.shared.resources.restore_without_sheets
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -193,7 +199,7 @@ internal fun daysWord(count: Int) = plural(count, Res.string.backup_count_days_o
 @Composable
 internal fun pagesWord(count: Int) = plural(count, Res.string.backup_count_pages_one, Res.string.backup_count_pages_few, Res.string.backup_count_pages_many)
 
-/** The words of a chip: «41 день занятий», «уровень 9», «64 записи», «6 видео», «12 произведений», «48 страниц». */
+/** The words of a chip: «41 день занятий», «уровень 9», «64 записи», «6 видео», «12 произведений», «48 страниц», «12 событий», «2 своих вида». */
 @Composable
 internal fun chipWords(chip: BackupFacts.Chip): String = when (chip.fact) {
     BackupFacts.Fact.DAYS -> daysWord(chip.count)
@@ -202,6 +208,8 @@ internal fun chipWords(chip: BackupFacts.Chip): String = when (chip.fact) {
     BackupFacts.Fact.VIDEOS -> plural(chip.count, Res.string.backup_count_video_one, Res.string.backup_count_video_few, Res.string.backup_count_video_many)
     BackupFacts.Fact.PIECES -> piecesWord(chip.count)
     BackupFacts.Fact.PAGES -> pagesWord(chip.count)
+    BackupFacts.Fact.EVENTS -> plural(chip.count, Res.string.event_count_one, Res.string.event_count_few, Res.string.event_count_many)
+    BackupFacts.Fact.KINDS -> plural(chip.count, Res.string.backup_count_kinds_one, Res.string.backup_count_kinds_few, Res.string.backup_count_kinds_many)
 }
 
 /** The words of a dashed chip: «без видео», «без звука», «без фото нот». */

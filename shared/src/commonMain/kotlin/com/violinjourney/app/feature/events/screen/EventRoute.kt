@@ -27,18 +27,18 @@ import org.jetbrains.compose.resources.getString
  * The entry of the screen of an event (spec 3.35, 3.36.9): owns its view model, its effects and the system windows of «Добавить запись» —
  * the camera, the picker of videos, the picker of a sound file (the one of a backing, 3.32) and the sheet that rescues a shot. One system
  * window per press ([rememberSystemWindowGate]): a second tap of a double tap opens nothing over the first. [onOpenForm] — the form of
- * the event; null until it is there (the second half of stage 98): «Изменить» and «Добавить заметку» are then not shown.
+ * the event: «Изменить», and «Добавить заметку» at its notes.
  */
 @Composable
 fun EventRoute(
     onClose: () -> Unit,
+    onOpenForm: (eventId: Long, focusNotes: Boolean) -> Unit,
     onOpenPiece: (pieceId: Long) -> Unit,
     onOpenSession: (sessionId: Long) -> Unit,
     onOpenRepertoire: () -> Unit,
     viewModel: EventViewModel,
     tracking: AnalyticsViewModel,
     modifier: Modifier = Modifier,
-    onOpenForm: ((eventId: Long, focusNotes: Boolean) -> Unit)? = null,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     // a state, not a value: it changes twenty times a second while a sound is recorded, and only the bar of the recording reads it whole
@@ -81,7 +81,7 @@ fun EventRoute(
             viewModel.effects.collect { effect ->
                 when (effect) {
                     EventEffect.Close -> currentOnClose()
-                    is EventEffect.OpenForm -> currentOnOpenForm?.invoke(effect.eventId, effect.focusNotes)
+                    is EventEffect.OpenForm -> currentOnOpenForm(effect.eventId, effect.focusNotes)
                     is EventEffect.OpenPiece -> currentOnOpenPiece(effect.pieceId)
                     is EventEffect.OpenSession -> currentOnOpenSession(effect.sessionId)
                     EventEffect.OpenRepertoire -> currentOnOpenRepertoire()
@@ -105,6 +105,5 @@ fun EventRoute(
         onIntent = viewModel::onIntent,
         modifier = modifier,
         import = import,
-        formOpens = onOpenForm != null,
     )
 }

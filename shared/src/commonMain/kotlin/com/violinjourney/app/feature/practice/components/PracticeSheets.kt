@@ -38,6 +38,7 @@ import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PE
 import com.violinjourney.app.core.ui.components.AppChip
 import com.violinjourney.app.core.ui.components.AppSheetButtons
 import com.violinjourney.app.core.ui.components.SectionLabel
+import com.violinjourney.app.core.ui.components.Stepper
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons

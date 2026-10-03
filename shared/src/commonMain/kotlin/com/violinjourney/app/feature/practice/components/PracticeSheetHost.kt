@@ -70,7 +70,9 @@ fun PracticeSheetHost(state: PracticeState, onIntent: (PracticeIntent) -> Unit, 
                 is SheetFace.Gift -> {
                     { GiftButtons(onThanks = { onIntent(PracticeIntent.GiftAccepted(shown.gift.hours)) }) }
                 }
-                is SheetFace.Day, is SheetFace.Path, is SheetFace.Trophies -> null
+                // a day to come without events (spec 3.36.9): making one is all there is to do — the main button at the bottom
+                is SheetFace.Day -> if (shown.day.isFuture && shown.day.events.isEmpty()) ({ AddEventButtons { onIntent(PracticeIntent.NewEventClicked) } }) else null
+                is SheetFace.Path, is SheetFace.Trophies -> null
             }
         },
         // «Имя и фото» on its side with the keyboard up: «Готово» goes under the field, the keyboard's own «Готово» answers (5.29 R3)
@@ -79,7 +81,7 @@ fun PracticeSheetHost(state: PracticeState, onIntent: (PracticeIntent) -> Unit, 
     ) { shown ->
         when (shown) {
             is SheetFace.Summary -> SummarySheetContent(shown.sheet, state.stepMinutes, zone, onStep = { onIntent(PracticeIntent.SummaryStepped(it)) })
-            is SheetFace.Day -> DaySheetContent(shown.day, onIntent, zone)
+            is SheetFace.Day -> DaySheetContent(shown.day, onIntent, zone, onAddEvent = { onIntent(PracticeIntent.NewEventClicked) })
             is SheetFace.EditTime -> EditTimeSheetContent(shown.sheet, state.stepMinutes, onIntent)
             is SheetFace.Path -> PathSheetContent(shown.header, photo, onIntent)
             is SheetFace.Profile -> NamePhotoSheetContent(shown.sheet, hasPhoto = shown.header.avatarPath != null, photo, onIntent, onPickPhoto = pickPhoto)

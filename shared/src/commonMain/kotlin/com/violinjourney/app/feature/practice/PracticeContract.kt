@@ -442,6 +442,18 @@ sealed interface PracticeIntent {
     /** A row of the reminder (spec 3.36.9): the screen of its event; «назад» comes back to «Занятия». */
     data class ReminderEventClicked(val id: Long) : PracticeIntent
 
+    /**
+     * «Событие в этот день» of the sheet of a day (spec 3.36.9): the form of an event with the date of the sheet; the sheet steps aside, as
+     * for a record, and rises again when the form is closed.
+     */
+    data object NewEventClicked : PracticeIntent
+
+    /**
+     * The form saved an event on [date] (plan D24) — told before [Resumed] when «Занятия» come back: the sheet that stepped aside for the
+     * form or the event rises on that day, the calendar on its month — the date may have been changed in the form. Nothing else opens.
+     */
+    data class EventSaved(val date: LocalDate) : PracticeIntent
+
     /** «Имя и фото» of «Мой путь»: the sheet «Имя и фото» takes its place. Heard only over «Мой путь». */
     data object ProfileClicked : PracticeIntent
 
@@ -482,6 +494,9 @@ sealed interface PracticeEffect {
 
     /** The screen of an event (spec 3.35, 3.36.9). */
     data class OpenEvent(val id: Long) : PracticeEffect
+
+    /** The form of a new event on [date] (spec 3.36.9: «Событие в этот день»). */
+    data class OpenEventForm(val date: LocalDate) : PracticeEffect
 
     data object OpenJourney : PracticeEffect
 

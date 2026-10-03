@@ -14,6 +14,8 @@ import com.violinjourney.app.R
 import com.violinjourney.app.core.data.AppDatabase
 import com.violinjourney.app.core.data.di.appDatabaseBuilder
 import com.violinjourney.app.core.di.IoDispatcher
+import com.violinjourney.app.core.domain.events.EventRepository
+import com.violinjourney.app.core.domain.events.KindRef
 import com.violinjourney.app.core.domain.practice.PracticeRepository
 import com.violinjourney.app.core.domain.progress.Progress
 import com.violinjourney.app.core.domain.progress.ProgressConfig
@@ -40,6 +42,7 @@ class AppBackupStore @Inject constructor(
     private val repertoire: RepertoireRepository,
     private val practice: PracticeRepository,
     private val trophies: TrophyRepository,
+    private val events: EventRepository,
     private val progressConfig: ProgressConfig,
     private val clock: WallClock,
     @IoDispatcher private val io: CoroutineDispatcher,
@@ -64,6 +67,8 @@ class AppBackupStore @Inject constructor(
             level = Progress.levelOf(Progress.totalMs(entries), progressConfig).level,
             withSound = all.count { it.audioPath != null && it.videoPath == null },
             videos = all.count { it.videoPath != null },
+            events = events.events.first().size,
+            ownKinds = events.kinds.first().count { it.ref is KindRef.Custom },
         )
         val data = databaseFile.length() + File(databaseFile.path + DatabaseSnapshot.WAL).length() + settingsFile.length() + mediaOf(BackupPart.DATA).sumOf { it.length() }
         BackupContents(

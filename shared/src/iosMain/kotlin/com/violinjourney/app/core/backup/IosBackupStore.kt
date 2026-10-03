@@ -4,6 +4,8 @@ import androidx.room.RoomDatabase
 import androidx.room.execSQL
 import androidx.room.useWriterConnection
 import com.violinjourney.app.core.data.AppDatabase
+import com.violinjourney.app.core.domain.events.EventRepository
+import com.violinjourney.app.core.domain.events.KindRef
 import com.violinjourney.app.core.domain.practice.PracticeRepository
 import com.violinjourney.app.core.domain.progress.Progress
 import com.violinjourney.app.core.domain.progress.ProgressConfig
@@ -56,6 +58,7 @@ internal class IosBackupStore(
     private val repertoire: RepertoireRepository,
     private val practice: PracticeRepository,
     private val trophies: TrophyRepository,
+    private val events: EventRepository,
     private val progressConfig: ProgressConfig,
     private val clock: WallClock,
     private val io: CoroutineDispatcher,
@@ -80,6 +83,8 @@ internal class IosBackupStore(
             level = Progress.levelOf(Progress.totalMs(entries), progressConfig).level,
             withSound = all.count { it.audioPath != null && it.videoPath == null },
             videos = all.count { it.videoPath != null },
+            events = events.events.first().size,
+            ownKinds = events.kinds.first().count { it.ref is KindRef.Custom },
         )
         val dataBytes = databaseFile.sizeBytes() + data.child(AppDatabase.FILE_NAME + WAL).sizeBytes() + settingsFile.sizeBytes() +
             mediaOf(BackupPart.DATA).sumOf { it.second.sizeBytes() }

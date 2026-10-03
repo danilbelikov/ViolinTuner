@@ -15,8 +15,11 @@ import com.violinjourney.app.core.backup.SaveFailure
  * screens'.
  */
 object BackupFacts {
-    /** A count a chip says — on a card, in this order: days of practice, the level, recordings, videos, pieces, pages of sheets. */
-    enum class Fact { DAYS, LEVEL, SESSIONS, VIDEOS, PIECES, PAGES }
+    /**
+     * A count a chip says — on a card, in this order: days of practice, the level, recordings, videos, pieces, pages of sheets; the events
+     * of the calendar and the kinds of one's own only in what a restore takes away ([lost]): no card names them (plan D39).
+     */
+    enum class Fact { DAYS, LEVEL, SESSIONS, VIDEOS, PIECES, PAGES, EVENTS, KINDS }
 
     data class Chip(val fact: Fact, val count: Int)
 
@@ -81,12 +84,16 @@ object BackupFacts {
 
     /**
      * What a restore takes away, as «Заменить данные?» and «Удалить всё и восстановить?» name it (spec 3.36.8): recordings, pieces, days
-     * of practice — only those there are: «5 записей · 38 дней занятий», never «0 произведений».
+     * of practice, events of the calendar — only those there are: «5 записей · 38 дней занятий · 12 событий», never «0 произведений». A
+     * kind of one's own is said by its events; kinds without a single event — by themselves, «2 своих вида»: an app with only them is not
+     * empty either (review of stage 98б), and the question names what goes.
      */
     fun lost(counts: BackupCounts): List<Chip> = listOfNotNull(
         Chip(Fact.SESSIONS, counts.sessions).takeIf { counts.sessions > 0 },
         Chip(Fact.PIECES, counts.pieces).takeIf { counts.pieces > 0 },
         Chip(Fact.DAYS, counts.practiceDays).takeIf { counts.practiceDays > 0 },
+        Chip(Fact.EVENTS, counts.events).takeIf { counts.events > 0 },
+        Chip(Fact.KINDS, counts.ownKinds).takeIf { counts.events == 0 && counts.ownKinds > 0 },
     )
 
     /** The parts left out of the copy of [manifest] whose kind of thing its data had. */

@@ -163,6 +163,27 @@ class ControlsTouchTest {
     }
 
     /**
+     * A chip of choice with an icon before its words — «Другая…» with the pencil in the form of an event (spec 3.36.9): pressed over 48 as
+     * any chip, a radio button, its icon silent — the words say what it is — and as wide as [AppChip.choiceWidthFor] counts it with its icon.
+     */
+    @Test
+    fun aChoiceWithAnIconAnswersOverFortyEightAndIsAsWideAsItsWidthCountsIt() {
+        var width = 0.dp
+        assertTheChipTakesFortyEight(beyond = 1.dp) {
+            width = AppChip.choiceWidthFor(listOf(OTHER), withIcon = true)
+            AppChip.Choice(OTHER, selected = false, onClick = { presses++ }, modifier = Modifier.testTag(TAG), icon = AppIcons.Pencil)
+        }
+        compose.runOnIdle { assertEquals("the touch in the strip", 1, presses) }
+        val chip = compose.onNodeWithTag(TAG)
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
+            .assertIsNotSelected()
+        assertEquals("its words, and nothing for the icon", listOf(OTHER), chip.fetchSemanticsNode().config.getOrNull(SemanticsProperties.Text)?.map { it.text })
+        assertTrue("no description of the icon", chip.fetchSemanticsNode().config.getOrNull(SemanticsProperties.ContentDescription).isNullOrEmpty())
+        val laid = chip.getUnclippedBoundsInRoot()
+        assertTrue("the width counted holds the chip: ${laid.right - laid.left} of $width", laid.right - laid.left <= width + 0.5.dp)
+    }
+
+    /**
      * A preset of the user's own on «Звук» (spec 3.36.5): a chip of choice that a long press offers to remove — the press chooses, the
      * long press is heard as such and not as a choice, TalkBack is told what it does, and the chip still reads as a radio button.
      */
@@ -333,5 +354,6 @@ class ControlsTouchTest {
         const val REMOVE = "Удалить"
         const val PLACE = "На столе, справа"
         const val CLEAR = "Снять фильтр"
+        const val OTHER = "Другая…"
     }
 }

@@ -221,9 +221,17 @@ fun SegmentedSwitch(
             ) { sizeSp ->
                 val style = labelStyle.copy(fontSize = sizeSp.sp, lineHeight = (sizeSp * LINE_HEIGHT).sp)
                 labels.map { label ->
+                    val words = label.split(' ', '\n', '\t').filter { it.isNotEmpty() }
                     SegmentFit.Label(
                         line = measurer.lineWidth(AnnotatedString(label), style),
-                        word = label.split(' ', '\n', '\t').filter { it.isNotEmpty() }.maxOfOrNull { measurer.lineWidth(AnnotatedString(it), style) } ?: 0f,
+                        word = words.maxOfOrNull { measurer.lineWidth(AnnotatedString(it), style) } ?: 0f,
+                        // the least width of two lines: the best place for the one break between its words
+                        twoLines = (1 until words.size).minOfOrNull { cut ->
+                            maxOf(
+                                measurer.lineWidth(AnnotatedString(words.subList(0, cut).joinToString(" ")), style),
+                                measurer.lineWidth(AnnotatedString(words.subList(cut, words.size).joinToString(" ")), style),
+                            )
+                        } ?: 0f,
                     )
                 }
             }

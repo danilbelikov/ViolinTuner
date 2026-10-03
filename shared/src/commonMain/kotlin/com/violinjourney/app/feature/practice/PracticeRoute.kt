@@ -22,6 +22,7 @@ import com.violinjourney.app.feature.journey.LocalHomeLook
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.practice_too_short
 import com.violinjourney.app.shared.resources.profile_photo_failed
+import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.getString
 
 @Composable
@@ -32,6 +33,8 @@ fun PracticeRoute(
     onOpenHome: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenEvent: (eventId: Long) -> Unit,
+    onOpenEventForm: (date: LocalDate) -> Unit,
+    takeEventDate: () -> LocalDate?,
     modifier: Modifier = Modifier,
     viewModel: PracticeViewModel,
     homeLookViewModel: HomeLookViewModel,
@@ -56,6 +59,8 @@ fun PracticeRoute(
     val currentOnOpenHome by rememberUpdatedState(onOpenHome)
     val currentOnOpenSettings by rememberUpdatedState(onOpenSettings)
     val currentOnOpenEvent by rememberUpdatedState(onOpenEvent)
+    val currentOnOpenEventForm by rememberUpdatedState(onOpenEventForm)
+    val currentTakeEventDate by rememberUpdatedState(takeEventDate)
     val homeLook by homeLookViewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(viewModel, lifecycleOwner) {
@@ -68,6 +73,7 @@ fun PracticeRoute(
                     PracticeEffect.OpenHome -> currentOnOpenHome()
                     PracticeEffect.OpenSettings -> currentOnOpenSettings()
                     is PracticeEffect.OpenEvent -> currentOnOpenEvent(effect.id)
+                    is PracticeEffect.OpenEventForm -> currentOnOpenEventForm(effect.date)
                     PracticeEffect.ShowTooShort ->
                         messages.show(getString(Res.string.practice_too_short))
                     PracticeEffect.ShowPhotoFailed ->
@@ -77,8 +83,12 @@ fun PracticeRoute(
         }
     }
 
-    // Back from a record or an event opened from the sheet of the day (spec 3.36.2, 3.36.9): the sheet that stepped aside for it rises again.
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onIntent(PracticeIntent.Resumed) }
+    // Back from a record, an event or the form of one opened from the sheet of the day (spec 3.36.2, 3.36.9): the sheet that stepped aside
+    // for it rises again — on the day an event was saved on, told first (plan D24).
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        currentTakeEventDate()?.let { viewModel.onIntent(PracticeIntent.EventSaved(it)) }
+        viewModel.onIntent(PracticeIntent.Resumed)
+    }
 
     // Decorative motion of this screen (spec 3.16) follows the system setting «убрать анимации».
     CompositionLocalProvider(LocalReduceMotion provides rememberAnimationsRemoved(), LocalHomeLook provides homeLook) {

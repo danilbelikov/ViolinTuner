@@ -14,12 +14,18 @@ import com.violinjourney.app.core.backup.DataLayout
 import com.violinjourney.app.core.backup.IosBackupStore
 import com.violinjourney.app.core.backup.IosRestoreSwap
 import com.violinjourney.app.core.data.AppDatabase
+import com.violinjourney.app.core.data.events.RoomEventRepository
 import com.violinjourney.app.core.data.practice.RoomPracticeRepository
 import com.violinjourney.app.core.data.progress.RoomTrophyRepository
 import com.violinjourney.app.core.data.repertoire.RoomRepertoireRepository
 import com.violinjourney.app.core.data.session.RoomSessionRepository
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.TolerancePreset
+import com.violinjourney.app.core.domain.events.EventDraft
+import com.violinjourney.app.core.domain.events.EventsConfig
+import com.violinjourney.app.core.domain.events.KindSave
+import com.violinjourney.app.core.domain.events.KindSign
+import com.violinjourney.app.core.domain.events.Repeat
 import com.violinjourney.app.core.domain.practice.PracticeEntry
 import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
@@ -154,8 +160,31 @@ class IosStorageTest {
     private fun storeOf(data: PlatformFile, database: AppDatabase, practice: RoomPracticeRepository) = IosBackupStore(
         data, database, RoomSessionRepository(database.sessionDao(), IntonationConfig(), NoAudioFiles, SystemWallClock, NoOpAnalytics()),
         RoomRepertoireRepository(database.repertoireDao(), NoSheetFiles, RepertoireConfig(), SystemWallClock, NoOpAnalytics()),
-        practice, RoomTrophyRepository(database.trophyDao()), ProgressConfig(), SystemWallClock, Dispatchers.Default,
+        practice, RoomTrophyRepository(database.trophyDao()), eventsOf(database), ProgressConfig(), SystemWallClock, Dispatchers.Default,
     )
+
+    private fun eventsOf(database: AppDatabase) = RoomEventRepository(database.eventDao(), EventsConfig(), SystemWallClock, NoOpAnalytics(), Dispatchers.Default)
+
+    /**
+     * A calendar alone is something to keep (review of stage 98б): an app with a lesson and nothing else is not «nothing to save», and a
+     * restore over it asks «Заменить данные?»; a kind of one's own without an event counts too.
+     */
+    @Test
+    fun `a calendar alone is not an empty app`() = runTest {
+        val database = IosStorage.database(directory)
+        val store = storeOf(PlatformFile(directory), database, RoomPracticeRepository(database.practiceDao()))
+        assertTrue(store.contents().counts.isEmpty, "a new app")
+        val events = eventsOf(database)
+        events.saveKind(KindSave.NewOwn("Сольфеджио", color = 1, sign = KindSign.BOOK))
+        val kindOnly = store.contents().counts
+        assertEquals(1, kindOnly.ownKinds)
+        assertFalse(kindOnly.isEmpty, "a kind of one's own")
+        events.add(EventDraft(date = LocalDate(2026, 10, 5), startMinutes = 17 * 60, durationMinutes = 45), Repeat.NONE, until = null, today = LocalDate(2026, 10, 3))
+        val counts = store.contents().counts
+        assertEquals(1, counts.events)
+        assertFalse(counts.isEmpty, "a lesson")
+        database.close()
+    }
 
     @Test
     fun `a copy takes the database whole and puts it back in place`() = runTest {

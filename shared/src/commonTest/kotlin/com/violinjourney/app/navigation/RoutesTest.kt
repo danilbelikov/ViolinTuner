@@ -1,11 +1,13 @@
 package com.violinjourney.app.navigation
 
 import com.violinjourney.app.core.analytics.screenKeyOf
+import com.violinjourney.app.core.domain.events.BuiltInKind
 import com.violinjourney.app.core.domain.journey.JourneyRoute
 import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.feature.backup.RestoreViewModel
 import com.violinjourney.app.feature.camera.CaptureViewModel
+import com.violinjourney.app.feature.events.form.EventFormViewModel
 import com.violinjourney.app.feature.events.screen.EventViewModel
 import com.violinjourney.app.feature.home.HomeViewModel
 import com.violinjourney.app.feature.journey.StopViewModel
@@ -20,6 +22,7 @@ import com.violinjourney.app.feature.sound.SoundViewModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlinx.datetime.LocalDate
 
 class RoutesTest {
     /** [pattern] with each `{name}` put in its value, as navigation matches a route against it. */
@@ -74,6 +77,27 @@ class RoutesTest {
         assertEquals(Routes.HOME_SHOP, Routes.homeShop(null))
         assertEquals(Routes.HOME_SHOP, Routes.homeShop())
         assertEquals(fill(Routes.EVENT_PATTERN, EventViewModel.ARG_EVENT_ID to 12), Routes.event(12))
+        // the form of an event (spec 3.36.9): new on the day of a sheet, new of a kind, an edit at its notes
+        assertEquals(
+            fill(
+                Routes.EVENT_FORM_PATTERN,
+                EventFormViewModel.ARG_EVENT_ID to EventFormViewModel.NEW_EVENT,
+                EventFormViewModel.ARG_DATE to "2026-09-28",
+                EventFormViewModel.ARG_KIND to BuiltInKind.LESSON.name,
+                EventFormViewModel.ARG_FOCUS_NOTES to false,
+            ),
+            Routes.eventForm(null, LocalDate(2026, 9, 28), BuiltInKind.LESSON),
+        )
+        assertEquals(
+            fill(
+                Routes.EVENT_FORM_PATTERN,
+                EventFormViewModel.ARG_EVENT_ID to 7,
+                EventFormViewModel.ARG_DATE to "",
+                EventFormViewModel.ARG_KIND to "",
+                EventFormViewModel.ARG_FOCUS_NOTES to true,
+            ),
+            Routes.eventForm(7, focusNotes = true),
+        )
     }
 
     @Test
@@ -92,17 +116,19 @@ class RoutesTest {
             Routes.PIECE_FORM_PATTERN, Routes.SCALE_FORM_PATTERN, Routes.SECTION_PATTERN, Routes.JOURNEY, Routes.JOURNEY_MAP,
             Routes.JOURNEY_PASSPORT, Routes.JOURNEY_STOP_PATTERN, Routes.HOME, Routes.HOME_SHOP_PATTERN, Routes.HOME_ARRANGE, Routes.HOME_HOUSES,
             Routes.SPLASH_AWAY, Routes.SPLASH_HOME, Routes.SETTINGS, Routes.BACKUP, Routes.RESTORE_PATTERN, Routes.EVENT_PATTERN,
+            Routes.EVENT_FORM_PATTERN,
         )
         // the keys of screen_open (spec 5.27): a new name here is a new screen in the statistics, on both platforms; the shop by place
         // is the shop — its place is not in the key (5.29 R7)
         val keys = listOf(
             "session", "sound", "piece", "capture", "stand", "pieceForm", "scaleForm", "section", "journey", "journeyMap",
             "journeyPassport", "journeyStop", "home", "homeShop", "homeArrange", "homeHouses", "splashAway", "splashHome",
-            "settings", "backup", "restore", "event",
+            "settings", "backup", "restore", "event", "eventForm",
         )
         assertEquals(keys, routes.map(::screenKeyOf))
         assertEquals(Routes.SPLASH_HOME, Routes.stop(JourneyRoute.HOME), "the home of the journey opens through its title card")
         assertEquals("homeShop", screenKeyOf(Routes.homeShop("deskR")), "a shop by place is the shop in the statistics")
+        assertEquals("eventForm", screenKeyOf(Routes.eventForm(null, LocalDate(2026, 9, 28))), "a form of a day is the form in the statistics")
     }
 
     @Test

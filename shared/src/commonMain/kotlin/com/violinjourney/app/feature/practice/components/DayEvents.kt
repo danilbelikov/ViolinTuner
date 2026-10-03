@@ -132,8 +132,7 @@ private fun repeatWord(repeat: Repeat): String? = when (repeat) {
 
 /**
  * «Событие в этот день» (spec 3.36.9): the last row of the sheet of any day, dashed, with the plus — the way in is everywhere, and it
- * does not argue with «Изменить» and «Добавить». Up to two lines, never cut. It opens the form of an event, which comes with stage 98:
- * until then only the previews show it.
+ * does not argue with «Изменить» and «Добавить». Up to two lines, never cut. It opens the form of an event with the date of the sheet.
  */
 @Composable
 fun AddEventRow(onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -166,8 +165,7 @@ fun AddEventRow(onClick: () -> Unit, modifier: Modifier = Modifier) {
 
 /**
  * The main «Событие в этот день» of a day to come without events (spec 3.36.9, 5.29 R9): 56 with the plus, at the bottom of the frame
- * under «Событий нет» — making an event is all there is to do on such a day. The frame of «Занятия» gives it to the face of the day with
- * the form of an event (stage 98); until then only the previews show it.
+ * under «Событий нет» — making an event is all there is to do on such a day. The frame of «Занятия» gives it to the face of that day.
  */
 @Composable
 fun AddEventButtons(onClick: () -> Unit) {

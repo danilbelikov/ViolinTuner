@@ -69,7 +69,8 @@ fun ScopeSheetContent(
                 contentAlignment = Alignment.Center,
             ) { AppIcon(AppIcons.Trash, contentDescription = null, tint = ViolinTheme.dangerSoft, size = EventsDimens.ScopeBinIcon) }
         }
-        if (label != null) SectionLabel(label)
+        // «Урок повторяется» is long in some languages (de at 1.3 on 360): two lines rather than an ellipsis
+        if (label != null) SectionLabel(label, maxLines = LABEL_LINES)
         Text(
             text = question,
             modifier = Modifier.fillMaxWidth().padding(top = if (label != null) EventsDimens.ScopeQuestionTop else 0.dp).semantics { heading() },
@@ -125,3 +126,6 @@ fun ScopeAnswers(answers: List<ScopeAnswer>, cancel: String, onCancel: () -> Uni
  * question was left no room over them (640 × 360). The sheet of a deletion now, the sheet of an edit of the form after it.
  */
 fun scopeAnswersPinned(compact: Boolean): Boolean = !compact
+
+/** The label of the sheet of a repeat may take two lines: «Урок повторяется» outgrows 360 dp at 1.3 in German. */
+private const val LABEL_LINES = 2

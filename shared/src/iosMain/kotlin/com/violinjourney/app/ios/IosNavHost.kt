@@ -27,6 +27,8 @@ import com.violinjourney.app.feature.camera.CaptureViewModel
 import com.violinjourney.app.feature.camera.IosShotCamera
 import com.violinjourney.app.feature.camera.IosVideoMux
 import com.violinjourney.app.feature.camera.ShotCameraFactory
+import com.violinjourney.app.feature.events.form.EventFormRoute
+import com.violinjourney.app.feature.events.form.EventFormViewModel
 import com.violinjourney.app.feature.events.screen.EventRoute
 import com.violinjourney.app.feature.events.screen.EventViewModel
 import com.violinjourney.app.feature.history.HistoryRoute
@@ -73,6 +75,8 @@ import com.violinjourney.app.feature.sound.SoundViewModel
 import com.violinjourney.app.navigation.ONBOARDING_ROUTE
 import com.violinjourney.app.navigation.Routes
 import com.violinjourney.app.navigation.TopLevelDestination
+import kotlinx.datetime.LocalDate
+import platform.Foundation.NSLog
 import platform.Foundation.NSURL
 import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationOpenSettingsURLString
@@ -120,7 +124,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 tracking = viewModel { AnalyticsViewModel(graph.analytics) },
             )
         }
-        composable(TopLevelDestination.PRACTICE.route) {
+        composable(TopLevelDestination.PRACTICE.route) { entry ->
             PracticeRoute(
                 onOpenLive = { navController.navigateToTopLevel(TopLevelDestination.LIVE) },
                 onOpenSession = navController::navigateToSession,
@@ -128,6 +132,9 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 onOpenHome = { navController.navigate(Routes.HOME) { launchSingleTop = true } },
                 onOpenSettings = navController::navigateToSettings,
                 onOpenEvent = navController::navigateToEvent,
+                onOpenEventForm = { date -> navController.navigateToEventForm(Routes.eventForm(date = date)) },
+                // the date an event was saved on by its form, taken once (plan D24)
+                takeEventDate = { entry.savedStateHandle.remove<String>(Routes.RESULT_EVENT_DATE)?.let(LocalDate::parse) },
                 viewModel = viewModel {
                     PracticeViewModel(
                         repository = graph.practice, runningStore = graph.runningPractice, finisher = graph.finisher,
@@ -236,11 +243,48 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
         composable(route = Routes.EVENT_PATTERN, arguments = listOf(navArgument(EventViewModel.ARG_EVENT_ID) { type = NavType.LongType })) {
             EventRoute(
                 onClose = navController::popBackStack,
+                onOpenForm = { eventId, focusNotes -> navController.navigateToEventForm(Routes.eventForm(eventId, focusNotes = focusNotes)) },
                 onOpenPiece = navController::navigateToPiece,
                 onOpenSession = navController::navigateToSession,
                 onOpenRepertoire = { navController.navigateToTopLevel(TopLevelDestination.REPERTOIRE) },
                 viewModel = viewModel { eventViewModel(graph, createSavedStateHandle()) },
                 tracking = viewModel { AnalyticsViewModel(graph.analytics) },
+            )
+        }
+        // The form of an event (spec 3.35, 3.36.9): above the tabs; `-openRoute eventForm` and `eventForm?date=…` open it as they are
+        composable(
+            route = Routes.EVENT_FORM_PATTERN,
+            arguments = listOf(
+                navArgument(EventFormViewModel.ARG_EVENT_ID) {
+                    type = NavType.LongType
+                    defaultValue = EventFormViewModel.NEW_EVENT
+                },
+                navArgument(EventFormViewModel.ARG_DATE) {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
+                navArgument(EventFormViewModel.ARG_KIND) {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
+                navArgument(EventFormViewModel.ARG_FOCUS_NOTES) {
+                    type = NavType.BoolType
+                    defaultValue = false
+                },
+            ),
+        ) {
+            EventFormRoute(
+                onClose = navController::popBackStack,
+                onOpenCreated = { eventId, date ->
+                    navController.tellPracticeTheEventDate(date)
+                    navController.popBackStack()
+                    navController.navigateToEvent(eventId)
+                },
+                onSaved = { date ->
+                    navController.tellPracticeTheEventDate(date)
+                    navController.popBackStack()
+                },
+                viewModel = viewModel { EventFormViewModel(createSavedStateHandle(), graph.events, graph.eventsConfig, graph.clock) },
             )
         }
         // «Снять под минусовку» (spec 3.32): the app's own camera, over everything
@@ -525,6 +569,25 @@ private fun NavHostController.navigateToSound(sessionId: Long?) {
 /** The screen of an event (spec 3.36.9): from a row of the sheet of the day and of the reminder on «Занятия». */
 private fun NavHostController.navigateToEvent(eventId: Long) {
     navigate(Routes.event(eventId)) { launchSingleTop = true }
+}
+
+/** The form of an event, [route] built by `Routes.eventForm`: new from the sheet of a day, an edit from the screen of the event. */
+private fun NavHostController.navigateToEventForm(route: String) {
+    navigate(route) { launchSingleTop = true }
+}
+
+/**
+ * The date an event saved by its form lies on (plan D24), for «Занятия» to take when they come back: written into the saved state of their
+ * entry, the root of the tabs. Not in the stack (opened by `-openRoute` before the tabs) — there is nobody to tell.
+ */
+private fun NavHostController.tellPracticeTheEventDate(date: LocalDate) {
+    val practice = try {
+        getBackStackEntry(TopLevelDestination.PRACTICE.route)
+    } catch (e: IllegalArgumentException) {
+        NSLog("IosNavHost: no «Занятия» in the stack to tell the date of the event: ${e.message}".replace("%", "%%"))
+        null
+    }
+    practice?.savedStateHandle?.set(Routes.RESULT_EVENT_DATE, date.toString())
 }
 
 private fun NavHostController.navigateToPiece(pieceId: Long) {

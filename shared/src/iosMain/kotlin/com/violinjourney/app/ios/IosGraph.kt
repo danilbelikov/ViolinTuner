@@ -201,7 +201,7 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     // A copy of the data (spec 3.20): the same manager as on Android, over the files and the pickers of iOS.
     val backupConfig = BackupConfig()
     val backupPrefs = DataStoreBackupPrefs(dataStore)
-    val backupStore = IosBackupStore(dataDirectory, database, sessions, repertoire, practice, trophies, progressConfig, clock, io)
+    val backupStore = IosBackupStore(dataDirectory, database, sessions, repertoire, practice, trophies, events, progressConfig, clock, io)
     val backupManager = BackupManager(
         store = backupStore, documents = IosBackupDocuments(), prefs = backupPrefs, keepAlive = IosKeepAlive,
         config = backupConfig, clock = clock, elapsed = elapsed, io = io, analytics = analytics,

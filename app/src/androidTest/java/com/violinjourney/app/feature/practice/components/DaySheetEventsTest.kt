@@ -12,6 +12,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isHeading
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -39,6 +40,7 @@ import com.violinjourney.app.shared.resources.event_kind_lesson
 import com.violinjourney.app.shared.resources.event_repeat_weekly_short
 import com.violinjourney.app.shared.resources.event_time_range
 import com.violinjourney.app.shared.resources.practice_day_add
+import com.violinjourney.app.shared.resources.practice_day_add_event
 import com.violinjourney.app.shared.resources.practice_day_edit
 import com.violinjourney.app.shared.resources.practice_day_events
 import com.violinjourney.app.shared.resources.practice_day_no_events
@@ -61,8 +63,8 @@ import org.junit.runner.RunWith
  * «Изменить», and under them the heading «События» and a row an event in the order of the day — «весь день» first — each one
  * description of its parts in the order they are seen, the whole row of at least 64; a day to come has no time and nothing to edit —
  * «Время появится, когда день наступит.», the chip «завтра» for tomorrow, its rows right under it without a heading; a day to come
- * without events says «Событий нет» and what a day holds. Laid out in a window of its own size ([TestWindow]); the words read in the
- * composition.
+ * without events says «Событий нет» and what a day holds; «Событие в этот день» is the last row of a day with events (stage 98б). Laid out
+ * in a window of its own size ([TestWindow]); the words read in the composition.
  */
 @RunWith(AndroidJUnit4::class)
 class DaySheetEventsTest {
@@ -88,6 +90,9 @@ class DaySheetEventsTest {
 
     private var day by mutableStateOf(past)
 
+    /** The sheet is the frame's on «Занятия»: «Событие в этот день» opens the form of an event. */
+    private var withAdd = false
+
     private lateinit var words: Words
 
     /** The words of the sheet in the language of the app, read in the composition. */
@@ -101,6 +106,7 @@ class DaySheetEventsTest {
         val tomorrow: String,
         val noEvents: String,
         val noEventsText: String,
+        val addEvent: String,
     )
 
     private fun show() {
@@ -118,10 +124,16 @@ class DaySheetEventsTest {
                 tomorrow = stringResource(Res.string.practice_day_tomorrow),
                 noEvents = stringResource(Res.string.practice_day_no_events),
                 noEventsText = stringResource(Res.string.practice_day_no_events_text),
+                addEvent = stringResource(Res.string.practice_day_add_event),
             )
             ViolinTheme {
                 TestWindow(DpSize(412.dp, 892.dp)) {
-                    Box(Modifier.padding(20.dp)) { DaySheetContent(day, onIntent = { intents += it }, zone = zone) }
+                    Box(Modifier.padding(20.dp)) {
+                        DaySheetContent(
+                            day, onIntent = { intents += it }, zone = zone,
+                            onAddEvent = if (withAdd) ({ intents += PracticeIntent.NewEventClicked }) else null,
+                        )
+                    }
                 }
             }
         }
@@ -178,6 +190,27 @@ class DaySheetEventsTest {
         assertTrue("no «${words.add}»", gone(words.add))
         assertEquals("no heading «${words.events}»", 0, compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading)).fetchSemanticsNodes().size)
         assertTrue("nothing it did", intents.isEmpty())
+    }
+
+    /**
+     * «Событие в этот день» (spec 3.36.9, stage 98б): the last row of a day gone by — under its events — and of a day to come with events,
+     * the form of an event with the date of the sheet; a day to come without events has it as the main button of the frame instead.
+     */
+    @Test
+    fun theLastRowOfADayOpensTheFormOfAnEvent() {
+        withAdd = true
+        show()
+        val add = compose.onNode(hasText(words.addEvent) and hasClickAction()).assertHeightIsAtLeast(48.dp)
+        val lesson = compose.onNodeWithContentDescription(words.lesson).getUnclippedBoundsInRoot()
+        assertTrue("the last row, under the events", lesson.bottom <= add.getUnclippedBoundsInRoot().top)
+        add.performClick()
+        day = tomorrow
+        compose.waitForIdle()
+        compose.onNode(hasText(words.addEvent) and hasClickAction()).performClick()
+        day = empty
+        compose.waitForIdle()
+        assertTrue("a day to come without events: the frame's button, not the row", gone(words.addEvent))
+        assertEquals(listOf<PracticeIntent>(PracticeIntent.NewEventClicked, PracticeIntent.NewEventClicked), intents)
     }
 
     /** A day to come without events: «Событий нет» and what a day holds; no «Время появится…», nothing to edit. */

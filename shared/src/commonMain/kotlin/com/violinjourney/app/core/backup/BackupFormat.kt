@@ -26,9 +26,16 @@ data class BackupCounts(
     val level: Int = 1,
     val withSound: Int = 0,
     val videos: Int = 0,
+    /**
+     * The events of the calendar and the kinds of one's own (spec 3.35): they go in the snapshot of the database, and neither the passport
+     * nor the chips of a copy name them (plan D39) — only what is in the app now counts them, so that a calendar alone is not taken for
+     * nothing (review of stage 98б): its copy can be saved, and a restore over it asks first and names it.
+     */
+    val events: Int = 0,
+    val ownKinds: Int = 0,
 ) {
-    /** Nothing a person would miss: no recordings, no pieces, no days of practice. */
-    val isEmpty: Boolean get() = sessions == 0 && pieces == 0 && practiceDays == 0
+    /** Nothing a person would miss: no recordings, no pieces, no days of practice, no events and no kinds of one's own. */
+    val isEmpty: Boolean get() = sessions == 0 && pieces == 0 && practiceDays == 0 && events == 0 && ownKinds == 0
 }
 
 /**

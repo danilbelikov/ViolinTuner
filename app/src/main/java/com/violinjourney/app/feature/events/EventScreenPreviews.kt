@@ -53,7 +53,7 @@ import kotlinx.datetime.toInstant
 // The screen of an event (spec 3.36.9; events-views.html 5–6, practice-sheets.html 9) on the data of the mockups: Sunday 27 September
 // 2026; the lessons with Анна Сергеевна on Mondays at 17:00 for 45 minutes, until 28 December; «Академический концерт» gone by on the
 // 13th, «Осенний концерт» to come on 24 October; the repertoire — Вивальди, Госсек and a scale. Over the tabs: the status bar over it,
-// no bar of the tabs. The form of an event comes in the second half of stage 98: «Изменить» and «Добавить заметку» are not here yet.
+// no bar of the tabs; «Изменить» and «Добавить заметку» open the form of the event (EventFormPreviews).
 
 private object Sample {
     val zone: TimeZone = TimeZone.of("Europe/Moscow")

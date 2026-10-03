@@ -41,6 +41,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -81,10 +82,17 @@ private const val ACCENT_TONE = 4
 private const val DISABLED_ALPHA = 0.38f
 
 /**
+ * How TalkBack names a day of a grid (plan D46): [PRACTICE] — the calendar of «Занятия», «13 октября, вторник, 45 минут; урок в 17:00»;
+ * [FORM] — the sheets of the form of an event, the whole weekday first and no time: «суббота, 24 октября; оркестр в 11:00».
+ */
+enum class DaySpeech { PRACTICE, FORM }
+
+/**
  * The days of a month in whole weeks, Monday first (spec 3.36.2, 3.36.9): the grid of «Занятия», and of the sheets of the form of an
  * event. [ground] is what the grid lies on — the ground of the screen on «Занятия», the colour of the sheet in a sheet: the gap of the
  * ring «выбран» and the plate of the marks are painted with it. [timeFill] false — no fill of the time of the days (the sheet «Дата»
- * chooses a day, it does not tell how long it was played); [dimFuture] false — the numbers of the days to come are not dimmed.
+ * chooses a day, it does not tell how long it was played); [dimFuture] false — the numbers of the days to come are not dimmed; [speech]
+ * — how a reader names a day.
  */
 @Composable
 fun MonthGrid(
@@ -95,6 +103,7 @@ fun MonthGrid(
     ground: Color = MaterialTheme.colorScheme.surface,
     timeFill: Boolean = true,
     dimFuture: Boolean = true,
+    speech: DaySpeech = DaySpeech.PRACTICE,
 ) {
     // The marks of every cell are of one size, chosen by the column of the grid (CalendarMetrics.marksOfGrid), not by the pixels each
     // cell gets: the width is taken when the grid is measured and read where the marks are drawn — the grid is not composed anew.
@@ -115,7 +124,7 @@ fun MonthGrid(
                     if (cell == null) {
                         Spacer(Modifier.weight(1f).height(metrics.rowHeight))
                     } else {
-                        DayCell(cell, metrics, Modifier.weight(1f), ground, timeFill, dimFuture, gridMarks, onClick = { onDaySelected(cell.date) })
+                        DayCell(cell, metrics, Modifier.weight(1f), ground, timeFill, dimFuture, gridMarks, speech = speech, onClick = { onDaySelected(cell.date) })
                     }
                 }
             }
@@ -136,7 +145,9 @@ fun MonthGrid(
  * 45 минут; урок в 17:00».
  *
  * [gridMarks] — the size of the marks of the grid the cell stands in, read where they are drawn ([MonthGrid]: one size for all its
- * cells); null, or none from it yet — the size of the cell's own width (a cell alone, as in the sheet «Вид»).
+ * cells); null, or none from it yet — the size of the cell's own width (a cell alone, as in the sheet «Вид»). [interactive] false — a
+ * picture of a day, not a day to choose: the preview of the sheet «Вид» shows how a kind lies in a cell, and a reader hears nothing of
+ * it — the words beside it name the kind.
  */
 @Composable
 fun DayCell(
@@ -147,6 +158,8 @@ fun DayCell(
     timeFill: Boolean = true,
     dimFuture: Boolean = true,
     gridMarks: (() -> MarkSize?)? = null,
+    speech: DaySpeech = DaySpeech.PRACTICE,
+    interactive: Boolean = true,
     onClick: () -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -175,7 +188,7 @@ fun DayCell(
     }
     // the selected day is bold whatever it is, a day to come too; today and the fourth tone are bold of themselves
     val bold = cell.isSelected || (!cell.isFuture && (cell.isToday || accentTone))
-    val description = dayDescription(cell)
+    val description = dayDescription(cell, speech)
     val interaction = remember { MutableInteractionSource() }
     val circlePresses = remember(interaction) { ShiftedInteractionSource(interaction) }
     val events = ViolinTheme.eventsColors
@@ -185,15 +198,22 @@ fun DayCell(
         modifier = modifier
             .height(metrics.rowHeight)
             .then(if (cell.enabled) Modifier else Modifier.alpha(DISABLED_ALPHA))
-            .selectable(
-                selected = cell.isSelected,
-                interactionSource = interaction,
-                indication = null,
-                enabled = cell.enabled,
-                role = Role.Button,
-                onClick = onClick,
+            .then(
+                if (interactive) {
+                    Modifier
+                        .selectable(
+                            selected = cell.isSelected,
+                            interactionSource = interaction,
+                            indication = null,
+                            enabled = cell.enabled,
+                            role = Role.Button,
+                            onClick = onClick,
+                        )
+                        .semantics { contentDescription = description }
+                } else {
+                    Modifier.clearAndSetSemantics {}
+                },
             )
-            .semantics { contentDescription = description }
             .dayMarks(cell, metrics, ground, events, more, gridMarks),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -235,14 +255,17 @@ fun DayCell(
 /**
  * What TalkBack says of a day (spec 3.36.9): the date and its time — «13 октября, вторник, 45 минут»; a day to come has no time, only
  * its date — then its events by the word of their kind and their start, in the order of the day — «весь день» first (5.28): «;
- * выступление, весь день, урок в 17:00».
+ * выступление, весь день, урок в 17:00». In the sheets of the form ([DaySpeech.FORM]) the whole weekday comes first and no day has a
+ * time: «суббота, 24 октября; оркестр в 11:00» (plan D46).
  */
 @Composable
-private fun dayDescription(cell: CalendarCell): String {
-    val date = Formats.dayWithWeekday(cell.date)
-    val day = if (cell.isFuture) {
-        date
+private fun dayDescription(cell: CalendarCell, speech: DaySpeech): String {
+    val day = if (speech == DaySpeech.FORM) {
+        Formats.weekdayFullDate(cell.date)
+    } else if (cell.isFuture) {
+        Formats.dayWithWeekday(cell.date)
     } else {
+        val date = Formats.dayWithWeekday(cell.date)
         val time = if (cell.totalMs > 0) Formats.minutesInWords(cell.totalMs) else stringResource(Res.string.practice_day_none)
         stringResource(Res.string.practice_day_description, date, time)
     }
