@@ -2,6 +2,7 @@ package com.violinjourney.app.core.settings
 
 import com.violinjourney.app.core.domain.TolerancePreset
 import com.violinjourney.app.core.domain.UserSettings
+import com.violinjourney.app.core.domain.VideoQuality
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
@@ -19,4 +20,6 @@ class FakeSettingsRepository(initial: UserSettings = UserSettings()) : SettingsR
     override suspend fun setOnboardingDone(done: Boolean) = settings.update { it.copy(onboardingDone = done) }
 
     override suspend fun setAnalyticsEnabled(enabled: Boolean) = settings.update { it.copy(analyticsEnabled = enabled) }
+
+    override suspend fun setVideoQuality(quality: VideoQuality) = settings.update { it.copy(videoQuality = quality) }
 }

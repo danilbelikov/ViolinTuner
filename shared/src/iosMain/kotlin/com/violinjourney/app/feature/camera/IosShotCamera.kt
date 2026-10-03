@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.UIKitInteropProperties
 import androidx.compose.ui.viewinterop.UIKitView
 import com.violinjourney.app.core.audio.backing.HostClock
+import com.violinjourney.app.core.domain.VideoQuality
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.sizeBytes
 import com.violinjourney.app.core.recording.video.VideoMux
@@ -61,6 +62,8 @@ import platform.AVFoundation.AVMutableCompositionTrack
 import platform.AVFoundation.AVURLAsset
 import platform.AVFoundation.addMutableTrackWithMediaType
 import platform.AVFoundation.authorizationStatusForMediaType
+import platform.AVFoundation.AVCaptureSessionPreset1280x720
+import platform.AVFoundation.AVCaptureSessionPreset640x480
 import platform.AVFoundation.defaultDeviceWithDeviceType
 import platform.AVFoundation.duration
 import platform.AVFoundation.exposureMode
@@ -166,8 +169,8 @@ class IosShotCamera : ShotCamera {
      * Binds the camera on the given side — made and configured on the queue, not on the main thread; false when there is
      * none, or it refused. The caller's thread (the main one) learns of it and turns the viewfinder.
      */
-    suspend fun bind(front: Boolean): Boolean {
-        val bound = onQueue { configure(front) } ?: return false
+    suspend fun bind(front: Boolean, quality: VideoQuality): Boolean {
+        val bound = onQueue { configure(front, quality) } ?: return false
         if (bound !== device) {
             device = bound
             coordinate()
@@ -177,16 +180,21 @@ class IosShotCamera : ShotCamera {
         return true
     }
 
-    /** The queue's: the input of [front] in the session, and the session running. */
-    private fun configure(front: Boolean): AVCaptureDevice? {
+    /** The queue's: the input of [front] in the session at [quality], and the session running. */
+    private fun configure(front: Boolean, quality: VideoQuality): AVCaptureDevice? {
         val position = if (front) AVCaptureDevicePositionFront else AVCaptureDevicePositionBack
         val camera = AVCaptureDevice.defaultDeviceWithDeviceType(AVCaptureDeviceTypeBuiltInWideAngleCamera, AVMediaTypeVideo, position) ?: return null
         val next = AVCaptureDeviceInput.deviceInputWithDevice(camera, null) ?: return null
         session.beginConfiguration()
         input?.let(session::removeInput)
         input = null
-        // 1080p where the camera has it (spec 5.25)
-        session.sessionPreset = if (session.canSetSessionPreset(AVCaptureSessionPreset1920x1080)) AVCaptureSessionPreset1920x1080 else AVCaptureSessionPresetHigh
+        // «Качество видео» where the camera has it, the best it has where it does not (spec 5.13)
+        val preset = when (quality) {
+            VideoQuality.P480 -> AVCaptureSessionPreset640x480
+            VideoQuality.P720 -> AVCaptureSessionPreset1280x720
+            VideoQuality.P1080 -> AVCaptureSessionPreset1920x1080
+        }
+        session.sessionPreset = if (session.canSetSessionPreset(preset)) preset else AVCaptureSessionPresetHigh
         if (!session.canAddInput(next)) {
             session.commitConfiguration()
             return null
@@ -368,14 +376,21 @@ private class PreviewView(private val camera: IosShotCamera) : UIView(frame = CG
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-actual fun CaptureViewfinder(camera: ShotCamera, front: Boolean, enabled: Boolean, onBindFailed: () -> Unit, modifier: Modifier) {
+actual fun CaptureViewfinder(
+    camera: ShotCamera,
+    front: Boolean,
+    quality: VideoQuality,
+    enabled: Boolean,
+    onBindFailed: () -> Unit,
+    modifier: Modifier,
+) {
     val ios = camera as IosShotCamera
     val failed by rememberUpdatedState(onBindFailed)
     // a take is played with the hands on the violin: the screen must not dim under it
     KeepScreenOn()
-    LaunchedEffect(enabled, front) {
+    LaunchedEffect(enabled, front, quality) {
         // a bind given up for another side (a quick switch) says nothing about the side bound now
-        if (enabled && !ios.bind(front) && isActive) failed()
+        if (enabled && !ios.bind(front, quality) && isActive) failed()
     }
     DisposableEffect(ios) { onDispose { ios.unbind() } }
     // the phone turned: the viewfinder turns with it, a turn from one side to the other included

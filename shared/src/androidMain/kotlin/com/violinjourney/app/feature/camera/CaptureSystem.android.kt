@@ -26,6 +26,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.violinjourney.app.core.domain.VideoQuality
 import com.violinjourney.app.core.ui.components.KeepScreenOn
 import com.violinjourney.app.core.ui.permission.MicAsk
 import com.violinjourney.app.core.ui.permission.PermissionMark
@@ -92,7 +93,14 @@ actual fun rememberCapturePermissions(onAnswer: (camera: CaptureAccess, mic: Cap
 }
 
 @Composable
-actual fun CaptureViewfinder(camera: ShotCamera, front: Boolean, enabled: Boolean, onBindFailed: () -> Unit, modifier: Modifier) {
+actual fun CaptureViewfinder(
+    camera: ShotCamera,
+    front: Boolean,
+    quality: VideoQuality,
+    enabled: Boolean,
+    onBindFailed: () -> Unit,
+    modifier: Modifier,
+) {
     val cameraX = camera as CameraXShotCamera
     val surface by cameraX.surfaceRequest.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -100,8 +108,8 @@ actual fun CaptureViewfinder(camera: ShotCamera, front: Boolean, enabled: Boolea
     val failed by rememberUpdatedState(onBindFailed)
     // a take is played with the hands on the violin: the screen must not dim under it
     KeepScreenOn()
-    LaunchedEffect(enabled, front, lifecycleOwner) {
-        if (enabled && !cameraX.bind(lifecycleOwner, front)) failed()
+    LaunchedEffect(enabled, front, quality, lifecycleOwner) {
+        if (enabled && !cameraX.bind(lifecycleOwner, front, quality)) failed()
     }
     DisposableEffect(cameraX) { onDispose { cameraX.unbind() } }
     // the picture is written the way the phone is held when the shot starts

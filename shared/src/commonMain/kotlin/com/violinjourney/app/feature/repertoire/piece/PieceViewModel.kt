@@ -38,6 +38,8 @@ import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.SheetPage
 import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.domain.UserSettings
+import com.violinjourney.app.core.domain.VideoQuality
 import com.violinjourney.app.core.recording.MediaImport
 import com.violinjourney.app.core.recording.TakeOwner
 import com.violinjourney.app.core.recording.TakePipeline
@@ -90,8 +92,12 @@ open class PieceViewModel(
     /** The app's, as the pipeline and «Звук» have it: the lag guessed for wireless headphones comes from here (spec 5.25). */
     private val backingConfig: BackingConfig,
     private val io: CoroutineDispatcher = Dispatchers.IO,
+    /** «Качество видео» of the settings (spec 3.19): the system camera is told it at each shot. */
+    videoQuality: Flow<VideoQuality> = flowOf(UserSettings().videoQuality),
 ) : ViewModel() {
     private val pieceId: Long = checkNotNull(savedState[ARG_PIECE_ID]) { "piece id is required" }
+
+    private val videoQuality = videoQuality.stateIn(viewModelScope, SharingStarted.Eagerly, UserSettings().videoQuality)
 
     /** What only the screen decides: photos on their way in, the takes being picked. */
     private data class Ui(val importing: Int = 0, val selection: Selection = Selection())
@@ -326,7 +332,7 @@ open class PieceViewModel(
                 val file = videos.newCameraFile()
                 // The camera app may push this process out of memory: the path has to outlive it.
                 savedState[KEY_VIDEO_FILE] = file.filePath
-                handOver(PieceEffect.LaunchVideoCamera(file.filePath))
+                handOver(PieceEffect.LaunchVideoCamera(file.filePath, videoQuality.value))
             }
             // With or without headphones: under the backing the camera screen keeps the rule of a take itself — its button
             // sleeps and says why, and wakes when headphones come (spec 3.32). Dropping the tap here said nothing at all.

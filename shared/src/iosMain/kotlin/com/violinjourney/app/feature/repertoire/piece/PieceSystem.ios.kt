@@ -40,9 +40,9 @@ actual fun rememberPieceSystem(
                 photoPath = path
                 if (SystemScreens.cameraAvailable()) SystemScreens.present(SystemScreens.camera(video = false, photoCamera)) else cameraFinished(false)
             },
-            launchVideoCamera = { path ->
+            launchVideoCamera = { path, quality ->
                 videoPath = path
-                if (SystemScreens.cameraAvailable()) SystemScreens.present(SystemScreens.camera(video = true, videoCamera)) else videoShot(false)
+                if (SystemScreens.cameraAvailable()) SystemScreens.present(SystemScreens.camera(video = true, videoCamera, quality)) else videoShot(false)
             },
             pickPhotos = { SystemScreens.present(SystemScreens.mediaPicker(videos = false, limit = ANY_NUMBER, delegate = photos)) },
             pickVideo = { SystemScreens.present(SystemScreens.mediaPicker(videos = true, limit = 1, delegate = video)) },

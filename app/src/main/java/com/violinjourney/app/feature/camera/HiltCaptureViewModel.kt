@@ -12,6 +12,8 @@ import com.violinjourney.app.core.recording.TakePipeline
 import com.violinjourney.app.core.recording.video.VideoFiles
 import com.violinjourney.app.core.recording.video.VideoMux
 import com.violinjourney.app.core.settings.IntonationConfigSource
+import com.violinjourney.app.core.settings.SettingsRepository
+import com.violinjourney.app.core.settings.videoQuality
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
@@ -31,6 +33,8 @@ class HiltCaptureViewModel @Inject constructor(
     recordingRate: RecordingRate,
     muxer: VideoMux,
     @IoDispatcher io: CoroutineDispatcher,
+    settings: SettingsRepository,
 ) : CaptureViewModel(
     savedState, takes, configSource, repertoire, backings, backingPcm, routes, videos, backingConfig, cameraFactory, recordingRate, muxer, io,
+    settings.videoQuality,
 )

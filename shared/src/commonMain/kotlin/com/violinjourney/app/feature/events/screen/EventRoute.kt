@@ -87,7 +87,7 @@ fun EventRoute(
                     EventEffect.OpenRepertoire -> currentOnOpenRepertoire()
                     EventEffect.RequestMicPermission -> requestMicPermission()
                     // a camera that cannot come up now leaves no file behind: the shot is as if backed out of
-                    is EventEffect.LaunchVideoCamera -> if (!gate.picker { system.launchVideoCamera(effect.filePath) }) {
+                    is EventEffect.LaunchVideoCamera -> if (!gate.picker { system.launchVideoCamera(effect.filePath, effect.quality) }) {
                         viewModel.onIntent(EventIntent.VideoShotFinished(saved = false))
                     }
                     EventEffect.PickVideo -> gate.picker(system.pickVideo)

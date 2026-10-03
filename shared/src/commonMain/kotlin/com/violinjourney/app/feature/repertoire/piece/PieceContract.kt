@@ -2,6 +2,7 @@ package com.violinjourney.app.feature.repertoire.piece
 
 import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.scale.Scale
+import com.violinjourney.app.core.domain.VideoQuality
 import com.violinjourney.app.feature.history.HistoryCard
 import com.violinjourney.app.feature.history.Selection
 import com.violinjourney.app.feature.history.SelectionIntent
@@ -207,8 +208,8 @@ sealed interface PieceEffect {
 
     data class OpenSession(val sessionId: Long) : PieceEffect
 
-    /** [filePath] is where the video has to be written; the route turns it into a content uri. */
-    data class LaunchVideoCamera(val filePath: String) : PieceEffect
+    /** [filePath] is where the video has to be written; the route turns it into a content uri. [quality] — «Качество видео» (spec 3.19). */
+    data class LaunchVideoCamera(val filePath: String, val quality: VideoQuality) : PieceEffect
 
     /** A shot that did not become a take, on its way to the system share sheet; [filePath] is under `cache/share/`. */
     data class ShareVideo(val filePath: String) : PieceEffect

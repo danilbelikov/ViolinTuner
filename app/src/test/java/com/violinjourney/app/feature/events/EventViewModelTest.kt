@@ -31,6 +31,7 @@ import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
 import com.violinjourney.app.core.domain.sound.SoundSettings
+import com.violinjourney.app.core.domain.VideoQuality
 import com.violinjourney.app.core.recording.FileAnalysisResult
 import com.violinjourney.app.core.recording.MediaImport
 import com.violinjourney.app.core.recording.TakeOwner
@@ -44,6 +45,7 @@ import com.violinjourney.app.core.recording.video.FakeVideoFiles
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
 import com.violinjourney.app.core.settings.FakeSettingsRepository
 import com.violinjourney.app.core.settings.SettingsConfigSource
+import com.violinjourney.app.core.settings.videoQuality
 import com.violinjourney.app.core.time.FixedWallClock
 import com.violinjourney.app.feature.events.screen.EventDialog
 import com.violinjourney.app.feature.events.screen.EventEffect
@@ -89,6 +91,7 @@ import org.junit.rules.TemporaryFolder
 /** The screen of an event (spec 3.35, 3.36.9): its parts, its four ways to add a recording, its programme and its deletion. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class EventViewModelTest {
+    private val settings = FakeSettingsRepository()
     // Saturday 24 October 2026, 18:00 in Moscow: the day of the concert
     private val now = Instant.parse("2026-10-24T15:00:00Z")
     private val today = LocalDate(2026, 10, 24)
@@ -167,7 +170,7 @@ class EventViewModelTest {
         val takes = testTakePipeline(pitch, sessions, NoAudioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler))
         val viewModel = EventViewModel(
             saved, events, sessions, repertoire, SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), takes, videos(), soundFiles(),
-            videoFiles, NoShareFiles, EventsConfig(), RepertoireConfig(), clock, words,
+            videoFiles, NoShareFiles, EventsConfig(), RepertoireConfig(), clock, words, settings.videoQuality,
         )
         val effects = mutableListOf<EventEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
@@ -536,6 +539,7 @@ class EventViewModelTest {
         runCurrent()
         val launch = effects.single() as EventEffect.LaunchVideoCamera
         assertTrue(launch.filePath.endsWith(".mp4"))
+        assertEquals("the settings' default", VideoQuality.P720, launch.quality)
 
         // the camera pushed the app out of memory: a new view model gets the same saved state
         val (after, _) = screen(id, saved)

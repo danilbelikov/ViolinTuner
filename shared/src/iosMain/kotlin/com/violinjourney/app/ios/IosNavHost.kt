@@ -15,6 +15,7 @@ import com.violinjourney.app.core.audio.backing.IosBackingPreview
 import com.violinjourney.app.core.domain.events.BuiltInKind
 import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.SectionRef
+import com.violinjourney.app.core.settings.videoQuality
 import com.violinjourney.app.core.ui.analytics.AnalyticsViewModel
 import com.violinjourney.app.feature.backup.BackupRoute
 import com.violinjourney.app.feature.backup.BackupViewModel
@@ -319,7 +320,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                         repertoire = graph.repertoire, backings = graph.backings, backingPcm = graph.backingPcm,
                         routes = graph.audioRoutes, videos = graph.videoFiles, backingConfig = graph.backingConfig,
                         cameraFactory = ShotCameraFactory(::IosShotCamera), recordingRate = graph.recordingRate,
-                        muxer = IosVideoMux, io = graph.io,
+                        muxer = IosVideoMux, io = graph.io, videoQuality = graph.settings.videoQuality,
                     )
                 },
             )
@@ -530,14 +531,14 @@ private fun pieceViewModel(graph: IosGraph, savedState: SavedStateHandle) = Piec
     videos = graph.videoFiles, importer = graph.videoImporter, shareFiles = graph.shareFiles, backings = graph.backings,
     backingFiles = graph.backingFiles, backingPcm = graph.backingPcm, recordingRate = graph.recordingRate,
     backingImporter = graph.backingImporter, backingPreview = IosBackingPreview(), routes = graph.audioRoutes,
-    backingConfig = graph.backingConfig, io = graph.io,
+    backingConfig = graph.backingConfig, io = graph.io, videoQuality = graph.settings.videoQuality,
 )
 
 private fun eventViewModel(graph: IosGraph, savedState: SavedStateHandle) = EventViewModel(
     savedState = savedState, events = graph.events, sessions = graph.sessions, repertoire = graph.repertoire,
     configSource = graph.configSource, takes = graph.takes(), importer = graph.videoImporter, audioImporter = graph.audioImporter,
     videos = graph.videoFiles, shareFiles = graph.shareFiles, config = graph.eventsConfig, repertoireConfig = graph.repertoireConfig,
-    clock = graph.clock,
+    clock = graph.clock, videoQuality = graph.settings.videoQuality,
 )
 
 private fun shareViewModel(graph: IosGraph, texts: IosTexts) = ShareViewModel(

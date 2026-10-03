@@ -92,6 +92,10 @@
     <string name="settings_group_app">앱</string>
     <string name="settings_a4_title">기준음 A4</string>
     <string name="settings_a4_note">모든 음의 기준</string>
+    <string name="settings_video_quality_title">영상 화질</string>
+    <string name="settings_video_quality_note_ios">새 영상 테이크에 적용</string>
+    <string name="settings_video_quality_note_android">반주와 함께 촬영할 때</string>
+    <string name="settings_video_quality_option">%1$dp</string>
     <string name="settings_tolerance_title">허용 범위</string>
     <string name="settings_tolerance_note">초록 구간의 너비</string>
     <string name="settings_language">언어</string>

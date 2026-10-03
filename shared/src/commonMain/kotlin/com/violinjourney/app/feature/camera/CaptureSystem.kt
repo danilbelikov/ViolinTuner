@@ -2,6 +2,7 @@ package com.violinjourney.app.feature.camera
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.violinjourney.app.core.domain.VideoQuality
 
 /** Where a permission of a shot stands (spec 3.32, 3.36.4). */
 enum class CaptureAccess {
@@ -35,8 +36,15 @@ class CapturePermissions(
 expect fun rememberCapturePermissions(onAnswer: (camera: CaptureAccess, mic: CaptureAccess) -> Unit): CapturePermissions
 
 /**
- * The picture of [camera] on the screen, bound to it while [enabled] — [front] or back; [onBindFailed] when there is no
- * such camera or it refused. The screen stays on while it is shown: a take is played with the hands on the violin.
+ * The picture of [camera] on the screen, bound to it while [enabled] — [front] or back, recording in [quality] («Качество видео»,
+ * spec 3.19); [onBindFailed] when there is no such camera or it refused. The screen stays on while it is shown: a take is played with the hands on the violin.
  */
 @Composable
-expect fun CaptureViewfinder(camera: ShotCamera, front: Boolean, enabled: Boolean, onBindFailed: () -> Unit, modifier: Modifier)
+expect fun CaptureViewfinder(
+    camera: ShotCamera,
+    front: Boolean,
+    quality: VideoQuality,
+    enabled: Boolean,
+    onBindFailed: () -> Unit,
+    modifier: Modifier,
+)

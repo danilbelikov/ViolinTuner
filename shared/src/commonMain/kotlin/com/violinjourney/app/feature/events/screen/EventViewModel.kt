@@ -17,6 +17,8 @@ import com.violinjourney.app.core.domain.events.SessionEvent
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.domain.UserSettings
+import com.violinjourney.app.core.domain.VideoQuality
 import com.violinjourney.app.core.io.deleteFile
 import com.violinjourney.app.core.io.filePath
 import com.violinjourney.app.core.io.platformFile
@@ -84,8 +86,12 @@ open class EventViewModel(
     private val repertoireConfig: RepertoireConfig,
     private val clock: WallClock,
     private val words: EventWords = ResourceEventWords,
+    /** «Качество видео» of the settings (spec 3.19): the system camera is told it at each shot. */
+    videoQuality: Flow<VideoQuality> = flowOf(UserSettings().videoQuality),
 ) : ViewModel() {
     private val eventId: Long = checkNotNull(savedState[ARG_EVENT_ID]) { "event id is required" }
+
+    private val videoQuality = videoQuality.stateIn(viewModelScope, SharingStarted.Eagerly, UserSettings().videoQuality)
 
     /** Whose recordings this screen makes (plan D13). */
     private val owner = TakeOwner.Event(eventId)
@@ -257,7 +263,7 @@ open class EventViewModel(
                 val file = videos.newCameraFile()
                 // The camera app may push this process out of memory: the path has to outlive it.
                 savedState[KEY_VIDEO_FILE] = file.filePath
-                effectChannel.trySend(EventEffect.LaunchVideoCamera(file.filePath))
+                effectChannel.trySend(EventEffect.LaunchVideoCamera(file.filePath, videoQuality.value))
             }
         }
     }

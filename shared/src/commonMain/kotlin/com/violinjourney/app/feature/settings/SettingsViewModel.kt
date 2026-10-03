@@ -48,6 +48,7 @@ open class SettingsViewModel(
                 }
                 SettingsIntent.SoundClicked -> effectChannel.send(SettingsEffect.OpenSound)
                 is SettingsIntent.AnalyticsToggled -> repository.setAnalyticsEnabled(intent.enabled)
+                is SettingsIntent.VideoQualitySelected -> repository.setVideoQuality(intent.quality)
             }
         }
     }
@@ -58,6 +59,7 @@ open class SettingsViewModel(
         tolerance = settings.tolerance,
         sound = sound,
         analyticsEnabled = settings.analyticsEnabled,
+        videoQuality = settings.videoQuality,
     )
 
     private companion object {

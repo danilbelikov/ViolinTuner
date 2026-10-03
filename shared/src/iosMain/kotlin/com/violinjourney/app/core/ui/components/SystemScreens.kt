@@ -1,5 +1,6 @@
 package com.violinjourney.app.core.ui.components
 
+import com.violinjourney.app.core.domain.VideoQuality
 import com.violinjourney.app.core.io.PickedCopies
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.autoreleasepool
@@ -35,6 +36,9 @@ import platform.darwin.dispatch_get_main_queue
 import platform.posix.QOS_CLASS_USER_INITIATED
 import platform.darwin.dispatch_time
 import platform.Foundation.writeToFile
+import platform.UIKit.UIImagePickerControllerQualityType640x480
+import platform.UIKit.UIImagePickerControllerQualityTypeHigh
+import platform.UIKit.UIImagePickerControllerQualityTypeIFrame1280x720
 
 /**
  * The system's own screens the app puts in front of itself on iOS: the photo picker, the camera, the file picker and
@@ -103,11 +107,20 @@ internal object SystemScreens {
     fun cameraAvailable(): Boolean =
         UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera)
 
-    fun camera(video: Boolean, delegate: CameraDelegate): UIImagePickerController = UIImagePickerController().apply {
+    /**
+     * The system camera; a video in [quality] — told, or it shoots in its own default of 480 × 360 (spec 3.19, 5.13). 1080p is the best
+     * the camera has: the picker names no 1080p of its own.
+     */
+    fun camera(video: Boolean, delegate: CameraDelegate, quality: VideoQuality = VideoQuality.P720): UIImagePickerController = UIImagePickerController().apply {
         sourceType = UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
         if (video) {
             mediaTypes = listOf(MOVIE_TYPE)
             cameraCaptureMode = UIImagePickerControllerCameraCaptureMode.UIImagePickerControllerCameraCaptureModeVideo
+            videoQuality = when (quality) {
+                VideoQuality.P480 -> UIImagePickerControllerQualityType640x480
+                VideoQuality.P720 -> UIImagePickerControllerQualityTypeIFrame1280x720
+                VideoQuality.P1080 -> UIImagePickerControllerQualityTypeHigh
+            }
         }
         this.delegate = delegate
     }

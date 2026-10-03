@@ -26,6 +26,7 @@ import com.violinjourney.app.core.domain.practice.FakeRunningPracticeStore
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
+import com.violinjourney.app.core.domain.VideoQuality
 import com.violinjourney.app.core.recording.TakePipeline
 import com.violinjourney.app.core.recording.testTakePipeline
 import com.violinjourney.app.core.recording.video.VideoFiles
@@ -286,7 +287,7 @@ class CaptureViewModelTest {
                 CaptureViewModel(
                     SavedStateHandle(mapOf(CaptureViewModel.ARG_PIECE_ID to PIECE_ID)), takes, SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()),
                     FakeRepertoireRepository(), backings, backingPcm, routes, videos, BackingConfig(), { camera },
-                    { likelyHz }, muxer, StandardTestDispatcher(testScheduler),
+                    { likelyHz }, muxer, StandardTestDispatcher(testScheduler), flowOf(VideoQuality.P480),
                 )
             }
         }
@@ -302,6 +303,13 @@ class CaptureViewModelTest {
     private fun TestScope.advance(millis: Long) {
         advanceTimeBy(millis)
         runCurrent()
+    }
+
+    @Test
+    fun `the camera is bound only once the video quality of the settings is known`() = runTest {
+        val (viewModel, _) = screen()
+        runCurrent()
+        assertEquals(VideoQuality.P480, viewModel.state.value.videoQuality)
     }
 
     @Test

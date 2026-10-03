@@ -1,6 +1,7 @@
 package com.violinjourney.app.feature.repertoire.piece
 
 import androidx.compose.runtime.Composable
+import com.violinjourney.app.core.domain.VideoQuality
 
 /**
  * What the screen of a piece asks of the system (spec 3.15, 3.19, 3.32): its cameras, its pickers and its sheet of
@@ -10,8 +11,8 @@ import androidx.compose.runtime.Composable
 class PieceSystem(
     /** The system camera writes a photo of a sheet to [path]. */
     val launchCamera: (path: String) -> Unit,
-    /** The system camera writes a video take to [path]. */
-    val launchVideoCamera: (path: String) -> Unit,
+    /** The system camera writes a video take to [path], in [quality] where it listens — on iOS (spec 3.19). */
+    val launchVideoCamera: (path: String, quality: VideoQuality) -> Unit,
     val pickPhotos: () -> Unit,
     val pickVideo: () -> Unit,
     val pickBacking: () -> Unit,

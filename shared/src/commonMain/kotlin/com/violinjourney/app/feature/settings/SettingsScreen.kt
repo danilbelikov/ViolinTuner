@@ -31,6 +31,7 @@ import com.violinjourney.app.core.ui.components.LocalListGroupGround
 import com.violinjourney.app.core.ui.components.ScreenHeader
 import com.violinjourney.app.core.ui.components.SectionLabel
 import com.violinjourney.app.core.ui.components.TolerancePresetList
+import com.violinjourney.app.core.ui.components.VideoQualitySelector
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.format.languageName
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -48,6 +49,9 @@ import com.violinjourney.app.shared.resources.settings_restart_caption
 import com.violinjourney.app.shared.resources.settings_restart_onboarding
 import com.violinjourney.app.shared.resources.settings_tolerance_note
 import com.violinjourney.app.shared.resources.settings_tolerance_title
+import com.violinjourney.app.shared.resources.settings_video_quality_note_android
+import com.violinjourney.app.shared.resources.settings_video_quality_note_ios
+import com.violinjourney.app.shared.resources.settings_video_quality_title
 import com.violinjourney.app.shared.resources.sound_settings_row
 import com.violinjourney.app.shared.resources.sound_settings_row_caption
 import org.jetbrains.compose.resources.stringResource
@@ -144,6 +148,18 @@ fun SettingsScreen(
                         // not read yet: the line held empty, not «без обработки» before the sound that is set (spec 3.36.8 «Загрузка»)
                         caption = if (state.read) stringResource(Res.string.sound_settings_row_caption, captionName(state.sound)) else "",
                     )
+                    val quality = stringResource(Res.string.settings_video_quality_title)
+                    // the system camera of Android does not listen: there the choice is only the own camera's (spec 3.19)
+                    val qualityNote = stringResource(
+                        if (systemCameraTakesVideoQuality) Res.string.settings_video_quality_note_ios else Res.string.settings_video_quality_note_android,
+                    )
+                    ChoiceRow(quality, qualityNote) {
+                        VideoQualitySelector(
+                            selected = state.videoQuality.takeIf { state.read },
+                            onSelect = { onIntent(SettingsIntent.VideoQualitySelected(it)) },
+                            description = "$quality, $qualityNote",
+                        )
+                    }
                 }
                 GroupLabel(stringResource(Res.string.backup_block_title))
                 dataBlock()

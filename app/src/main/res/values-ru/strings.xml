@@ -92,6 +92,10 @@
     <string name="settings_group_app">Приложение</string>
     <string name="settings_a4_title">Эталон A4</string>
     <string name="settings_a4_note">все ноты считаются от него</string>
+    <string name="settings_video_quality_title">Качество видео</string>
+    <string name="settings_video_quality_note_ios">для новых видео-дублей</string>
+    <string name="settings_video_quality_note_android">для съёмки под минусовку</string>
+    <string name="settings_video_quality_option">%1$dp</string>
     <string name="settings_tolerance_title">Допуск</string>
     <string name="settings_tolerance_note">ширина зелёной зоны</string>
     <string name="settings_language">Язык</string>

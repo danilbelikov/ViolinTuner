@@ -92,6 +92,10 @@
     <string name="settings_group_app">App</string>
     <string name="settings_a4_title">Reference pitch A4</string>
     <string name="settings_a4_note">all notes are measured from it</string>
+    <string name="settings_video_quality_title">Video quality</string>
+    <string name="settings_video_quality_note_ios">for new video takes</string>
+    <string name="settings_video_quality_note_android">for shots with the backing</string>
+    <string name="settings_video_quality_option">%1$dp</string>
     <string name="settings_tolerance_title">Tolerance</string>
     <string name="settings_tolerance_note">width of the green zone</string>
     <string name="settings_language">Language</string>

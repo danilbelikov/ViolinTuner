@@ -14,6 +14,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.violinjourney.app.core.domain.VideoQuality
 import com.violinjourney.app.core.ui.components.LocalMessages
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.capture_video_failed
@@ -78,7 +79,8 @@ fun CaptureRoute(
             CaptureViewfinder(
                 camera = viewModel.camera,
                 front = state.front,
-                enabled = state.cameraPermission == true,
+                quality = state.videoQuality ?: VideoQuality.P720,
+                enabled = state.cameraPermission == true && state.videoQuality != null,
                 onBindFailed = { viewModel.onIntent(CaptureIntent.CameraBindFailed) },
                 modifier = viewfinderModifier,
             )

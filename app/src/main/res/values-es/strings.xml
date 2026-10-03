@@ -92,6 +92,10 @@
     <string name="settings_group_app">Aplicación</string>
     <string name="settings_a4_title">La de referencia (A4)</string>
     <string name="settings_a4_note">todas las notas parten de él</string>
+    <string name="settings_video_quality_title">Calidad de vídeo</string>
+    <string name="settings_video_quality_note_ios">para nuevas tomas de vídeo</string>
+    <string name="settings_video_quality_note_android">para grabar con acompañamiento</string>
+    <string name="settings_video_quality_option">%1$dp</string>
     <string name="settings_tolerance_title">Tolerancia</string>
     <string name="settings_tolerance_note">ancho de la zona verde</string>
     <string name="settings_language">Idioma</string>

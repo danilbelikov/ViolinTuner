@@ -92,6 +92,10 @@
     <string name="settings_group_app">应用</string>
     <string name="settings_a4_title">标准音 A4</string>
     <string name="settings_a4_note">所有音以此为准</string>
+    <string name="settings_video_quality_title">视频画质</string>
+    <string name="settings_video_quality_note_ios">用于新的视频录制</string>
+    <string name="settings_video_quality_note_android">用于带伴奏拍摄</string>
+    <string name="settings_video_quality_option">%1$dp</string>
     <string name="settings_tolerance_title">容差</string>
     <string name="settings_tolerance_note">绿色区域的宽度</string>
     <string name="settings_language">语言</string>

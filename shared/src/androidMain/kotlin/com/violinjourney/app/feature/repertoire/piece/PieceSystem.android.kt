@@ -93,7 +93,8 @@ actual fun rememberPieceSystem(
             launchCamera = { path ->
                 withCamera(launch = { camera.launch(context.providedUri(path)) }, refused = { cameraFinished(false) })
             },
-            launchVideoCamera = { path ->
+            // the camera apps of Android do not listen to a quality: they shoot as they are set (spec 3.19)
+            launchVideoCamera = { path, _ ->
                 withCamera(launch = { videoCamera.launch(context.providedUri(path)) }, refused = { videoShot(false) })
             },
             pickPhotos = { gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },

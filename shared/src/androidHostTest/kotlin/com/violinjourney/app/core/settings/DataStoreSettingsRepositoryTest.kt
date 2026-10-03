@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.TolerancePreset
 import com.violinjourney.app.core.domain.UserSettings
+import com.violinjourney.app.core.domain.VideoQuality
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
@@ -59,6 +60,16 @@ class DataStoreSettingsRepositoryTest {
         assertFalse(repository.settings.first().analyticsEnabled)
     }
 
+    @Test
+    fun `video is 720p until another quality is picked`() = runTest {
+        val repository = DataStoreSettingsRepository(dataStore())
+        assertEquals(VideoQuality.P720, repository.settings.first().videoQuality)
+        repository.setVideoQuality(VideoQuality.P1080)
+        assertEquals(VideoQuality.P1080, repository.settings.first().videoQuality)
+        repository.setVideoQuality(VideoQuality.P480)
+        assertEquals(VideoQuality.P480, repository.settings.first().videoQuality)
+    }
+
     /**
      * A settings file DataStore cannot parse — a failing disk, a broken file from a copy — used to end every start of the
      * app. It starts over: what a fresh install has, but with the statistics off, since the lost file cannot say whether
@@ -88,10 +99,12 @@ class DataStoreSettingsRepositoryTest {
         store.edit {
             it[intPreferencesKey("a4_hz")] = 999
             it[stringPreferencesKey("tolerance_preset")] = "EXTREME"
+            it[stringPreferencesKey("video_quality")] = "P4320"
         }
         val settings = DataStoreSettingsRepository(store).settings.first()
         assertEquals(440, settings.a4Hz)
         assertEquals(TolerancePreset.INTERMEDIATE, settings.tolerance)
+        assertEquals(VideoQuality.P720, settings.videoQuality)
     }
 
     @Test

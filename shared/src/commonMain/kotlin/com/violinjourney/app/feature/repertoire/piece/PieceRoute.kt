@@ -91,7 +91,7 @@ fun PieceRoute(
                     PieceEffect.RequestMicPermission -> requestMicPermission()
                     PieceEffect.ShowNoNotesRecorded -> messages.show(getString(Res.string.record_no_notes))
                     is PieceEffect.OpenSession -> currentOnOpenSession(effect.sessionId)
-                    is PieceEffect.LaunchVideoCamera -> system.launchVideoCamera(effect.filePath)
+                    is PieceEffect.LaunchVideoCamera -> system.launchVideoCamera(effect.filePath, effect.quality)
                     is PieceEffect.ShareVideo -> system.shareVideo(effect.filePath)
                     PieceEffect.PickBackingFile -> system.pickBacking()
                     is PieceEffect.OpenCapture -> currentOnOpenCapture(effect.pieceId)

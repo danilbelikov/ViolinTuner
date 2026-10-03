@@ -11,6 +11,7 @@ import androidx.datastore.preferences.core.preferencesOf
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.violinjourney.app.core.domain.TolerancePreset
 import com.violinjourney.app.core.domain.UserSettings
+import com.violinjourney.app.core.domain.VideoQuality
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -32,6 +33,8 @@ class DataStoreSettingsRepository(
                 // Absent means on: the fourth page of the onboarding says so, and a file written
                 // by an older version has nothing stored here (spec 3.34).
                 analyticsEnabled = preferences[ANALYTICS_ENABLED] ?: true,
+                videoQuality = VideoQuality.entries.firstOrNull { it.name == preferences[VIDEO_QUALITY] }
+                    ?: UserSettings().videoQuality,
             )
         }
         .distinctUntilChanged()
@@ -53,11 +56,16 @@ class DataStoreSettingsRepository(
         dataStore.edit { it[ANALYTICS_ENABLED] = enabled }
     }
 
+    override suspend fun setVideoQuality(quality: VideoQuality) {
+        dataStore.edit { it[VIDEO_QUALITY] = quality.name }
+    }
+
     companion object {
         private val A4_HZ = intPreferencesKey("a4_hz")
         private val TOLERANCE = stringPreferencesKey("tolerance_preset")
         private val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
         private val ANALYTICS_ENABLED = booleanPreferencesKey("analytics_enabled")
+        private val VIDEO_QUALITY = stringPreferencesKey("video_quality")
 
         /**
          * For the one DataStore of the settings file, on both platforms: a file that cannot be parsed (a failing disk, a

@@ -92,6 +92,10 @@
     <string name="settings_group_app">App</string>
     <string name="settings_a4_title">Kammerton A4</string>
     <string name="settings_a4_note">alle Töne gehen von ihm aus</string>
+    <string name="settings_video_quality_title">Videoqualität</string>
+    <string name="settings_video_quality_note_ios">für neue Video-Takes</string>
+    <string name="settings_video_quality_note_android">für Aufnahmen mit Begleitspur</string>
+    <string name="settings_video_quality_option">%1$dp</string>
     <string name="settings_tolerance_title">Toleranz</string>
     <string name="settings_tolerance_note">Breite der grünen Zone</string>
     <string name="settings_language">Sprache</string>

@@ -92,6 +92,10 @@
     <string name="settings_group_app">Application</string>
     <string name="settings_a4_title">Diapason (la4)</string>
     <string name="settings_a4_note">toutes les notes en découlent</string>
+    <string name="settings_video_quality_title">Qualité vidéo</string>
+    <string name="settings_video_quality_note_ios">pour les nouvelles prises vidéo</string>
+    <string name="settings_video_quality_note_android">pour filmer avec l\'accompagnement</string>
+    <string name="settings_video_quality_option">%1$dp</string>
     <string name="settings_tolerance_title">Tolérance</string>
     <string name="settings_tolerance_note">largeur de la zone verte</string>
     <string name="settings_language">Langue</string>

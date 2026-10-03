@@ -92,6 +92,10 @@
     <string name="settings_group_app">アプリ</string>
     <string name="settings_a4_title">基準ピッチ A4</string>
     <string name="settings_a4_note">すべての音の基準</string>
+    <string name="settings_video_quality_title">動画の画質</string>
+    <string name="settings_video_quality_note_ios">新しい動画テイクに適用</string>
+    <string name="settings_video_quality_note_android">伴奏つき撮影に適用</string>
+    <string name="settings_video_quality_option">%1$dp</string>
     <string name="settings_tolerance_title">許容範囲</string>
     <string name="settings_tolerance_note">緑のゾーンの幅</string>
     <string name="settings_language">言語</string>

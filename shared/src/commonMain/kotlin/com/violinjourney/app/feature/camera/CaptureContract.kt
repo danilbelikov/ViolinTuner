@@ -1,4 +1,5 @@
 package com.violinjourney.app.feature.camera
+import com.violinjourney.app.core.domain.VideoQuality
 
 /** The screen of «Снять под минусовку» (spec 3.32, 3.36.4). */
 data class CaptureState(
@@ -13,6 +14,8 @@ data class CaptureState(
     /** The camera could not be had (none on this side, or it refused). */
     val cameraFailed: Boolean = false,
     val front: Boolean = false,
+    /** «Качество видео» of the settings (spec 3.19); null until read — the camera is not bound before it is known. */
+    val videoQuality: VideoQuality? = null,
     val recording: Boolean = false,
     val elapsedSeconds: Long = 0,
     val backingTitle: String? = null,

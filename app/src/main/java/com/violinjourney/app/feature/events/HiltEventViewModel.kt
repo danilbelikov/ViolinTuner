@@ -12,6 +12,8 @@ import com.violinjourney.app.core.recording.audio.AudioTakeImporter
 import com.violinjourney.app.core.recording.video.VideoFiles
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
 import com.violinjourney.app.core.settings.IntonationConfigSource
+import com.violinjourney.app.core.settings.SettingsRepository
+import com.violinjourney.app.core.settings.videoQuality
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.events.screen.EventViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,6 +34,8 @@ class HiltEventViewModel @Inject constructor(
     config: EventsConfig,
     repertoireConfig: RepertoireConfig,
     clock: WallClock,
+    settings: SettingsRepository,
 ) : EventViewModel(
     savedState, events, sessions, repertoire, configSource, takes, importer, audioImporter, videos, shareFiles, config, repertoireConfig, clock,
+    videoQuality = settings.videoQuality,
 )

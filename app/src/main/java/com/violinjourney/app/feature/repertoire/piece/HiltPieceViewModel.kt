@@ -19,6 +19,8 @@ import com.violinjourney.app.core.recording.TakePipeline
 import com.violinjourney.app.core.recording.video.VideoFiles
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
 import com.violinjourney.app.core.settings.IntonationConfigSource
+import com.violinjourney.app.core.settings.SettingsRepository
+import com.violinjourney.app.core.settings.videoQuality
 import com.violinjourney.app.core.time.WallClock
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -46,7 +48,8 @@ class HiltPieceViewModel @Inject constructor(
     routes: AudioRoutes,
     backingConfig: BackingConfig,
     @IoDispatcher io: CoroutineDispatcher,
+    settings: SettingsRepository,
 ) : PieceViewModel(
     savedState, repertoire, sheetFiles, config, clock, takes, configSource, sessions, videos, importer, shareFiles, backings,
-    backingFiles, backingPcm, recordingRate, backingImporter, backingPreview, routes, backingConfig, io,
+    backingFiles, backingPcm, recordingRate, backingImporter, backingPreview, routes, backingConfig, io, settings.videoQuality,
 )

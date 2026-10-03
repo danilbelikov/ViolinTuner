@@ -12,6 +12,8 @@ import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.backing.BackingOffset
 import com.violinjourney.app.core.domain.backing.BackingRepository
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
+import com.violinjourney.app.core.domain.UserSettings
+import com.violinjourney.app.core.domain.VideoQuality
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.deleteFile
 import com.violinjourney.app.core.io.fileName
@@ -37,6 +39,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -64,6 +67,8 @@ open class CaptureViewModel(
     private val recordingRate: RecordingRate,
     private val muxer: VideoMux,
     private val io: CoroutineDispatcher = Dispatchers.IO,
+    /** «Качество видео» of the settings (spec 3.19): the first value is the camera's for the screen's life. */
+    videoQuality: Flow<VideoQuality> = flowOf(UserSettings().videoQuality),
 ) : ViewModel() {
     private val pieceId: Long = checkNotNull(savedState[ARG_PIECE_ID]) { "piece id is required" }
 
@@ -163,6 +168,10 @@ open class CaptureViewModel(
     init {
         takes.videoHook = hook
         viewModelScope.launch { takes.watchPractice() }
+        viewModelScope.launch {
+            val quality = videoQuality.first()
+            mutableState.update { it.copy(videoQuality = quality) }
+        }
         viewModelScope.launch {
             val title = repertoire.piece(pieceId)?.title.orEmpty()
             // off the main thread: on iOS the room is counted with what the system would free, and that takes a while

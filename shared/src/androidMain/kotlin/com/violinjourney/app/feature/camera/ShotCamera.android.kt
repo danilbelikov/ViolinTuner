@@ -25,6 +25,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import com.violinjourney.app.core.domain.VideoQuality
 import java.io.File
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,11 +42,9 @@ class CameraXShotCamera(private val context: Context) : ShotCamera {
 
     private val preview = Preview.Builder().build().apply { setSurfaceProvider { request -> mutableSurface.value = request } }
 
-    // 1080p where the camera has it, the nearest below where it does not (spec 5.25)
-    private val recorder = Recorder.Builder()
-        .setQualitySelector(QualitySelector.from(Quality.FHD, FallbackStrategy.lowerQualityOrHigherThan(Quality.FHD)))
-        .build()
-    private val videoCapture = VideoCapture.withOutput(recorder)
+    /** The quality [videoCapture] records in; another one at [bind] makes it anew, while nothing is recorded. */
+    private var quality = VideoQuality.P720
+    private var videoCapture = captureIn(quality)
     private var provider: ProcessCameraProvider? = null
     private var camera: Camera? = null
     private var recording: Recording? = null
@@ -61,12 +60,19 @@ class CameraXShotCamera(private val context: Context) : ShotCamera {
     private var startEventNanos: Long? = null
     private var recordedNanos: Long = 0
 
-    suspend fun bind(owner: LifecycleOwner, front: Boolean): Boolean {
+    /** Binds the camera on the given side, recording in [quality] — «Качество видео» of the settings (spec 3.19, 5.13). */
+    suspend fun bind(owner: LifecycleOwner, front: Boolean, quality: VideoQuality): Boolean {
         val cameras = provider ?: ProcessCameraProvider.awaitInstance(context).also { provider = it }
         val selector = if (front) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
         return try {
             if (!cameras.hasCamera(selector)) return false
             cameras.unbindAll()
+            // a recording under way outlives a rebind (a turn of the phone) only in the capture it was started on
+            if (quality != this.quality && recording == null) {
+                val rotation = videoCapture.targetRotation
+                videoCapture = captureIn(quality).apply { targetRotation = rotation }
+                this.quality = quality
+            }
             camera = cameras.bindToLifecycle(owner, selector, preview, videoCapture)
             true
         } catch (e: IllegalArgumentException) {
@@ -165,6 +171,19 @@ class CameraXShotCamera(private val context: Context) : ShotCamera {
         val counted = (stoppedAt - recordedNanos).takeIf { recordedNanos > 0 }
         startNanos = listOfNotNull(startEventNanos, counted).maxOrNull()
         return usable
+    }
+
+    /** The chosen height where the camera has it, the nearest below where it does not, above where nothing is below (spec 5.13). */
+    private fun captureIn(quality: VideoQuality): VideoCapture<Recorder> {
+        val wanted = when (quality) {
+            VideoQuality.P480 -> Quality.SD
+            VideoQuality.P720 -> Quality.HD
+            VideoQuality.P1080 -> Quality.FHD
+        }
+        val recorder = Recorder.Builder()
+            .setQualitySelector(QualitySelector.from(wanted, FallbackStrategy.lowerQualityOrHigherThan(wanted)))
+            .build()
+        return VideoCapture.withOutput(recorder)
     }
 
     private companion object {

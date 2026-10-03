@@ -27,6 +27,7 @@ import com.violinjourney.app.core.domain.sound.FakeSoundRepository
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundPresets
 import com.violinjourney.app.core.domain.sound.SoundSettings
+import com.violinjourney.app.core.domain.VideoQuality
 import com.violinjourney.app.core.recording.MediaImport
 import com.violinjourney.app.core.recording.TakePipeline
 import com.violinjourney.app.core.recording.testTakePipeline
@@ -36,6 +37,7 @@ import com.violinjourney.app.core.recording.video.FakeVideoFiles
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
 import com.violinjourney.app.core.settings.FakeSettingsRepository
 import com.violinjourney.app.core.settings.SettingsConfigSource
+import com.violinjourney.app.core.settings.videoQuality
 import com.violinjourney.app.core.time.FixedWallClock
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.history.Selection
@@ -77,6 +79,7 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PieceViewModelTest {
+    private val settings = FakeSettingsRepository()
     private val repertoire = FakeRepertoireRepository()
     private val files = FakeSheetFiles()
     private val clock: WallClock = FixedWallClock(Instant.fromEpochMilliseconds(9_000), TimeZone.UTC)
@@ -221,6 +224,7 @@ class PieceViewModelTest {
             backings = backings, backingFiles = backingFiles, backingPcm = backingPcm,
             backingImporter = { importResult }, backingPreview = preview, routes = routes, backingConfig = backingConfig,
             io = StandardTestDispatcher(testScheduler), recordingRate = RecordingRate { TakePipeline.DEFAULT_RATE },
+            videoQuality = settings.videoQuality,
         )
         backgroundScope.launch { viewModel.backing.collect {} }
         val effects = mutableListOf<PieceEffect>()
@@ -836,6 +840,18 @@ class PieceViewModelTest {
         val card = viewModel.state.value.takes.single().card
         assertTrue(card.hasVideo)
         assertEquals(VIDEO_BYTES, card.videoBytes)
+    }
+
+    @Test
+    fun `the system camera is told the video quality of the settings`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        settings.setVideoQuality(VideoQuality.P1080)
+        val (viewModel, effects) = screen(id)
+        runCurrent()
+
+        viewModel.onIntent(PieceIntent.VideoShootClicked)
+        runCurrent()
+        assertEquals(VideoQuality.P1080, (effects.single() as PieceEffect.LaunchVideoCamera).quality)
     }
 
     @Test

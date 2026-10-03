@@ -45,10 +45,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.domain.TolerancePreset
+import com.violinjourney.app.core.domain.VideoQuality
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.a4_option_description
+import com.violinjourney.app.shared.resources.settings_video_quality_option
 import com.violinjourney.app.shared.resources.tolerance_beginner_name
 import com.violinjourney.app.shared.resources.tolerance_beginner_text
 import com.violinjourney.app.shared.resources.tolerance_cents
@@ -147,6 +149,31 @@ private fun A4Segments(optionsHz: List<Int>, selectedHz: Int, onSelect: (Int) ->
         containerColor = MaterialTheme.colorScheme.surface,
         strong = true,
         segmentDescriptions = optionsHz.map { stringResource(Res.string.a4_option_description, it) },
+    )
+}
+
+/**
+ * «Качество видео» in «Настройки» (spec 3.19, 3.36.8): the segments of the reference — «480p · 720p · 1080p» at 15 sp, 800, in
+ * tabular figures, on the ground of the screen. [selected] null — the stored choice not read yet: no segment lit rather than 720p
+ * that then jumps to the choice. [description] — the row's title and its note, as with the reference.
+ */
+@Composable
+fun VideoQualitySelector(
+    selected: VideoQuality?,
+    onSelect: (VideoQuality) -> Unit,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+) {
+    val options = VideoQuality.entries
+    SegmentedSwitch(
+        labels = options.map { stringResource(Res.string.settings_video_quality_option, it.height) },
+        selectedIndex = selected?.let(options::indexOf),
+        onSelect = { onSelect(options[it]) },
+        modifier = modifier,
+        fontSize = A4_SEGMENT_SP,
+        description = description,
+        containerColor = MaterialTheme.colorScheme.surface,
+        strong = true,
     )
 }
 

@@ -24,6 +24,7 @@ import com.violinjourney.app.core.domain.sound.BuiltInPreset
 import com.violinjourney.app.core.domain.sound.FakeSoundRepository
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundPresets
+import com.violinjourney.app.core.domain.VideoQuality
 import com.violinjourney.app.core.settings.FakeSettingsRepository
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.time.ZonedSystemWallClock
@@ -87,6 +88,19 @@ class SettingsViewModelTest {
         runCurrent()
         assertFalse(repository.settings.value.analyticsEnabled)
         assertFalse(viewModel.state.value.analyticsEnabled)
+    }
+
+    @Test
+    fun `the video quality is stored at once`() = runTest {
+        val viewModel = SettingsViewModel(repository, FakeSoundRepository(), SoundConfig())
+        backgroundScope.launch { viewModel.state.collect {} }
+        runCurrent()
+        assertEquals(VideoQuality.P720, viewModel.state.value.videoQuality)
+
+        viewModel.onIntent(SettingsIntent.VideoQualitySelected(VideoQuality.P1080))
+        runCurrent()
+        assertEquals(VideoQuality.P1080, repository.settings.value.videoQuality)
+        assertEquals(VideoQuality.P1080, viewModel.state.value.videoQuality)
     }
 
     @Test
