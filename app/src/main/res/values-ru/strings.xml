@@ -1564,10 +1564,11 @@
     <string name="share_notes_too_long_one">только для видео до %1$d минуты</string>
     <string name="share_notes_too_long_few">только для видео до %1$d минут</string>
     <string name="share_notes_too_long_many">только для видео до %1$d минут</string>
-    <string name="overlay_badge">в строе %1$s</string>
+    <string name="overlay_badge">Анализ игры</string>
     <string name="overlay_best_note">Лучшая нота</string>
     <string name="overlay_drift_none">ничего</string>
     <string name="overlay_previous_take">Прошлый дубль</string>
+    <string name="overlay_signature">Анализируй свою игру в приложении %1$s</string>
     <!-- What TalkBack says of the chip of a variant's format (spec 3.36.5, 3.37): «файл mp4», not «точка mp4» -->
     <string name="share_format_description">файл %1$s</string>
 </resources>

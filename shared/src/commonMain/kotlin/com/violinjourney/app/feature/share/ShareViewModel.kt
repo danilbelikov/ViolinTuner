@@ -36,6 +36,7 @@ import com.violinjourney.app.core.recording.overlay.NotesVideoRenderer
 import com.violinjourney.app.core.recording.overlay.OverlayWords
 import com.violinjourney.app.core.recording.video.VideoFiles
 import com.violinjourney.app.core.recording.video.VideoInfo
+import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.feature.events.EventWords
 import com.violinjourney.app.feature.events.ResourceEventWords
 import com.violinjourney.app.feature.sound.SoundReducer
@@ -70,6 +71,12 @@ import kotlinx.coroutines.withContext
 interface ShareTexts {
     /** «Менуэт соль мажор · 18 сентября», «Сессия · 14 сентября», or the name the user gave. */
     fun title(title: String?, pieceTitle: String?, startedAtEpochMs: Long): String
+
+    /** The same title without its date — «Менуэт соль мажор», «Запись»: the opening of «Видео с нотами» sets it over the date (spec 3.37). */
+    fun heading(title: String?, pieceTitle: String?): String
+
+    /** «3 октября». */
+    fun date(epochMs: Long): String
 
     /** «Менуэт · 84 % · 18 сентября». */
     fun message(title: String?, pieceTitle: String?, scorePercent: Int, startedAtEpochMs: Long): String
@@ -144,6 +151,10 @@ open class ShareViewModel(
     /** «Менуэт соль мажор · 3 октября» — the title of the recording being shared: the summary of «Видео с нотами» says it. */
     private var shareTitle = ""
 
+    /** «Менуэт соль мажор» and «3 октября» — the same in two lines: the opening of «Видео с нотами» (spec 3.37). */
+    private var shareHeading = ""
+    private var shareDate = ""
+
     /**
      * Held by the work that writes files to share ([writingAlone]). A render sees a cancel only between its chunks, and
      * the unpacking of a backing (blocking, seconds) not at all: a cancelled one may go on writing its `.part` for a while,
@@ -179,6 +190,10 @@ open class ShareViewModel(
                 ?.let { take -> backings.backing(take.backingId)?.takeIf { backingPcm != null }?.let { it to take } }
             takeBacking = under
             shareTitle = title
+            // an event names a recording with its own date until the recording is given a name of its own
+            val byEvent = event.takeIf { session.title == null }
+            shareHeading = texts.heading(session.title ?: byEvent?.let { eventWords.nameOf(it.name) }, pieceTitle)
+            shareDate = byEvent?.let { Formats.dayAndMonth(it.date) } ?: texts.date(session.startedAtEpochMs)
             val info = ShareInfo(
                 sessionId = sessionId,
                 fileName = ShareNames.fileName(title),
@@ -439,7 +454,7 @@ open class ShareViewModel(
     /** What «Видео с нотами» of [sessionId] draws: its stored analysis made into the overlay, and the words of now; null when it is gone. */
     private suspend fun notesOf(sessionId: Long): NotesWork? {
         val details = sessions.details(sessionId) ?: return null
-        val overlay = NotesOverlays.of(details, sessions.sessions.first(), intonation, shareTitle, notesConfig)
+        val overlay = NotesOverlays.of(details, sessions.sessions.first(), intonation, shareTitle, shareHeading, shareDate, notesConfig)
         return NotesWork(overlay, overlayWords(overlay))
     }
 
@@ -506,9 +521,14 @@ open class ShareViewModel(
 
     /** The overlay of a recording and the words it is drawn in. */
     private class NotesWork(val overlay: NotesOverlay, val words: OverlayWords) {
-        /** The file of these notes: another language, another title or another previous take is another file. */
+        /**
+         * The file of these notes: another language, another title, another heading or date of the opening (a named take's date
+         * follows the time zone) or another previous take is another file.
+         */
         val key: String
-            get() = (HASH_STEP * (HASH_STEP * words.hashCode() + overlay.title.hashCode()) + overlay.previous.hashCode()).toUInt().toString(HEX)
+            get() = listOf(overlay.title, overlay.heading, overlay.date, overlay.previous)
+                .fold(words.hashCode()) { hash, part -> HASH_STEP * hash + part.hashCode() }
+                .toUInt().toString(HEX)
     }
 
     /** A progress screen that was shown is shown long enough to be read: nothing on this app's screens flashes by. */

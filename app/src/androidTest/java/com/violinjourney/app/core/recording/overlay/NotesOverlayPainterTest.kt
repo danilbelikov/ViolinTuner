@@ -18,6 +18,7 @@ import com.violinjourney.app.core.ui.theme.DarkZoneColors
 import com.violinjourney.app.core.ui.theme.Manrope
 import java.io.File
 import kotlin.math.abs
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -33,12 +34,13 @@ class NotesOverlayPainterTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val frames = File(context.cacheDir, "overlay-frames").apply { mkdirs() }
     private val config = NotesVideoConfig()
+    private val text = runBlocking { OverlayText(createFontFamilyResolver(context), Manrope, OverlayText.icon()) }
 
     /** A in tune 0–2 s, C sharp and far off 2.05–3 s, E a little flat 3.05–6 s; the video ends at 7 s. */
     private val notes = listOf(
-        OverlayNote(69, 0, 2_000, Zone.IN_TUNE),
-        OverlayNote(73, 2_050, 3_000, Zone.OFF),
-        OverlayNote(76, 3_050, 6_000, Zone.NEAR),
+        OverlayNote(69, 0, 2_000, Zone.IN_TUNE, 3.0),
+        OverlayNote(73, 2_050, 3_000, Zone.OFF, 24.0),
+        OverlayNote(76, 3_050, 6_000, Zone.NEAR, -14.0),
     )
     private val videoEndMs = 7_000L
     private val low = NotesOverlays.heights(notes.map { it.midi }, config).first
@@ -47,13 +49,14 @@ class NotesOverlayPainterTest {
     private fun overlay(): NotesOverlay {
         return NotesOverlay(
             notes = notes, lowMidi = low, highMidi = high, scorePercent = 82, toleranceCents = 8, title = "Менуэт соль мажор · 3 октября",
+            heading = "Менуэт соль мажор", date = "3 октября",
             bestMidi = 69, drift = OverlayDrift(73, 24.0, Zone.OFF), previous = OverlayPrevious(74, 8),
             ribbon = notes.map { RecordingBar(((it.endMs - it.startMs) / 50).toInt(), it.zone) }, config = config,
         )
     }
 
     private val words = OverlayWords(
-        badge = "в строе 82%", toleranceLine = "в строе · допуск ±8 ц", bestNote = "Лучшая нота", drift = "Что уходит",
+        badge = "Анализ игры", signature = "Анализируй свою игру в приложении Violin Journey", toleranceLine = "в строе · допуск ±8 ц", bestNote = "Лучшая нота", drift = "Что уходит",
         driftCents = "+24 ц", driftNone = "ничего", previousTake = "Прошлый дубль", previousScore = "74%",
     )
 
@@ -61,7 +64,7 @@ class NotesOverlayPainterTest {
     private fun frame(width: Int, height: Int, nowMs: Long, name: String): Pair<Bitmap, NotesOverlayPainter> {
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         bitmap.eraseColor(GREY)
-        val painter = NotesOverlayPainter(overlay(), words, OverlayText(createFontFamilyResolver(context), Manrope), width.toFloat(), height.toFloat())
+        val painter = NotesOverlayPainter(overlay(), words, text, width.toFloat(), height.toFloat())
         CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, Canvas(bitmap.asImageBitmap()), Size(width.toFloat(), height.toFloat())) {
             painter.draw(this, nowMs, videoEndMs)
         }
@@ -74,8 +77,8 @@ class NotesOverlayPainterTest {
         val (bitmap, painter) = frame(1_080, 1_920, nowMs = 1_000, name = "portrait-1s")
         val g = painter.geometry
         val y = g.pillCenterY(69, low, high).toInt()
-        // a little left of the white playhead, inside the capsule of A, which runs from −1 s to +1 s around it
-        assertColor(DarkZoneColors.inTune.toArgb(), bitmap.getPixel((g.headX - 3 * g.u).toInt(), y))
+        // right of the white playhead and past the name, inside the capsule of A, which runs on to +1 s; left of it is dust
+        assertColor(DarkZoneColors.inTune.toArgb(), bitmap.getPixel((g.headX + AHEAD_U * g.u).toInt(), y))
         // the playhead itself is white over the capsule
         assertTrue("the playhead is white", luminance(bitmap.getPixel(g.headX.toInt(), y)) > 0.85)
     }
@@ -120,12 +123,137 @@ class NotesOverlayPainterTest {
         assertTrue("on its way, slowing: ${red(corner)}", red(corner) in EASED_HALFWAY)
     }
 
+    /** The opening title (since 0.90): its shade darkens the top of the frame over the first seconds, and is gone by 5 s. */
+    @Test
+    fun theOpeningDarkensTheTopAndGoes() {
+        val (opening, _) = frame(1_080, 1_920, nowMs = 1_500, name = "portrait-opening-1.5s")
+        val (after, _) = frame(1_080, 1_920, nowMs = 5_000, name = "portrait-5s")
+        frame(1_920, 1_080, nowMs = 1_500, name = "landscape-opening-1.5s")
+        assertTrue("the shade at 1.5 s: ${Integer.toHexString(opening.getPixel(20, 20))}", red(opening.getPixel(20, 20)) < red(GREY) - SHADED)
+        assertColor(GREY, after.getPixel(20, 20))
+    }
+
+    /**
+     * The opening's text (since 0.90): the heading — not the title, which carries the date too — and the date under it, each
+     * inside its em box, which the spec stands at 9 u and 1.6 u under the name; gone by 5 s.
+     */
+    @Test
+    fun theOpeningSaysTheHeadingAndTheDateInTheirPlaces() {
+        val (opening, painter) = frame(1_080, 1_920, nowMs = 1_500, name = "portrait-opening-text")
+        val (after, _) = frame(1_080, 1_920, nowMs = 5_000, name = "portrait-opening-gone")
+        val g = painter.geometry
+        val slack = EM_SLACK_U * g.u
+        val nameBox = g.openingTitleTop..(g.openingTitleTop + config.openingTitleU * g.u)
+        val dateBox = g.openingDateTop..(g.openingDateTop + config.openingDateU * g.u)
+        // the two are told apart halfway through the gap between their em boxes
+        val between = ((nameBox.endInclusive + dateBox.start) / 2).toInt()
+        val nameRows = brightRows(opening, NAME_BRIGHT, 0 until between)
+        val dateRows = brightRows(opening, DATE_BRIGHT, between until g.openingScrimHeight.toInt())
+        assertTrue("the name is drawn", nameRows.isNotEmpty())
+        assertTrue("the date is drawn", dateRows.isNotEmpty())
+        assertTrue("the name ${nameRows.first()}..${nameRows.last()} in its em box $nameBox", nameRows.first() >= nameBox.start - slack && nameRows.last() <= nameBox.endInclusive + slack)
+        assertTrue("the date ${dateRows.first()}..${dateRows.last()} in its em box $dateBox", dateRows.first() >= dateBox.start - slack && dateRows.last() <= dateBox.endInclusive + slack)
+        // the heading alone: the title with its date would fill the column and end in «…»
+        val span = brightSpan(opening, NAME_BRIGHT, nameRows)
+        assertTrue("the name is ${span.last - span.first} px of a column of ${g.columnWidth}", span.last - span.first < g.columnWidth * HEADING_SHARE)
+        assertTrue("nothing bright at 5 s", brightRows(after, DATE_BRIGHT, 0 until g.openingScrimHeight.toInt()).isEmpty())
+    }
+
+    /** The tag's sign (since 0.90): the arrow up over a note that sits high, down under one that sits low, the dot in tune. */
+    @Test
+    fun theTagBacksItsColourWithAShape() {
+        listOf(
+            Triple(2_300L, Zone.OFF, Sign.UP),
+            Triple(3_500L, Zone.NEAR, Sign.DOWN),
+            Triple(1_000L, Zone.IN_TUNE, Sign.DOT),
+        ).forEach { (nowMs, zone, expected) ->
+            val (bitmap, painter) = frame(1_080, 1_920, nowMs = nowMs, name = "portrait-tag-${nowMs}ms")
+            assertEquals("the sign at $nowMs ms", expected, signOf(bitmap, painter.geometry, DarkZoneColors.colorFor(zone).toArgb()))
+        }
+    }
+
+    private enum class Sign { UP, DOWN, DOT }
+
+    /**
+     * The sign of the tag: the rightmost cluster of [color] in it — the name before it is of the zone too, the number after it is
+     * grey. The sign stands in the middle of the tag: an arrow up is wide above it (its head) and narrow under it (its stem), an
+     * arrow down the other way round, the dot the same both sides.
+     */
+    private fun signOf(bitmap: Bitmap, g: NotesOverlayGeometry, color: Int): Sign {
+        val rows = (g.tagBottom - g.tagHeight).toInt()..g.tagBottom.toInt()
+        fun inColumn(x: Int) = rows.count { near(color, bitmap.getPixel(x, it), SIGN_SLACK) }
+        val right = (bitmap.width - 1 downTo 0).first { inColumn(it) > 0 }
+        var left = right
+        while (left > 0 && inColumn(left - 1) > 0) left--
+        fun width(y: Float) = (left..right).count { near(color, bitmap.getPixel(it, y.toInt()), SIGN_SLACK) }
+        val middle = g.tagBottom - g.tagHeight / 2
+        val above = width(middle - SIGN_PROBE_U * g.u)
+        val below = width(middle + SIGN_PROBE_U * g.u)
+        return when {
+            abs(above - below) <= DOT_SLACK_U * g.u -> Sign.DOT
+            above > below -> Sign.UP
+            else -> Sign.DOWN
+        }
+    }
+
+    /** The rows of [rows] with a pixel brighter than [bright] in the middle third of the frame. */
+    private fun brightRows(bitmap: Bitmap, bright: Double, rows: IntRange): List<Int> =
+        rows.filter { y -> (bitmap.width / 3 until bitmap.width * 2 / 3).any { luminance(bitmap.getPixel(it, y)) > bright } }
+
+    /** From the leftmost to the rightmost pixel brighter than [bright] in [rows]. */
+    private fun brightSpan(bitmap: Bitmap, bright: Double, rows: List<Int>): IntRange {
+        val xs = rows.flatMap { y -> (0 until bitmap.width).filter { luminance(bitmap.getPixel(it, y)) > bright } }
+        return xs.min()..xs.max()
+    }
+
+    /** A capsule that reaches the playhead crumbles there (since 0.90): left of it is dust, never the capsule whole. */
+    @Test
+    fun leftOfThePlayheadIsDustNotTheCapsule() {
+        val (bitmap, painter) = frame(1_080, 1_920, nowMs = 1_000, name = "portrait-dust")
+        val g = painter.geometry
+        val x = (g.headX - BEHIND_U * g.u).toInt()
+        val middle = g.pillCenterY(69, low, high)
+        val column = ((middle - g.pillHeight / 2).toInt()..(middle + g.pillHeight / 2).toInt()).map { bitmap.getPixel(x, it) }
+        val solid = column.count { near(DarkZoneColors.inTune.toArgb(), it, COLOR_SLACK) }
+        assertTrue("$solid of ${column.size} pixels are the capsule's colour", solid < column.size / 2)
+    }
+
+    /** The signature of the summary (since 0.90): the icon beside the line of the app — its warm sun under the veil. */
+    @Test
+    fun theSummaryCarriesTheIcon() {
+        listOf(1_080 to 1_920, 1_920 to 1_080).forEach { (width, height) ->
+            val (bitmap, painter) = frame(width, height, nowMs = videoEndMs + 1_000, name = "summary-icon-${width}x$height")
+            assertTrue("the icon in the signature of $width × $height", warmPixelIn(bitmap, signatureBand(painter.geometry)))
+        }
+    }
+
+    /** The badge says «Анализ игры» alone (since 0.90): no score, though the recording has one. */
+    @Test
+    fun theBadgeCarriesNoScore() {
+        val badge = runBlocking { OverlayWords.of(overlay()).badge }
+        assertTrue("«$badge»", badge.isNotBlank() && badge.none { it.isDigit() || it == '%' })
+    }
+
+    /** The rows under the summary's block and its gap: the signature alone, one or two lines of it. */
+    private fun signatureBand(g: NotesOverlayGeometry): IntRange {
+        val bottomU = if (g.portrait) config.signatureBottomU else config.signatureBottomLandscapeU
+        val top = g.height - (bottomU + config.appLineMaxLines * config.signatureLineU) * g.u
+        return top.toInt() until g.height.toInt()
+    }
+
+    /** Some pixel of [rows] is the icon's sun or dusk — warm and bright, which neither the veil nor the white text is. */
+    private fun warmPixelIn(bitmap: Bitmap, rows: IntRange): Boolean = rows.any { y ->
+        (0 until bitmap.width).any { x -> bitmap.getPixel(x, y).let { red(it) > WARM_RED && red(it) - blue(it) > WARM_LEAD } }
+    }
+
     private fun veiled(channel: Int): Int = (channel * (1 - config.veilAlpha) + INK * config.veilAlpha).toInt()
 
     private fun assertColor(expected: Int, actual: Int) {
-        val near = abs(red(expected) - red(actual)) <= 2 && abs(green(expected) - green(actual)) <= 2 && abs(blue(expected) - blue(actual)) <= 2
-        assertTrue("expected ${Integer.toHexString(expected)}, was ${Integer.toHexString(actual)}", near)
+        assertTrue("expected ${Integer.toHexString(expected)}, was ${Integer.toHexString(actual)}", near(expected, actual, 2))
     }
+
+    private fun near(expected: Int, actual: Int, slack: Int): Boolean =
+        abs(red(expected) - red(actual)) <= slack && abs(green(expected) - green(actual)) <= slack && abs(blue(expected) - blue(actual)) <= slack
 
     private fun red(pixel: Int) = pixel shr 16 and 0xFF
     private fun green(pixel: Int) = pixel shr 8 and 0xFF
@@ -138,6 +266,44 @@ class NotesOverlayPainterTest {
 
         /** Inside the capsule, under the letters of its name: the capsule is 4.4 u high, the name about 2 u. */
         const val BELOW_NAME_U = 1.6f
+
+        /** Right of the playhead past the name a capsule carries at its start there: «A4» and its inset are about 5 u. */
+        const val AHEAD_U = 8f
+
+        /** Left of the playhead, where the capsule of A would still be whole without the dust. */
+        const val BEHIND_U = 3f
+
+        /** A capsule's colour, give or take the dust drawn over the shade. */
+        const val COLOR_SLACK = 28
+
+        /** The shade of the opening at 0.55 at its top: grey 0x80 comes down to about 0x3A — well past a few levels. */
+        const val SHADED = 40
+
+        /** The white name over the shade, and the date at 0.7 — both brighter than the grey 0x80 of the frame, 0.5. */
+        const val NAME_BRIGHT = 0.85
+        const val DATE_BRIGHT = 0.6
+
+        /** Anti-aliasing round the em box of the opening's text. */
+        const val EM_SLACK_U = 0.3f
+
+        /** «Менуэт соль мажор» is about 60 u of a column of 84; with its date it would fill the column. */
+        const val HEADING_SHARE = 0.9f
+
+        /** The sign's own colour, past the anti-aliasing over the glass. */
+        const val SIGN_SLACK = 40
+
+        /**
+         * Above and under the middle of the tag: inside the dot (0.8 u round), across an arrow's head (2.6 u wide at its base,
+         * about 1.9 u here) on one side and its stem (0.8 u) on the other.
+         */
+        const val SIGN_PROBE_U = 0.6f
+
+        /** The dot is as wide both sides, give or take a pixel or two; an arrow's head is a whole u wider than its stem. */
+        const val DOT_SLACK_U = 0.4f
+
+        /** The sun of the icon is about ffe0a0, its dusk cc826a: red leads and is bright. */
+        const val WARM_RED = 170
+        const val WARM_LEAD = 50
 
         /** Grey 0x80 under a veil of 0.9 × 0.75 is about 49; a linear fade would leave about 75. */
         val EASED_HALFWAY = 40..60

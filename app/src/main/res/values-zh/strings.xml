@@ -1564,10 +1564,11 @@
     <string name="share_notes_too_long_one">仅限 %1$d 分钟以内的视频</string>
     <string name="share_notes_too_long_few">仅限 %1$d 分钟以内的视频</string>
     <string name="share_notes_too_long_many">仅限 %1$d 分钟以内的视频</string>
-    <string name="overlay_badge">准 %1$s</string>
+    <string name="overlay_badge">演奏分析</string>
     <string name="overlay_best_note">最准的音</string>
     <string name="overlay_drift_none">无</string>
     <string name="overlay_previous_take">上次录制</string>
+    <string name="overlay_signature">在 %1$s 应用中分析你的演奏</string>
     <!-- What TalkBack says of the chip of a variant's format (spec 3.36.5, 3.37): «файл mp4», not «точка mp4» -->
     <string name="share_format_description">%1$s 文件</string>
 </resources>

@@ -1,7 +1,9 @@
 // Launcher icon «Гриф-дорога» (variant 1b of the handoff `docs/design/project/icon_app/project/Значок v2.dc.html`)
 // → adaptive icon layers as vector drawables, the 512 px icon for the stores (docs/store/icon-512.png) and the iPhone's
-// 1024 px one (iosApp/iosApp/Assets.xcassets/AppIcon.appiconset). The geometry comes from the handoff's own generator
-// `icon-v2-gen.js` (build().b): changed there, regenerate here with `node tools/icon/export.js`.
+// 1024 px one (iosApp/iosApp/Assets.xcassets/AppIcon.appiconset), and the 256 px one the signature of «Видео с нотами» draws
+// (shared/src/commonMain/composeResources/drawable/overlay_app_icon.png, spec 5.30). The geometry comes from the handoff's own
+// generator `icon-v2-gen.js` (build().b): changed there, regenerate here with `node tools/icon/export.js`;
+// `node tools/icon/export.js overlay` writes the overlay's icon alone.
 // Layers as the handoff says: sky and ground — background, the fingerboard and the head — foreground;
 // monochrome (themed icons, Android 13+) — the handoff's `mono`, with the scroll's groove cut out.
 const fs = require('fs');
@@ -10,6 +12,7 @@ const vm = require('vm');
 const { execFileSync } = require('child_process');
 
 const root = path.join(__dirname, '..', '..');
+const overlayOnly = process.argv[2] === 'overlay';
 const handoff = path.join(root, 'docs/design/project/icon_app/project');
 const ctx = {};
 vm.runInNewContext(fs.readFileSync(path.join(handoff, 'icon-v2-gen.js'), 'utf8') + '\nthis.I = build();', ctx);
@@ -100,11 +103,13 @@ const ribbon = 'M' + left.concat(right.reverse()).map(p => r1(p[0]) + ' ' + r1(p
 const scroll = { ...mono[scrollAt], d: mono[scrollAt].d + ribbon, fillRule: 'evenodd' };
 const monoPaths = mono.map((p, i) => (i === scrollAt ? scroll : p)).filter((_, i) => i !== cutAt);
 
-const out = path.join(root, 'app/src/main/res/drawable');
-fs.writeFileSync(path.join(out, 'ic_launcher_background.xml'), vector('Launcher icon, background: evening sky, sun and ground.', background));
-fs.writeFileSync(path.join(out, 'ic_launcher_foreground.xml'), vector('Launcher icon, foreground: the fingerboard as a road, the head against the sun.', foreground));
-fs.writeFileSync(path.join(out, 'ic_launcher_monochrome.xml'), vector('Launcher icon, monochrome layer for themed icons.', monoPaths, true));
-console.log(`background ${background.length} paths, foreground ${foreground.length}, monochrome ${monoPaths.length}`);
+if (!overlayOnly) {
+  const out = path.join(root, 'app/src/main/res/drawable');
+  fs.writeFileSync(path.join(out, 'ic_launcher_background.xml'), vector('Launcher icon, background: evening sky, sun and ground.', background));
+  fs.writeFileSync(path.join(out, 'ic_launcher_foreground.xml'), vector('Launcher icon, foreground: the fingerboard as a road, the head against the sun.', foreground));
+  fs.writeFileSync(path.join(out, 'ic_launcher_monochrome.xml'), vector('Launcher icon, monochrome layer for themed icons.', monoPaths, true));
+  console.log(`background ${background.length} paths, foreground ${foreground.length}, monochrome ${monoPaths.length}`);
+}
 
 // The stores' icon: 512 × 512, a full square — the store rounds the corners and adds the shadow itself.
 // It shows what a launcher shows, the middle 72 of the 108 grid, so the sign is as large as on the phone.
@@ -123,6 +128,22 @@ function renderIcon(size, target) {
     `--screenshot=${target}`, 'file://' + page], { stdio: 'ignore' });
   fs.unlinkSync(page);
 }
+// A full square without transparency: sips drops the alpha channel by a JPEG round trip.
+function makeOpaque(png) {
+  const jpeg = png.replace(/\.png$/, '.jpg');
+  execFileSync('sips', ['-s', 'format', 'jpeg', '-s', 'formatOptions', '100', png, '--out', jpeg], { stdio: 'ignore' });
+  execFileSync('sips', ['-s', 'format', 'png', jpeg, '--out', png], { stdio: 'ignore' });
+  fs.unlinkSync(jpeg);
+}
+
+// The icon of the signature of «Видео с нотами» (spec 5.30): 256 px, the same full square — the painter rounds its corners.
+const overlayIcon = path.join(root, 'shared/src/commonMain/composeResources/drawable');
+fs.mkdirSync(overlayIcon, { recursive: true });
+renderIcon(256, path.join(overlayIcon, 'overlay_app_icon.png'));
+makeOpaque(path.join(overlayIcon, 'overlay_app_icon.png'));
+console.log('overlay icon shared/src/commonMain/composeResources/drawable/overlay_app_icon.png');
+if (overlayOnly) process.exit(0);
+
 const store = path.join(root, 'docs/store');
 fs.mkdirSync(store, { recursive: true });
 renderIcon(512, path.join(store, 'icon-512.png'));
@@ -134,10 +155,7 @@ const appIcon = path.join(root, 'iosApp/iosApp/Assets.xcassets/AppIcon.appiconse
 fs.mkdirSync(appIcon, { recursive: true });
 const iosPng = path.join(appIcon, 'AppIcon.png');
 renderIcon(1024, iosPng);
-const opaque = iosPng.replace(/\.png$/, '.jpg');
-execFileSync('sips', ['-s', 'format', 'jpeg', '-s', 'formatOptions', '100', iosPng, '--out', opaque], { stdio: 'ignore' });
-execFileSync('sips', ['-s', 'format', 'png', opaque, '--out', iosPng], { stdio: 'ignore' });
-fs.unlinkSync(opaque);
+makeOpaque(iosPng);
 fs.writeFileSync(path.join(appIcon, 'Contents.json'), JSON.stringify({
   images: [{ filename: 'AppIcon.png', idiom: 'universal', platform: 'ios', size: '1024x1024' }],
   info: { author: 'xcode', version: 1 },

@@ -148,8 +148,13 @@ class ShareViewModelTest {
         override fun deleteOrphans(referenced: Set<String>, nowEpochMs: Long, minAgeMs: Long) = Unit
     }
 
+    /** The date of a take as the clock's time zone says it: a named take's title carries none. */
+    private var dateOfTake = "18 сентября"
+
     private val texts = object : ShareTexts {
         override fun title(title: String?, pieceTitle: String?, startedAtEpochMs: Long) = title ?: pieceTitle?.let { "$it · 18 сентября" } ?: "Сессия · 18 сентября"
+        override fun heading(title: String?, pieceTitle: String?) = title ?: pieceTitle ?: "Сессия"
+        override fun date(epochMs: Long) = dateOfTake
         override fun message(title: String?, pieceTitle: String?, scorePercent: Int, startedAtEpochMs: Long) = "${title ?: pieceTitle ?: "Сессия"} · $scorePercent % · 18 сентября"
     }
 
@@ -861,7 +866,7 @@ class ShareViewModelTest {
             NoOpAnalytics(), events = events, eventWords = eventWords, notesRenderer = notes, notesSpeed = RenderSpeed(NotesVideoConfig().renderSpeedStart),
             overlayWords = { overlay ->
                 OverlayWords(
-                    badge = "в строе ${overlay.scorePercent}% ($language)", toleranceLine = language, bestNote = language, drift = language,
+                    badge = "Анализ игры ($language)", signature = language, toleranceLine = language, bestNote = language, drift = language,
                     driftCents = null, driftNone = language, previousTake = language, previousScore = null,
                 )
             },
@@ -870,6 +875,24 @@ class ShareViewModelTest {
         val effects = mutableListOf<ShareEffect>()
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
         return viewModel to effects
+    }
+
+    @Test
+    fun `the opening of a video of an event says the event and its own date`() = runTest {
+        events.recordEvents.value = mapOf(5L to SessionEvent(5, "Осенний концерт", LocalDate(2026, 10, 24), KindRef.BuiltIn(BuiltInKind.PERFORMANCE), null))
+        audio = folder.newFile("event.mp4").apply { writeText("original video") }
+        val id = recording(audioName = "event.mp4", eventId = 5)
+        sessions.sessions.value = sessions.sessions.value.map { if (it.id == id) it.copy(videoPath = "event.mp4") else it }
+        val notes = NotesRenderer()
+        val (viewModel, _) = shareWithNotes(Renderer(tookMs = 100), notes)
+        viewModel.start(id)
+        runCurrent()
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(5_000)
+        runCurrent()
+        val overlay = notes.overlay!!
+        assertEquals("Осенний концерт · 24 октября", overlay.title)
+        assertEquals("Осенний концерт" to "24 октября", overlay.heading to overlay.date)
     }
 
     @Test
@@ -893,6 +916,7 @@ class ShareViewModelTest {
         assertEquals(1, notes.renders)
         assertEquals("the processed sound, made beside the file", "sound", notes.soundHeard)
         assertEquals("the summary is titled as the file", "Менуэт · 18 сентября", notes.overlay!!.title)
+        assertEquals("the opening says the title and the date apart", "Менуэт" to "18 сентября", notes.overlay!!.heading to notes.overlay!!.date)
         val sent = effects.single() as ShareEffect.Send
         assertEquals("Менуэт · 18 сентября.mp4", sent.file.name)
         assertEquals("video with notes", sent.file.readText())
@@ -990,6 +1014,22 @@ class ShareViewModelTest {
         advanceTimeBy(5_000)
         runCurrent()
         assertEquals("other words on the picture: another file", 2, notes.renders)
+    }
+
+    @Test
+    fun `another date of the opening is another file - a named take moved to another time zone`() = runTest {
+        val notes = NotesRenderer()
+        val (viewModel, _) = shareWithNotes(Renderer(tookMs = 100), notes)
+        val id = videoTake()
+        listOf("18 сентября", "19 сентября").forEach { date ->
+            dateOfTake = date
+            viewModel.start(id)
+            runCurrent()
+            viewModel.onIntent(ShareIntent.ContinueClicked)
+            advanceTimeBy(5_000)
+            runCurrent()
+        }
+        assertEquals("the opening says another date: another file", 2, notes.renders)
     }
 
     @Test

@@ -1564,10 +1564,11 @@
     <string name="share_notes_too_long_one">seulement pour les vidéos de %1$d minute au plus</string>
     <string name="share_notes_too_long_few">seulement pour les vidéos de %1$d minutes au plus</string>
     <string name="share_notes_too_long_many">seulement pour les vidéos de %1$d minutes au plus</string>
-    <string name="overlay_badge">juste %1$s</string>
+    <string name="overlay_badge">Analyse du jeu</string>
     <string name="overlay_best_note">Meilleure note</string>
     <string name="overlay_drift_none">rien</string>
     <string name="overlay_previous_take">Prise précédente</string>
+    <string name="overlay_signature">Analysez votre jeu dans l\'app %1$s</string>
     <!-- What TalkBack says of the chip of a variant's format (spec 3.36.5, 3.37): «файл mp4», not «точка mp4» -->
     <string name="share_format_description">fichier %1$s</string>
 </resources>

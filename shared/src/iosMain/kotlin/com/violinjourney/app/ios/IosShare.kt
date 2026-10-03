@@ -112,6 +112,10 @@ internal class IosShareTexts private constructor(private val templates: Map<Stri
             ?: IosScaleTexts.format(templates.getValue(DEFAULT), arrayOf(date))
     }
 
+    override fun heading(title: String?, pieceTitle: String?): String = title ?: pieceTitle ?: templates.getValue(SESSION)
+
+    override fun date(epochMs: Long): String = Formats.dayAndMonth(epochMs, clock.zone)
+
     override fun message(title: String?, pieceTitle: String?, scorePercent: Int, startedAtEpochMs: Long): String = IosScaleTexts.format(
         templates.getValue(MESSAGE),
         arrayOf(title ?: pieceTitle ?: templates.getValue(SESSION), scorePercent, Formats.dayAndMonth(startedAtEpochMs, clock.zone)),

@@ -20,6 +20,11 @@ class AppShareTexts @Inject constructor(
             ?: context.getString(R.string.session_default_title, date)
     }
 
+    override fun heading(title: String?, pieceTitle: String?): String =
+        title ?: pieceTitle ?: context.getString(R.string.share_message_session)
+
+    override fun date(epochMs: Long): String = Formats.dayAndMonth(epochMs, clock.zone)
+
     override fun message(title: String?, pieceTitle: String?, scorePercent: Int, startedAtEpochMs: Long): String = context.getString(
         R.string.share_message,
         title ?: pieceTitle ?: context.getString(R.string.share_message_session),

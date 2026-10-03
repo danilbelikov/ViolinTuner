@@ -1564,10 +1564,11 @@
     <string name="share_notes_too_long_one">%1$d분 이하 영상만</string>
     <string name="share_notes_too_long_few">%1$d분 이하 영상만</string>
     <string name="share_notes_too_long_many">%1$d분 이하 영상만</string>
-    <string name="overlay_badge">정확 %1$s</string>
+    <string name="overlay_badge">연주 분석</string>
     <string name="overlay_best_note">가장 정확한 음</string>
     <string name="overlay_drift_none">없음</string>
     <string name="overlay_previous_take">이전 테이크</string>
+    <string name="overlay_signature">%1$s 앱에서 연주를 분석해 보세요</string>
     <!-- What TalkBack says of the chip of a variant's format (spec 3.36.5, 3.37): «файл mp4», not «точка mp4» -->
     <string name="share_format_description">%1$s 파일</string>
 </resources>

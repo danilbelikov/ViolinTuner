@@ -80,8 +80,45 @@ class NotesOverlayGeometryTest {
         assertEquals(1_920f - 5 * 10.8f - 7.2f * 10.8f, portrait.badgeTop, EPSILON)
         assertEquals(4 * 10.8f, landscape.badgeLeft, EPSILON)
         assertEquals(1_080f - 4 * 10.8f - 7.2f * 10.8f, landscape.badgeTop, EPSILON)
-        assertEquals((2.6f + 1.8f + 1.4f + 2.8f) * 10.8f + 100f, portrait.badgeWidth(100f), EPSILON)
-        assertEquals(portrait.badgeLeft + (2.6f + 1.8f + 1.4f) * 10.8f, portrait.badgeTextX, EPSILON)
+        assertEquals((2.6f + 2.2f + 1.4f + 2.8f) * 10.8f + 100f, portrait.badgeWidth(100f), EPSILON)
+        assertEquals(portrait.badgeLeft + (2.6f + 2.2f + 1.4f) * 10.8f, portrait.badgeTextX, EPSILON)
+        // the spinner: its line inside its 2.2 u
+        assertEquals(portrait.badgeLeft + (2.6f + 1.1f) * 10.8f, portrait.spinnerCenterX, EPSILON)
+        assertEquals((2.2f - 0.45f) / 2 * 10.8f, portrait.spinnerRadius, EPSILON)
+    }
+
+    @Test
+    fun `the line of the app follows the badge to the inset of the right edge`() {
+        val badge = portrait.badgeWidth(200f)
+        assertEquals(portrait.badgeLeft + badge + 2.4f * 10.8f, portrait.appLineLeft(badge), EPSILON)
+        assertEquals(1_080f - 5 * 10.8f, portrait.appLineLeft(badge) + portrait.appLineMaxWidth(badge), EPSILON)
+        assertEquals(1_920f - 4 * 10.8f, landscape.appLineLeft(badge) + landscape.appLineMaxWidth(badge), EPSILON)
+    }
+
+    @Test
+    fun `the tag is wider than its name by the sign and the number`() {
+        val name = 50f
+        val number = 30f
+        val arrowLine = portrait.tagLineWidth(name, number, inTune = false)
+        assertEquals(name + (1.4f + 2.6f + 0.8f) * 10.8f + number, arrowLine, EPSILON)
+        // the dot of in tune is narrower than the arrow
+        assertEquals(arrowLine - 1f * 10.8f, portrait.tagLineWidth(name, number, inTune = true), EPSILON)
+        assertTrue(portrait.tagWidth(arrowLine) > portrait.tagWidth(name))
+        // the line is centred on the playhead: the number ends where the line does
+        assertEquals(portrait.headX + arrowLine / 2, portrait.tagNumberX(arrowLine, name, inTune = false) + number, EPSILON)
+        assertEquals(portrait.headX - arrowLine / 2 + name + 1.4f * 10.8f, portrait.tagSignX(arrowLine, name), EPSILON)
+    }
+
+    @Test
+    fun `the opening stands at the top — lower in a portrait`() {
+        assertEquals(30 * 10.8f, portrait.openingScrimHeight, EPSILON)
+        assertEquals(24 * 10.8f, landscape.openingScrimHeight, EPSILON)
+        assertEquals(9 * 10.8f, portrait.openingTitleTop, EPSILON)
+        assertEquals(6 * 10.8f, landscape.openingTitleTop, EPSILON)
+        assertEquals(portrait.openingTitleTop + (6f + 1.6f) * 10.8f, portrait.openingDateTop, EPSILON)
+        // by the baseline: the em box's top at 9 u, its share above the baseline under it
+        assertEquals(9 * 10.8f + 6 * 10.8f * 0.78f, portrait.openingTitleBaseline(0.78f), EPSILON)
+        assertEquals(portrait.openingDateTop + 3.4f * 10.8f * 0.78f, portrait.openingDateBaseline(0.78f), EPSILON)
     }
 
     @Test
@@ -93,10 +130,40 @@ class NotesOverlayGeometryTest {
         // title 4.4 + 3 + score 17 + line 4.4 + 4 + strip 2.2 + 3, then the rows of 9
         val head = (4.4f + 3f + 17f + 4.4f + 4f + 2.2f + 3f) * 10.8f
         assertEquals(head + 3 * 9 * 10.8f, portrait.summaryHeight(3), EPSILON)
-        assertEquals((1_920f - portrait.summaryHeight(3)) / 2, portrait.summaryTop(3), EPSILON)
-        assertEquals(portrait.summaryTop(2) + head + 9 * 10.8f, portrait.rowTop(2, 1), EPSILON)
-        assertEquals(portrait.rowTop(2, 1) + (4.5f + 1.3f) * 10.8f, portrait.rowBaseline(2, 1), EPSILON)
-        assertEquals(portrait.summaryTop(3) + (4.4f + 3f + 17f + 4.4f + 4f) * 10.8f, portrait.stripTop(3), EPSILON)
+        val top = 300f
+        assertEquals(top + head + 9 * 10.8f, portrait.rowTop(top, 1), EPSILON)
+        assertEquals(portrait.rowTop(top, 1) + (4.5f + 1.3f) * 10.8f, portrait.rowBaseline(top, 1), EPSILON)
+        assertEquals(top + (4.4f + 3f + 17f + 4.4f + 4f) * 10.8f, portrait.stripTop(top), EPSILON)
+    }
+
+    @Test
+    fun `the signature stands 6 u above the bottom — 4 u lying — as high as its icon at the least`() {
+        val icon = 7 * 10.8f
+        assertEquals(icon, portrait.signatureHeight(3.9f * 10.8f), EPSILON)
+        assertEquals(2 * 3.9f * 10.8f, portrait.signatureHeight(2 * 3.9f * 10.8f), EPSILON)
+        assertEquals(1_920f - 6 * 10.8f - icon, portrait.signatureTop(icon), EPSILON)
+        assertEquals(1_080f - 4 * 10.8f - icon, landscape.signatureTop(icon), EPSILON)
+        // the icon, its gap and the text are no wider than the column, and centred together
+        assertEquals(portrait.columnWidth, icon + 2 * 10.8f + portrait.signatureTextMaxWidth, EPSILON)
+        val text = 400f
+        assertEquals(1_080f - (portrait.signatureTextLeft(text) + text), portrait.iconLeft(text), EPSILON)
+    }
+
+    @Test
+    fun `the summary is centred above its signature and never touches it`() {
+        for (geometry in listOf(portrait, landscape)) {
+            for (lines in 1..2) {
+                val signature = geometry.signatureHeight(lines * 3.9f * geometry.u)
+                for (rows in 1..3) {
+                    val top = geometry.summaryTop(rows, signature)
+                    val bottom = top + geometry.summaryHeight(rows)
+                    // the gap of 4 u at the least, and as much air above the block as between it and the gap
+                    assertTrue(bottom + 4 * geometry.u <= geometry.signatureTop(signature) + EPSILON, "rows $rows, lines $lines")
+                    assertEquals(top, geometry.signatureTop(signature) - 4 * geometry.u - bottom, EPSILON)
+                    assertTrue(top > 0f)
+                }
+            }
+        }
     }
 
     private companion object {

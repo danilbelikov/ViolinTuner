@@ -48,16 +48,78 @@ data class NotesVideoConfig(
     /** A break shorter than this — a change of bow — keeps the last note current: nothing blinks between two notes. */
     val holdMs: Long = 300,
     val tagFadeMs: Long = 150,
+    /**
+     * After the name in the tag (since 0.90): [tagSignGapU] of air, the arrow [tagArrowU] wide in the colour of the zone — or, in
+     * tune, the dot [tagDotU] — then [tagNumberGapU] and the mean deviation of the note, [tagNumberU] high and grey.
+     */
+    val tagSignGapU: Float = 1.4f,
+    val tagArrowU: Float = 2.6f,
+    val tagDotU: Float = 1.6f,
+    val tagNumberGapU: Float = 0.8f,
+    val tagNumberU: Float = 3.2f,
+    val tagNumberAlpha: Float = 0.75f,
 
-    // The badge: «в строе 82 %» on the glass, bottom left
+    // The dust (since 0.90): a capsule crumbles at the playhead, every [dustSegmentU] of it into [dustPerSegment] particles
+    val dustSegmentU: Float = 0.4f,
+    val dustPerSegment: Int = 3,
+    val dustLifeMs: Long = 700,
+    /** Their own speed on top of the lane's: left by up to [dustDriftU] u a second, up or down by up to [dustSpreadU]; and falling. */
+    val dustDriftU: Float = 4f,
+    val dustSpreadU: Float = 6f,
+    val dustFallU: Float = 14f,
+    /** The side of a particle, from [dustMinSideU] to [dustMaxSideU], shrinking to [dustEndShare] of it by the end of its life. */
+    val dustMinSideU: Float = 0.5f,
+    val dustMaxSideU: Float = 1f,
+    val dustEndShare: Float = 0.4f,
+    /** The corners of a particle, as a share of its side. */
+    val dustCorner: Float = 0.25f,
+
+    // The opening title (since 0.90): the name and the date of the recording on a shade of their own at the top
+    val openingScrimU: Float = 30f,
+    val openingScrimLandscapeU: Float = 24f,
+    val openingScrimAlpha: Float = 0.55f,
+    val openingTitleU: Float = 6f,
+    val openingDateU: Float = 3.4f,
+    val openingDateGapU: Float = 1.6f,
+    val openingDateAlpha: Float = 0.7f,
+    /** The top of the line of the name: below the top of the frame. */
+    val openingTopU: Float = 9f,
+    val openingTopLandscapeU: Float = 6f,
+    /** It comes in from [openingInMs] to [openingShownMs], dropping [openingDropU] into place; stays to [openingOutMs]; is gone at [openingEndMs]. */
+    val openingInMs: Long = 300,
+    val openingShownMs: Long = 900,
+    val openingOutMs: Long = 3_400,
+    val openingEndMs: Long = 4_000,
+    val openingDropU: Float = 1.5f,
+    /** A video shorter than [openingShortVideoMs] ends the title [openingLeadMs] before its own end; one shorter than [openingMinVideoMs] has none. */
+    val openingShortVideoMs: Long = 5_000,
+    val openingMinVideoMs: Long = 2_000,
+    val openingLeadMs: Long = 1_000,
+    /** The shortest a shortened coming in or going out may be. */
+    val openingMinFadeMs: Long = 200,
+
+    // The badge: a spinner and «Анализ игры» on the glass, bottom left (since 0.90; before — a dot and the score)
     val badgeU: Float = 7.2f,
     val badgePadStartU: Float = 2.6f,
     val badgePadEndU: Float = 2.8f,
-    val badgeDotU: Float = 1.8f,
-    val badgeDotGapU: Float = 1.4f,
+    /** The spinner: an arc of [spinnerSweepDegrees], [badgeSpinnerU] across, a line [spinnerLineU] wide, once round in [spinnerTurnMs]. */
+    val badgeSpinnerU: Float = 2.2f,
+    val spinnerLineU: Float = 0.45f,
+    val spinnerSweepDegrees: Float = 270f,
+    val spinnerTurnMs: Long = 1_000,
+    val badgeSpinnerGapU: Float = 1.4f,
     val badgeTextU: Float = 3.4f,
     val badgeInsetU: Float = 5f,
     val badgeInsetLandscapeU: Float = 4f,
+
+    // The line of the app beside the badge (since 0.90): dimmed, in one or two lines up to the inset of the badge from the right edge
+    val appLineGapU: Float = 2.4f,
+    val appLineTextU: Float = 2.6f,
+    val appLineHeightU: Float = 3.2f,
+    val appLineAlpha: Float = 0.45f,
+    val appLineNameAlpha: Float = 0.6f,
+    /** The line of the app, by the badge and in the summary, wraps to no more than this. */
+    val appLineMaxLines: Int = 2,
 
     // The summary: three seconds after the end of the video, over its last frame
     val summaryMs: Long = 3_000,
@@ -101,6 +163,19 @@ data class NotesVideoConfig(
     /** The middle of the dot over the baseline: the middle of the small letters. */
     val dotRaiseU: Float = 1.7f,
     val gainU: Float = 3.4f,
+
+    // The signature of the summary (since 0.90): the icon and the line of the app, centred, at the bottom of the frame
+    val signatureBottomU: Float = 6f,
+    val signatureBottomLandscapeU: Float = 4f,
+    val iconU: Float = 7f,
+    val iconCornerU: Float = 1.6f,
+    val iconGapU: Float = 2f,
+    val signatureTextU: Float = 2.8f,
+    val signatureLineU: Float = 3.9f,
+    val signatureAlpha: Float = 0.6f,
+    val signatureNameAlpha: Float = 0.9f,
+    /** Between the block of the summary and the signature, at the least: the block is centred in what is left above. */
+    val signatureGapU: Float = 4f,
 
     // The rules of the summary (spec 5.30)
     /** «Лучшая нота» is one that sounded at least this long in all and was in tune at least this share of its samples. */

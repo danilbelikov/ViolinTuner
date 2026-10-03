@@ -55,16 +55,56 @@ class NotesOverlayGeometry(val width: Float, val height: Float, private val conf
 
     fun tagWidth(textWidth: Float): Float = max(config.tagMinWidthU * u, textWidth + config.tagPadU * u)
 
+    /** The line of the tag (since 0.90): the name, the arrow — or the dot, [inTune] — and the number after it. */
+    fun tagLineWidth(nameWidth: Float, numberWidth: Float, inTune: Boolean): Float =
+        nameWidth + tagSignWidth(inTune) + config.tagNumberGapU * u + numberWidth + config.tagSignGapU * u
+
+    fun tagSignWidth(inTune: Boolean): Float = (if (inTune) config.tagDotU else config.tagArrowU) * u
+
+    /** Where the sign of a tag whose line is [lineWidth] wide begins, the name being [nameWidth]; the line is centred on the playhead. */
+    fun tagSignX(lineWidth: Float, nameWidth: Float): Float = headX - lineWidth / 2 + nameWidth + config.tagSignGapU * u
+
+    fun tagNumberX(lineWidth: Float, nameWidth: Float, inTune: Boolean): Float =
+        tagSignX(lineWidth, nameWidth) + tagSignWidth(inTune) + config.tagNumberGapU * u
+
     // The badge
 
     val badgeHeight: Float = config.badgeU * u
     val badgeLeft: Float = (if (portrait) config.badgeInsetU else config.badgeInsetLandscapeU) * u
     val badgeTop: Float = height - badgeLeft - badgeHeight
-    val badgeDotCenterX: Float = badgeLeft + (config.badgePadStartU + config.badgeDotU / 2) * u
-    val badgeTextX: Float = badgeLeft + (config.badgePadStartU + config.badgeDotU + config.badgeDotGapU) * u
+    val badgeCenterY: Float = badgeTop + badgeHeight / 2
+    val spinnerCenterX: Float = badgeLeft + (config.badgePadStartU + config.badgeSpinnerU / 2) * u
+
+    /** The radius of the middle of the spinner's line: the line stays inside its [NotesVideoConfig.badgeSpinnerU]. */
+    val spinnerRadius: Float = (config.badgeSpinnerU - config.spinnerLineU) / 2 * u
+    val spinnerLine: Float = config.spinnerLineU * u
+    val badgeTextX: Float = badgeLeft + (config.badgePadStartU + config.badgeSpinnerU + config.badgeSpinnerGapU) * u
 
     fun badgeWidth(textWidth: Float): Float =
-        (config.badgePadStartU + config.badgeDotU + config.badgeDotGapU + config.badgePadEndU) * u + textWidth
+        (config.badgePadStartU + config.badgeSpinnerU + config.badgeSpinnerGapU + config.badgePadEndU) * u + textWidth
+
+    /** The line of the app right of a badge [badgeWidth] wide (since 0.90): where it begins and how wide it may grow. */
+    fun appLineLeft(badgeWidth: Float): Float = badgeLeft + badgeWidth + config.appLineGapU * u
+
+    fun appLineMaxWidth(badgeWidth: Float): Float = width - badgeLeft - appLineLeft(badgeWidth)
+
+    val appLineHeight: Float = config.appLineHeightU * u
+
+    // The opening title (since 0.90)
+
+    val openingScrimHeight: Float = (if (portrait) config.openingScrimU else config.openingScrimLandscapeU) * u
+
+    /**
+     * The top of the em box of the name, at rest — not of its capitals; the date's em box stands under the name's own size and a gap.
+     * Text is placed by its baseline: [emAscent] is the share of the em above the baseline, the font's ascent over its ascent and
+     * descent (what a canvas means by the top of a line).
+     */
+    val openingTitleTop: Float = (if (portrait) config.openingTopU else config.openingTopLandscapeU) * u
+    val openingDateTop: Float = openingTitleTop + (config.openingTitleU + config.openingDateGapU) * u
+
+    fun openingTitleBaseline(emAscent: Float): Float = openingTitleTop + config.openingTitleU * u * emAscent
+
+    fun openingDateBaseline(emAscent: Float): Float = openingDateTop + config.openingDateU * u * emAscent
 
     // The summary
 
@@ -74,23 +114,48 @@ class NotesOverlayGeometry(val width: Float, val height: Float, private val conf
     /** The block of the summary with [rows] rows: title, score, the line of the tolerance, the strip, the rows. */
     fun summaryHeight(rows: Int): Float = summaryRowsTopOffset() + rows * config.rowU * u
 
-    /** Where the block of [rows] rows begins: in the middle of the frame. */
-    fun summaryTop(rows: Int): Float = (height - summaryHeight(rows)) / 2
+    /**
+     * Where the block of [rows] rows begins: in the middle of what is left above the signature [signatureHeight] high and its gap
+     * (since 0.90) — the two never touch.
+     */
+    fun summaryTop(rows: Int, signatureHeight: Float): Float =
+        (signatureTop(signatureHeight) - config.signatureGapU * u - summaryHeight(rows)) / 2
 
-    fun titleBaseline(rows: Int): Float = summaryTop(rows) + config.lineBaselineU * u
+    // the parts of a block that begins at [top]
 
-    fun scoreBaseline(rows: Int): Float = summaryTop(rows) + (config.lineU + config.scoreGapU + config.scoreBaselineU) * u
+    fun titleBaseline(top: Float): Float = top + config.lineBaselineU * u
 
-    fun toleranceBaseline(rows: Int): Float =
-        summaryTop(rows) + (config.lineU + config.scoreGapU + config.scoreLineU + config.lineBaselineU) * u
+    fun scoreBaseline(top: Float): Float = top + (config.lineU + config.scoreGapU + config.scoreBaselineU) * u
 
-    fun stripTop(rows: Int): Float = summaryTop(rows) + (config.lineU + config.scoreGapU + config.scoreLineU + config.lineU + config.stripGapU) * u
+    fun toleranceBaseline(top: Float): Float = top + (config.lineU + config.scoreGapU + config.scoreLineU + config.lineBaselineU) * u
+
+    fun stripTop(top: Float): Float = top + (config.lineU + config.scoreGapU + config.scoreLineU + config.lineU + config.stripGapU) * u
 
     val stripHeight: Float = config.stripU * u
 
-    fun rowTop(rows: Int, index: Int): Float = summaryTop(rows) + summaryRowsTopOffset() + index * config.rowU * u
+    fun rowTop(top: Float, index: Int): Float = top + summaryRowsTopOffset() + index * config.rowU * u
 
-    fun rowBaseline(rows: Int, index: Int): Float = rowTop(rows, index) + (config.rowU / 2 + config.rowBaselineU) * u
+    fun rowBaseline(top: Float, index: Int): Float = rowTop(top, index) + (config.rowU / 2 + config.rowBaselineU) * u
+
+    // The signature of the summary (since 0.90): the icon and one or two lines of text, centred, at the bottom
+
+    val iconSize: Float = config.iconU * u
+    val iconCorner: Float = config.iconCornerU * u
+    val signatureLineHeight: Float = config.signatureLineU * u
+
+    /** How wide the text of the signature may grow: the icon and the text together are no wider than the column. */
+    val signatureTextMaxWidth: Float = columnWidth - iconSize - config.iconGapU * u
+
+    /** The signature with text [textHeight] high: as high as the icon at the least. */
+    fun signatureHeight(textHeight: Float): Float = max(iconSize, textHeight)
+
+    fun signatureTop(signatureHeight: Float): Float =
+        height - (if (portrait) config.signatureBottomU else config.signatureBottomLandscapeU) * u - signatureHeight
+
+    /** Where the icon begins: the icon, its gap and the text [textWidth] wide are centred in the frame. */
+    fun iconLeft(textWidth: Float): Float = (width - (iconSize + config.iconGapU * u + textWidth)) / 2
+
+    fun signatureTextLeft(textWidth: Float): Float = iconLeft(textWidth) + iconSize + config.iconGapU * u
 
     private fun summaryRowsTopOffset(): Float =
         (config.lineU + config.scoreGapU + config.scoreLineU + config.lineU + config.stripGapU + config.stripU + config.rowsGapU) * u

@@ -29,8 +29,6 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.jetbrains.skia.ColorAlphaType
 import org.jetbrains.skia.ColorType
@@ -130,13 +128,12 @@ import platform.posix.memcpy
  */
 @OptIn(ExperimentalForeignApi::class)
 class IosNotesVideoRenderer(
-    /** Manrope is read from the resources once, the first time a file is made: it is not wanted before. */
-    private val loadText: suspend () -> OverlayText,
+    /** Manrope and the icon are read from the resources once, the first time a file is made: they are not wanted before. */
+    loadText: suspend () -> OverlayText,
     private val config: NotesVideoConfig,
     private val io: CoroutineDispatcher,
 ) : NotesVideoRenderer {
-    private val textLock = Mutex()
-    private var text: OverlayText? = null
+    private val text = OverlayTextLoader(loadText)
 
     override suspend fun render(
         picture: PlatformFile,
@@ -146,7 +143,7 @@ class IosNotesVideoRenderer(
         target: PlatformFile,
         onProgress: (Float) -> Unit,
     ): Boolean {
-        val font = textLock.withLock { text ?: loadText().also { text = it } }
+        val font = text.get()
         return withContext(io) {
             // AVAssetWriter writes no file over one that is there
             target.deleteFile()

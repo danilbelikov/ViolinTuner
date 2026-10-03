@@ -11,6 +11,7 @@ import com.violinjourney.app.core.recording.overlay.MediaNotesVideoRenderer
 import com.violinjourney.app.core.recording.overlay.NotesVideoConfig
 import com.violinjourney.app.core.recording.overlay.NotesVideoRenderer
 import com.violinjourney.app.core.recording.overlay.OverlayText
+import com.violinjourney.app.core.recording.overlay.OverlayTextLoader
 import com.violinjourney.app.core.ui.theme.Manrope
 import com.violinjourney.app.feature.share.AppShareTexts
 import com.violinjourney.app.core.di.ElapsedClock
@@ -55,9 +56,13 @@ abstract class ShareModule {
         @NotesVideoSpeed
         fun provideNotesVideoSpeed(config: NotesVideoConfig): RenderSpeed = RenderSpeed(config.renderSpeedStart)
 
-        /** The font of the notes drawn on a video, outside any composition: the app's own Manrope. */
+        /**
+         * The font of the notes drawn on a video, outside any composition — the app's own Manrope — and the icon of the signature
+         * from the shared resources: read once, the first time a file is made.
+         */
         @Provides
         @Singleton
-        fun provideOverlayText(@ApplicationContext context: Context): OverlayText = OverlayText(createFontFamilyResolver(context), Manrope)
+        fun provideOverlayText(@ApplicationContext context: Context): OverlayTextLoader =
+            OverlayTextLoader { OverlayText(createFontFamilyResolver(context), Manrope, OverlayText.icon()) }
     }
 }

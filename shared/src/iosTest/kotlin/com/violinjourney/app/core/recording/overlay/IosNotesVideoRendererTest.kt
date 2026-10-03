@@ -102,14 +102,14 @@ class IosNotesVideoRendererTest {
     private fun overlay(videoMs: Long): NotesOverlay {
         val (low, high) = NotesOverlays.heights(listOf(A4), config)
         return NotesOverlay(
-            notes = listOf(OverlayNote(A4, 0, videoMs, Zone.IN_TUNE)), lowMidi = low, highMidi = high, scorePercent = 100,
-            toleranceCents = 8, title = "A", bestMidi = A4, drift = null, previous = null,
+            notes = listOf(OverlayNote(A4, 0, videoMs, Zone.IN_TUNE, 0.0)), lowMidi = low, highMidi = high, scorePercent = 100,
+            toleranceCents = 8, title = "A", heading = "A", date = "3 октября", bestMidi = A4, drift = null, previous = null,
             ribbon = listOf(RecordingBar((videoMs / 50).toInt(), Zone.IN_TUNE)), config = config,
         )
     }
 
     private val words = OverlayWords(
-        badge = "в строе 100%", toleranceLine = "в строе · допуск ±8 ц", bestNote = "Лучшая нота", drift = "Что уходит",
+        badge = "Анализ игры", signature = "Анализируй свою игру в приложении Violin Journey", toleranceLine = "в строе · допуск ±8 ц", bestNote = "Лучшая нота", drift = "Что уходит",
         driftCents = null, driftNone = "ничего", previousTake = "Прошлый дубль", previousScore = null,
     )
 
@@ -172,7 +172,7 @@ class IosNotesVideoRendererTest {
         val frame = Frame.of(target, seconds = 1.0, keep = "ios-1s")
         val geometry = NotesOverlayGeometry(frame.width.toFloat(), frame.height.toFloat(), config)
         val (low, high) = NotesOverlays.heights(listOf(A4), config)
-        assertColorNear(IN_TUNE, frame.pixel((geometry.headX - 3 * geometry.u).toInt(), geometry.pillCenterY(A4, low, high).toInt()))
+        assertColorNear(IN_TUNE, frame.pixel((geometry.headX + AHEAD_U * geometry.u).toInt(), geometry.pillCenterY(A4, low, high).toInt()))
     }
 
     @Test
@@ -182,6 +182,74 @@ class IosNotesVideoRendererTest {
         assertTrue(withContext(Dispatchers.Default) { renderer.render(picture, sound, overlay(SECONDS * 1_000L), words, target) {} })
         val corner = Frame.of(target, seconds = SECONDS + 2.0, keep = "ios-summary").pixel(2, 2)
         assertTrue(luminance(corner) < DARK, "dark: ${corner.toString(16)}")
+    }
+
+    /**
+     * Since 0.90: the opening title darkens the top over the first seconds of a video long enough for it and is gone after; left
+     * of the playhead the capsule has crumbled to dust; the summary carries the icon of the app; the badge carries no score.
+     */
+    @Test
+    fun `the opening the dust and the icon reach the file`() = runTest {
+        val picture = PlatformFile("$folder/take.mp4")
+        writePicture(picture, LONGER_PICTURE, turned = false)
+        val sound = PlatformFile("$folder/take.m4a")
+        writeAacTones(sound.path, RATE, listOf(Tone(440.0, LONGER_PICTURE.toDouble())))
+        val target = PlatformFile("$folder/notes.mp4")
+        val overlay = overlay(LONGER_PICTURE * 1_000L)
+        assertTrue(withContext(Dispatchers.Default) { renderer.render(picture, sound, overlay, words, target) {} })
+
+        val opening = Frame.of(target, seconds = 1.5, keep = "ios-opening-1.5s")
+        val after = Frame.of(target, seconds = 3.5, keep = "ios-3.5s")
+        val shaded = luminance(opening.pixel(2, 2))
+        val clear = luminance(after.pixel(2, 2))
+        assertTrue(shaded < clear * SHADED_SHARE, "the top at 1.5 s: $shaded, at 3.5 s: $clear")
+
+        val geometry = NotesOverlayGeometry(opening.width.toFloat(), opening.height.toFloat(), config)
+        val (low, high) = NotesOverlays.heights(listOf(A4), config)
+        val x = (geometry.headX - BEHIND_U * geometry.u).toInt()
+        val middle = geometry.pillCenterY(A4, low, high)
+        val column = ((middle - geometry.pillHeight / 2).toInt()..(middle + geometry.pillHeight / 2).toInt()).map { opening.pixel(x, it) }
+        val solid = column.count { near(IN_TUNE, it) }
+        assertTrue(solid < column.size / 2, "$solid of ${column.size} pixels are the capsule's colour")
+
+        val summary = Frame.of(target, seconds = LONGER_PICTURE + 2.0, keep = "ios-summary-icon")
+        val top = summary.height - (config.signatureBottomLandscapeU + config.appLineMaxLines * config.signatureLineU) * geometry.u
+        val warm = (top.toInt() until summary.height).any { y ->
+            (0 until summary.width).any { x -> summary.pixel(x, y).let { (it shr 16 and 0xFF) > WARM_RED && (it shr 16 and 0xFF) - (it and 0xFF) > WARM_LEAD } }
+        }
+        assertTrue(warm, "the sun of the icon under the summary")
+
+        val badge = OverlayWords.of(overlay(LONGER_PICTURE * 1_000L)).badge
+        assertTrue(badge.isNotBlank() && badge.none { it.isDigit() || it == '%' }, "«$badge»")
+    }
+
+    /** The frames of a portrait and of a landscape video at the opening, in the lane and in the summary, kept to be looked at. */
+    @Test
+    fun `frames to look at`() = runTest {
+        val notes = listOf(
+            OverlayNote(A4, 0, 2_000, Zone.IN_TUNE, 3.0),
+            OverlayNote(A4 + 4, 2_050, 3_000, Zone.OFF, 24.0),
+            OverlayNote(A4 + 7, 3_050, 5_000, Zone.NEAR, -14.0),
+        )
+        val (low, high) = NotesOverlays.heights(notes.map { it.midi }, config)
+        val overlay = NotesOverlay(
+            notes = notes, lowMidi = low, highMidi = high, scorePercent = 82, toleranceCents = 8, title = "Менуэт соль мажор · 3 октября",
+            heading = "Менуэт соль мажор", date = "3 октября", bestMidi = A4, drift = OverlayDrift(A4 + 4, 24.0, Zone.OFF), previous = OverlayPrevious(74, 8),
+            ribbon = notes.map { RecordingBar(((it.endMs - it.startMs) / 50).toInt(), it.zone) }, config = config,
+        )
+        val shown = words.copy(driftCents = "+24 ц", previousScore = "74%")
+        listOf(false to "landscape", true to "portrait").forEach { (turned, name) ->
+            val picture = PlatformFile("$folder/take.mp4")
+            writePicture(picture, LOOK_SECONDS, turned)
+            val sound = PlatformFile("$folder/take.m4a")
+            writeAacTones(sound.path, RATE, listOf(Tone(440.0, LOOK_SECONDS.toDouble())))
+            val target = PlatformFile("$folder/notes-$name.mp4")
+            assertTrue(withContext(Dispatchers.Default) { renderer.render(picture, sound, overlay, shown, target) {} })
+            listOf(1.5, 2.2, 3.5).forEach { Frame.of(target, seconds = it, keep = "ios-look-$name-${it}s") }
+            Frame.of(target, seconds = LOOK_SECONDS + 2.0, keep = "ios-look-$name-summary")
+            NSFileManager.defaultManager.removeItemAtPath(picture.path, null)
+            NSFileManager.defaultManager.removeItemAtPath(sound.path, null)
+        }
     }
 
     @Test
@@ -196,7 +264,7 @@ class IosNotesVideoRendererTest {
         assertTrue(luminance(above) > PICTURE, "the picture shows: ${above.toString(16)}")
         val geometry = NotesOverlayGeometry(frame.width.toFloat(), frame.height.toFloat(), config)
         val (low, high) = NotesOverlays.heights(listOf(A4), config)
-        assertColorNear(IN_TUNE, frame.pixel((geometry.headX - 3 * geometry.u).toInt(), geometry.pillCenterY(A4, low, high).toInt()))
+        assertColorNear(IN_TUNE, frame.pixel((geometry.headX + AHEAD_U * geometry.u).toInt(), geometry.pillCenterY(A4, low, high).toInt()))
     }
 
     @Test
@@ -294,17 +362,33 @@ class IosNotesVideoRendererTest {
     }
 
     private fun assertColorNear(expected: Int, actual: Int) {
-        val near = (0..2).all { abs((expected shr (it * 8) and 0xFF) - (actual shr (it * 8) and 0xFF)) <= COLOR_SLACK }
-        assertTrue(near, "expected about ${expected.toString(16)}, was ${actual.toString(16)}")
+        assertTrue(near(expected, actual), "expected about ${expected.toString(16)}, was ${actual.toString(16)}")
     }
+
+    private fun near(expected: Int, actual: Int): Boolean =
+        (0..2).all { abs((expected shr (it * 8) and 0xFF) - (actual shr (it * 8) and 0xFF)) <= COLOR_SLACK }
 
     private fun luminance(rgb: Int) = (0.2126 * (rgb shr 16 and 0xFF) + 0.7152 * (rgb shr 8 and 0xFF) + 0.0722 * (rgb and 0xFF)) / 255
 
     private companion object {
         const val A4 = 69
+
+        /** Right of the playhead — left of it a capsule is dust — and past the name the capsule carries at its start there. */
+        const val AHEAD_U = 8f
         const val SECONDS = 2
         const val LONG_SECONDS = 20
         const val LONGER_PICTURE = 4
+        const val LOOK_SECONDS = 5
+
+        /** Left of the playhead, where the capsule of A would still be whole without the dust. */
+        const val BEHIND_U = 3f
+
+        /** The shade of the opening is 0.55 at the top: the picture keeps under half of itself there. */
+        const val SHADED_SHARE = 0.7
+
+        /** The sun of the icon is about ffe0a0, its dusk cc826a: red leads and is bright, as neither the veil nor white text is. */
+        const val WARM_RED = 150
+        const val WARM_LEAD = 40
         const val WIDTH = 320
         const val HEIGHT = 240
         const val FPS = 15

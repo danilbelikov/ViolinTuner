@@ -35,7 +35,7 @@ class NotesOverlayTest {
         SessionDetails(summary, samples, SessionAnalyzer.analyze(samples, intonation.copy(toleranceCents = summary.toleranceCents)))
 
     private fun overlay(samples: List<SessionSample?>, summary: SessionSummary = summary(), recordings: List<SessionSummary> = emptyList()) =
-        NotesOverlays.of(details(samples, summary), recordings, intonation, TITLE, config)
+        NotesOverlays.of(details(samples, summary), recordings, intonation, TITLE, HEADING, DATE, config)
 
     @Test
     fun `the notes are the segments of the analysis in the colour of their mean`() {
@@ -186,14 +186,94 @@ class NotesOverlayTest {
         assertEquals(71, overlay.scorePercent)
         assertEquals(12, overlay.toleranceCents)
         assertEquals(TITLE, overlay.title)
+        assertEquals(HEADING, overlay.heading)
+        assertEquals(DATE, overlay.date)
         // the ribbon by the ±12 of the recording: one piece in tune — by the ±8 of now it would be two
         assertEquals(SessionRibbon.of(samples, intonation.copy(toleranceCents = 12.0)), overlay.ribbon)
         assertEquals(1, overlay.ribbon.size)
     }
 
+    @Test
+    fun `the tag backs its colour with a shape — up for high — down for low — the dot in tune`() {
+        val overlay = overlay(run(69, 10, 24.0) + run(71, 10, -14.0) + run(72, 10, 3.0) + run(74, 10, -3.0))
+        assertEquals(listOf(OverlaySign.UP, OverlaySign.DOWN, OverlaySign.DOT, OverlaySign.DOT), overlay.notes.map { it.sign })
+        assertEquals(listOf("+24", "−14", "+3", "−3"), overlay.notes.map { it.centsText })
+    }
+
+    @Test
+    fun `the zone is of the number the tag says — the colour and the number never disagree at an edge`() {
+        // ±8: a mean of +8.3 says «+8», which is in tune — and so is its colour; +8.6 says «+9», near
+        assertEquals(Zone.IN_TUNE, NotesOverlays.zoneOf(8.3, intonation))
+        assertEquals(Zone.NEAR, NotesOverlays.zoneOf(8.6, intonation))
+        assertEquals(Zone.IN_TUNE, NotesOverlays.zoneOf(-8.4, intonation))
+        // the edge of near: +20.4 says «+20», near; +20.6 says «+21», off
+        assertEquals(Zone.NEAR, NotesOverlays.zoneOf(20.4, intonation))
+        assertEquals(Zone.OFF, NotesOverlays.zoneOf(20.6, intonation))
+        val note = overlay(run(69, 10, 8.3)).notes.single()
+        assertEquals(Zone.IN_TUNE, note.zone)
+        assertEquals(OverlaySign.DOT, note.sign)
+        assertEquals("+8", note.centsText)
+    }
+
+    @Test
+    fun `a note carries the mean of its segment — the number of its tag`() {
+        val overlay = overlay(run(69, 6, 10.0) + run(69, 4, 15.0) + run(71, 10, -7.0))
+        assertEquals(12.0, overlay.notes[0].meanCents, 1e-9)
+        assertEquals(-7.0, overlay.notes[1].meanCents, 1e-9)
+        assertEquals(Zone.NEAR, overlay.tagAt(300)!!.note.zone)
+        assertEquals(12.0, overlay.tagAt(300)!!.note.meanCents, 1e-9)
+    }
+
+    @Test
+    fun `the opening comes in from 300 ms — stays — and is gone at 4 s`() {
+        val overlay = overlay(phrases)
+        val end = 60_000L
+        assertNull(overlay.openingAt(0, end))
+        assertNull(overlay.openingAt(299, end))
+        assertEquals(0f, overlay.openingAt(300, end)!!.alpha, EPSILON)
+        assertEquals(1.5f, overlay.openingAt(300, end)!!.raiseU, EPSILON)
+        // half the time in is three quarters of the way: slowing towards its place
+        assertEquals(0.75f, overlay.openingAt(600, end)!!.alpha, EPSILON)
+        assertEquals(1.5f * 0.25f, overlay.openingAt(600, end)!!.raiseU, EPSILON)
+        assertEquals(OverlayOpening(1f, 0f), overlay.openingAt(900, end))
+        assertEquals(OverlayOpening(1f, 0f), overlay.openingAt(1_500, end))
+        assertEquals(OverlayOpening(1f, 0f), overlay.openingAt(3_399, end))
+        // going out by 1 − p², in place
+        assertEquals(0.75f, overlay.openingAt(3_700, end)!!.alpha, EPSILON)
+        assertEquals(0f, overlay.openingAt(3_700, end)!!.raiseU, EPSILON)
+        assertNull(overlay.openingAt(4_000, end))
+        assertNull(overlay.openingAt(10_000, end))
+    }
+
+    @Test
+    fun `a short video ends the opening a second before its own end — the stay is cut first`() {
+        val overlay = overlay(phrases)
+        // 3 s: over by 2 s, coming in and going out whole
+        assertEquals(1f, overlay.openingAt(900, 3_000)!!.alpha, EPSILON)
+        assertEquals(1f, overlay.openingAt(1_399, 3_000)!!.alpha, EPSILON)
+        assertEquals(0.75f, overlay.openingAt(1_700, 3_000)!!.alpha, EPSILON)
+        assertNull(overlay.openingAt(2_000, 3_000))
+        // 5 s is not short: the whole opening
+        assertEquals(1f, overlay.openingAt(3_399, 5_000)!!.alpha, EPSILON)
+        assertNull(overlay.openingAt(4_000, 5_000))
+    }
+
+    @Test
+    fun `a video of 2 s halves what is left between coming in and going out — under 2 s there is none`() {
+        val overlay = overlay(phrases)
+        // over by 1 s: 700 ms from 300, 350 in and 350 out
+        assertEquals(0.75f, overlay.openingAt(475, 2_000)!!.alpha, EPSILON)
+        assertEquals(1f, overlay.openingAt(650, 2_000)!!.alpha, EPSILON)
+        assertEquals(0.75f, overlay.openingAt(825, 2_000)!!.alpha, EPSILON)
+        assertNull(overlay.openingAt(1_000, 2_000))
+        assertNull(overlay.openingAt(600, 1_999))
+    }
+
     private companion object {
         const val PIECE = 7L
         const val TITLE = "Менуэт соль мажор · 3 октября"
+        const val HEADING = "Менуэт соль мажор"
+        const val DATE = "3 октября"
         const val EPSILON = 1e-4f
     }
 }

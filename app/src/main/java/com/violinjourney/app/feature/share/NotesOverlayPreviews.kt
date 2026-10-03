@@ -5,13 +5,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,6 +25,7 @@ import com.violinjourney.app.core.domain.Zone
 import com.violinjourney.app.core.domain.ZoneClassifier
 import com.violinjourney.app.core.domain.session.RecordingBar
 import com.violinjourney.app.core.recording.overlay.NotesOverlay
+import com.violinjourney.app.core.recording.overlay.NotesOverlayGeometry
 import com.violinjourney.app.core.recording.overlay.NotesOverlayPainter
 import com.violinjourney.app.core.recording.overlay.NotesOverlays
 import com.violinjourney.app.core.recording.overlay.NotesVideoConfig
@@ -32,9 +36,12 @@ import com.violinjourney.app.core.recording.overlay.OverlayText
 import com.violinjourney.app.core.recording.overlay.OverlayWords
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.theme.Manrope
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.overlay_app_icon
+import org.jetbrains.compose.resources.imageResource
 
 // «Видео с нотами» (spec 3.37, 5.30; overlay.html): frames of the file in their true pixels, scaled down — the lane while the video
-// runs, the summary after it. The picture under them is a stand-in for a video.
+// runs, the opening over its first seconds, the summary after it. The picture under them is a stand-in for a video.
 
 private val Config = NotesVideoConfig()
 
@@ -63,7 +70,7 @@ private val MinuetNotes: List<OverlayNote> = buildList {
     Minuet.forEach { (name, beatsAndCents) ->
         val (beats, cents) = beatsAndCents
         val length = (beats * QUARTER_MS).toLong()
-        add(OverlayNote(Midi.getValue(name), at, at + length - BOW_MS, zoneOf(cents)))
+        add(OverlayNote(Midi.getValue(name), at, at + length - BOW_MS, zoneOf(cents), cents.toDouble()))
         at += length
     }
 }
@@ -78,6 +85,8 @@ private fun overlay(previous: Boolean, drift: Boolean): NotesOverlay {
         scorePercent = 82,
         toleranceCents = 8,
         title = "Менуэт соль мажор · 3 октября",
+        heading = "Менуэт соль мажор",
+        date = "3 октября",
         bestMidi = Midi.getValue("G4"),
         drift = if (drift) OverlayDrift(Midi.getValue("F#5"), 24.0, Zone.OFF) else null,
         previous = if (previous) OverlayPrevious(74, 8) else null,
@@ -89,7 +98,8 @@ private fun overlay(previous: Boolean, drift: Boolean): NotesOverlay {
 /** The words as `OverlayWords.of` reads them, from the resources of the preview's language. */
 @Composable
 private fun words(overlay: NotesOverlay) = OverlayWords(
-    badge = stringResource(R.string.overlay_badge, stringResource(R.string.session_percent, overlay.scorePercent)),
+    badge = stringResource(R.string.overlay_badge),
+    signature = stringResource(R.string.overlay_signature, OverlayWords.APP_NAME),
     toleranceLine = stringResource(R.string.session_summary_in_tune) + stringResource(R.string.dot_separator) +
         stringResource(R.string.session_summary_tolerance, overlay.toleranceCents),
     bestNote = stringResource(R.string.overlay_best_note),
@@ -100,16 +110,19 @@ private fun words(overlay: NotesOverlay) = OverlayWords(
     previousScore = overlay.previous?.let { stringResource(R.string.session_percent, it.scorePercent) },
 )
 
-/** A frame of [width] × [height] pixels at the moment [nowMs], shown [shownWidthDp] wide. */
+/** A frame of [width] × [height] pixels at the moment [nowMs], shown [shownWidthDp] wide; [cropTo] — only that part of it, enlarged. */
 @Composable
-private fun Frame(width: Int, height: Int, nowMs: Long, shownWidthDp: Int, overlay: NotesOverlay) {
+private fun Frame(width: Int, height: Int, nowMs: Long, shownWidthDp: Int, overlay: NotesOverlay, cropTo: Rect? = null) {
     val words = words(overlay)
-    val text = OverlayText(LocalFontFamilyResolver.current, Manrope)
+    val text = OverlayText(LocalFontFamilyResolver.current, Manrope, imageResource(Res.drawable.overlay_app_icon))
     val painter = remember(overlay, words, width, height) { NotesOverlayPainter(overlay, words, text, width.toFloat(), height.toFloat()) }
-    Canvas(Modifier.size(shownWidthDp.dp, (shownWidthDp * height / width).dp)) {
-        scale(size.width / width, pivot = Offset.Zero) {
-            picture(width.toFloat(), height.toFloat())
-            painter.draw(this, nowMs, VideoEndMs)
+    val shown = cropTo ?: Rect(0f, 0f, width.toFloat(), height.toFloat())
+    Canvas(Modifier.size(shownWidthDp.dp, (shownWidthDp * shown.height / shown.width).dp).clipToBounds()) {
+        scale(size.width / shown.width, pivot = Offset.Zero) {
+            translate(-shown.left, -shown.top) {
+                picture(width.toFloat(), height.toFloat())
+                painter.draw(this, nowMs, VideoEndMs)
+            }
         }
     }
 }
@@ -133,7 +146,7 @@ private fun DrawScope.picture(width: Float, height: Float) {
     }
 }
 
-@Preview(name = "Видео с нотами · лента, портрет 1080 × 1920: ярлык ноты над чертой, бейдж балла", locale = "ru", widthDp = 300, heightDp = 534)
+@Preview(name = "Видео с нотами · лента, портрет 1080 × 1920: ярлык ноты над чертой, бейдж «Анализ игры» и строка приложения", locale = "ru", widthDp = 300, heightDp = 534)
 @Composable
 private fun LanePortraitPreview() = Frame(1_080, 1_920, nowMs = 7_200, shownWidthDp = 300, overlay = overlay(previous = true, drift = true))
 
@@ -164,3 +177,40 @@ private fun SummaryEnglishPreview() = Frame(1_080, 1_920, nowMs = VideoEndMs + 1
 @Preview(name = "Видео с нотами · итог по-немецки: длинные названия строк", locale = "de", widthDp = 300, heightDp = 534)
 @Composable
 private fun SummaryGermanPreview() = Frame(1_080, 1_920, nowMs = VideoEndMs + 1_000, shownWidthDp = 300, overlay = overlay(previous = true, drift = true))
+
+/** A portrait frame of 1080 × 1920 cropped around its playhead, as overlay.html (section 6) crops it: the tag, the lane and the dust. */
+private val AroundThePlayhead = NotesOverlayGeometry(1_080f, 1_920f, Config).let { g ->
+    Rect(g.headX - 26 * g.u, g.laneBottom - 39.6f * g.u, g.headX + 14 * g.u, g.laneBottom + 9.4f * g.u)
+}
+
+@Preview(name = "Видео с нотами · заставка, портрет: название и дата наверху, 1,5 с", locale = "ru", widthDp = 300, heightDp = 534)
+@Composable
+private fun OpeningPortraitPreview() = Frame(1_080, 1_920, nowMs = 1_500, shownWidthDp = 300, overlay = overlay(previous = true, drift = true))
+
+@Preview(name = "Видео с нотами · заставка проявляется, опускаясь на место: 0,6 с", locale = "ru", widthDp = 300, heightDp = 534)
+@Composable
+private fun OpeningComingPreview() = Frame(1_080, 1_920, nowMs = 600, shownWidthDp = 300, overlay = overlay(previous = true, drift = true))
+
+@Preview(name = "Видео с нотами · заставка, landscape", locale = "ru", widthDp = 560, heightDp = 315)
+@Composable
+private fun OpeningLandscapePreview() = Frame(1_920, 1_080, nowMs = 1_500, shownWidthDp = 560, overlay = overlay(previous = true, drift = true))
+
+@Preview(name = "Видео с нотами · ярлык «выше»: F#5 ↑ +24, рассыпание у черты, крупно", locale = "ru", widthDp = 324, heightDp = 397)
+@Composable
+private fun TagSharpPreview() = Frame(1_080, 1_920, nowMs = MinuetNotes.first { it.midi == Midi.getValue("F#5") }.startMs + 150, shownWidthDp = 324, overlay = overlay(previous = true, drift = true), cropTo = AroundThePlayhead)
+
+@Preview(name = "Видео с нотами · ярлык «в строе»: G5 ● +6 и пыль прошлой ноты, крупно", locale = "ru", widthDp = 324, heightDp = 397)
+@Composable
+private fun TagInTunePreview() = Frame(1_080, 1_920, nowMs = MinuetNotes.first { it.midi == Midi.getValue("G5") }.startMs + 250, shownWidthDp = 324, overlay = overlay(previous = true, drift = true), cropTo = AroundThePlayhead)
+
+@Preview(name = "Видео с нотами · рассыпание посреди долгой ноты: около 60 частиц, крупно", locale = "ru", widthDp = 324, heightDp = 397)
+@Composable
+private fun DustPreview() = Frame(1_080, 1_920, nowMs = MinuetNotes.last().startMs + 1_200, shownWidthDp = 324, overlay = overlay(previous = true, drift = true), cropTo = AroundThePlayhead)
+
+@Preview(name = "Видео с нотами · итог с подписью приложения, landscape", locale = "ru", widthDp = 560, heightDp = 315)
+@Composable
+private fun SummarySignatureLandscapePreview() = Frame(1_920, 1_080, nowMs = VideoEndMs + 1_000, shownWidthDp = 560, overlay = overlay(previous = true, drift = true))
+
+@Preview(name = "Видео с нотами · лента по-немецки: «Spielanalyse» и строка приложения в две строки", locale = "de", widthDp = 300, heightDp = 534)
+@Composable
+private fun LaneGermanPreview() = Frame(1_080, 1_920, nowMs = 7_200, shownWidthDp = 300, overlay = overlay(previous = true, drift = true))

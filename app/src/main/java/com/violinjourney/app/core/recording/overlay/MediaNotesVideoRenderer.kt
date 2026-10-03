@@ -41,6 +41,7 @@ import java.io.File
 import java.io.IOException
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.math.ceil
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -61,7 +62,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 @OptIn(UnstableApi::class)
 class MediaNotesVideoRenderer @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val text: OverlayText,
+    /** Manrope and the icon of the signature are read the first time a file is made: they are not wanted before. */
+    private val text: OverlayTextLoader,
     private val config: NotesVideoConfig,
     @IoDispatcher private val io: CoroutineDispatcher,
 ) : NotesVideoRenderer {
@@ -86,7 +88,8 @@ class MediaNotesVideoRenderer @Inject constructor(
             } ?: return false
             val format = NotesVideoFormat.of(probe.width, probe.height, probe.frameRate, config)
             if (!withContext(io) { saveLastFrame(picture, probe, format, lastFrame) }) return false
-            val painter = NotesOverlayPainter(overlay, words, text, format.width.toFloat(), format.height.toFloat())
+            val font = withContext(io) { text.get() }
+            val painter = NotesOverlayPainter(overlay, words, font, format.width.toFloat(), format.height.toFloat())
             val drawing = NotesBitmapOverlay(painter, probe.durationUs / US_PER_MS, config.summaryFadeMs, format.width, format.height)
             if (!transform(picture, lastFrame, probe, format, drawing, encoded) { onProgress(it * config.pictureShare) }) return false
             val job = currentCoroutineContext().job
@@ -278,7 +281,8 @@ class MediaNotesVideoRenderer @Inject constructor(
      * frame is the same, and the bitmap is neither drawn nor uploaded again. The shader of Media3 mixes an overlay as colours not
      * multiplied by their alpha (`insert_overlay_fragment_shader_methods.glsl`), while a bitmap keeps them multiplied: what is drawn
      * goes to [upload] unmultiplied, or every half-clear colour — the dimmed notes, the glass, the edges of letters — would come
-     * out darker than drawn. While the video runs only the band of the lane changes, and only it is copied.
+     * out darker than drawn. While the video runs only the band of the lane changes — and the band of the opening title over its
+     * first seconds (spec 5.30) — and only they are copied.
      */
     @OptIn(UnstableApi::class)
     private class NotesBitmapOverlay(
@@ -295,8 +299,12 @@ class MediaNotesVideoRenderer @Inject constructor(
         private val scope = CanvasDrawScope()
         private val size = Size(width.toFloat(), height.toFloat())
         private val laneBandTop = painter.geometry.scrimTop.toInt().coerceIn(0, height)
+
+        /** The band of the opening title, above the lane's (spec 5.30): it never reaches the lane, and is cut where it would. */
+        private val openingBandBottom = ceil(painter.openingBottom).toInt().coerceIn(0, laneBandTop)
         private val settledAtMs = videoEndMs + fadeMs
         private var settled = false
+        private var openingInUpload = false
 
         /** The time of the last frame drawn: how far the picture has come. */
         @Volatile var lastUs = 0L
@@ -308,12 +316,25 @@ class MediaNotesVideoRenderer @Inject constructor(
             val nowMs = presentationTimeUs / US_PER_MS
             drawn.eraseColor(Color.TRANSPARENT)
             scope.draw(Density(1f), LayoutDirection.Ltr, canvas, size) { painter.draw(this, nowMs, videoEndMs) }
-            val top = if (nowMs < videoEndMs) laneBandTop else 0
-            // getPixels gives the colours unmultiplied; an unmultiplied bitmap keeps them so
-            drawn.getPixels(pixels, 0, width, 0, top, width, height - top)
-            upload.setPixels(pixels, 0, width, 0, top, width, height - top)
+            if (nowMs >= videoEndMs) {
+                copy(0, height)
+            } else {
+                copy(laneBandTop, height)
+                // the opening title is copied while it shows, and once more after it, so that its last frame is wiped
+                val opening = painter.openingShows(nowMs, videoEndMs)
+                if (opening || openingInUpload) copy(0, openingBandBottom)
+                openingInUpload = opening
+            }
             settled = nowMs >= settledAtMs
             return upload
+        }
+
+        /** The rows from [top] to [bottom] of what is drawn, into [upload]: getPixels gives the colours unmultiplied, an unmultiplied bitmap keeps them so. */
+        private fun copy(top: Int, bottom: Int) {
+            val rows = bottom - top
+            if (rows <= 0) return
+            drawn.getPixels(pixels, 0, width, 0, top, width, rows)
+            upload.setPixels(pixels, 0, width, 0, top, width, rows)
         }
     }
 

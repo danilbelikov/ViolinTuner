@@ -14,7 +14,8 @@ import org.jetbrains.compose.resources.getSystemResourceEnvironment
 
 /**
  * Manrope for the notes drawn on a video on iOS (spec 3.37): the variable font the theme loads (`manrope()` of `IosApp`), read
- * from the shared resources as bytes — the overlay is drawn outside any composition, where `Font(resource)` cannot be asked.
+ * from the shared resources as bytes — the overlay is drawn outside any composition, where `Font(resource)` cannot be asked;
+ * and the icon of the signature beside it.
  */
 internal object IosOverlayText {
     @OptIn(ExperimentalTextApi::class)
@@ -23,7 +24,7 @@ internal object IosOverlayText {
         val fonts = WEIGHTS.map { weight ->
             Font(IDENTITY + weight.weight, bytes, weight, FontStyle.Normal, FontVariation.Settings(FontVariation.weight(weight.weight)))
         }
-        return OverlayText(createFontFamilyResolver(), FontFamily(fonts))
+        return OverlayText(createFontFamilyResolver(), FontFamily(fonts), OverlayText.icon())
     }
 
     /** The weights the overlay draws in. */
