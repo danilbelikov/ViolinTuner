@@ -1556,4 +1556,16 @@
     <string name="camera_no_permission">Senza accesso alla fotocamera non si può riprendere — si può concedere nelle impostazioni dell\'app.</string>
     <string name="camera_permission_text">La fotocamera fotografa gli spartiti e riprende le prese video. Restano sul telefono e non vengono inviate da nessuna parte.</string>
     <string name="photos_add_permission_text">Un video salvato da «Condividi» finisce in «Foto». L\'app lo aggiunge soltanto e non vede il resto della libreria.</string>
+    <!-- «Видео с нотами» (spec 3.37): the share variant and the words drawn on the picture -->
+    <string name="share_notes">Video con le note</string>
+    <string name="share_notes_caption_backing">striscia delle note e riepilogo alla fine · con la base</string>
+    <string name="share_notes_caption_processed">striscia delle note e riepilogo alla fine · suono elaborato</string>
+    <string name="share_notes_caption_original">striscia delle note e riepilogo alla fine · suono come registrato</string>
+    <string name="share_notes_too_long_one">solo per video fino a %1$d minuto</string>
+    <string name="share_notes_too_long_few">solo per video fino a %1$d minuti</string>
+    <string name="share_notes_too_long_many">solo per video fino a %1$d minuti</string>
+    <string name="overlay_badge">intonato %1$s</string>
+    <string name="overlay_best_note">Nota migliore</string>
+    <string name="overlay_drift_none">niente</string>
+    <string name="overlay_previous_take">Take precedente</string>
 </resources>

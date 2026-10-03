@@ -1556,4 +1556,16 @@
     <string name="camera_no_permission">카메라 권한이 없으면 촬영할 수 없어요 — 앱 설정에서 허용할 수 있어요.</string>
     <string name="camera_permission_text">카메라로 악보 사진과 영상 테이크를 찍어요. 촬영한 것은 휴대폰에만 남고 어디로도 보내지지 않아요.</string>
     <string name="photos_add_permission_text">“공유”에서 저장한 영상은 “사진”에 들어가요. 앱은 영상을 추가하기만 하고 나머지 보관함은 보지 못해요.</string>
+    <!-- «Видео с нотами» (spec 3.37): the share variant and the words drawn on the picture -->
+    <string name="share_notes">음표가 보이는 영상</string>
+    <string name="share_notes_caption_backing">음표 띠와 마지막 요약 · 반주와 함께</string>
+    <string name="share_notes_caption_processed">음표 띠와 마지막 요약 · 처리된 소리</string>
+    <string name="share_notes_caption_original">음표 띠와 마지막 요약 · 녹음된 그대로의 소리</string>
+    <string name="share_notes_too_long_one">%1$d분 이하 영상만</string>
+    <string name="share_notes_too_long_few">%1$d분 이하 영상만</string>
+    <string name="share_notes_too_long_many">%1$d분 이하 영상만</string>
+    <string name="overlay_badge">정확 %1$s</string>
+    <string name="overlay_best_note">가장 정확한 음</string>
+    <string name="overlay_drift_none">없음</string>
+    <string name="overlay_previous_take">이전 테이크</string>
 </resources>

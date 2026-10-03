@@ -68,6 +68,10 @@ internal val SheetScrim = Color(0x8C000000)
 internal val Recording = Color(0xFFE8565C)
 internal val OnRecording = Color(0xFFFFFFFF)
 
+// «Видео с нотами» (spec 3.37, 5.30): the ink of a note's name on its capsule and the veil the summary lies on — near black, so
+// the name reads on any zone colour (9 : 1 on green, 5.4 : 1 on red) and the last frame shows through the veil only faintly.
+internal val OverlayInk = Color(0xFF0B0B10)
+
 // The living practice screen (handoff polish, `tokens`).
 // Brighter than the handoff (#E9DDFF at .35): over the light end of the fill that one could not be seen.
 internal val LevelShine = Color(0xCCF7F2FF) // near-white lilac at .8

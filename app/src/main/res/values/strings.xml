@@ -1556,4 +1556,16 @@
     <string name="camera_no_permission">Without camera access there is nothing to film with — it can be given in the app\'s settings.</string>
     <string name="camera_permission_text">The camera takes photos of sheet music and video takes. They stay on the phone and are not sent anywhere.</string>
     <string name="photos_add_permission_text">A video you save from “Share” goes to Photos. The app only adds it and does not see the rest of your library.</string>
+    <!-- «Видео с нотами» (spec 3.37): the share variant and the words drawn on the picture -->
+    <string name="share_notes">Video with notes</string>
+    <string name="share_notes_caption_backing">note lane and summary at the end · with the backing track</string>
+    <string name="share_notes_caption_processed">note lane and summary at the end · processed sound</string>
+    <string name="share_notes_caption_original">note lane and summary at the end · sound as recorded</string>
+    <string name="share_notes_too_long_one">only for videos up to %1$d minute</string>
+    <string name="share_notes_too_long_few">only for videos up to %1$d minutes</string>
+    <string name="share_notes_too_long_many">only for videos up to %1$d minutes</string>
+    <string name="overlay_badge">in tune %1$s</string>
+    <string name="overlay_best_note">Best note</string>
+    <string name="overlay_drift_none">nothing</string>
+    <string name="overlay_previous_take">Previous take</string>
 </resources>

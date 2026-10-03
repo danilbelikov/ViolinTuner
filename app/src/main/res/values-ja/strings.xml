@@ -1556,4 +1556,16 @@
     <string name="camera_no_permission">カメラへのアクセスがないと撮影できません — アプリの設定で許可できます。</string>
     <string name="camera_permission_text">カメラで楽譜の写真とビデオテイクを撮影します。撮影したものは端末に残り、どこにも送信されません。</string>
     <string name="photos_add_permission_text">「共有」から保存した動画は「写真」に入ります。アプリは動画を追加するだけで、ライブラリのほかの内容は見えません。</string>
+    <!-- «Видео с нотами» (spec 3.37): the share variant and the words drawn on the picture -->
+    <string name="share_notes">音符つき動画</string>
+    <string name="share_notes_caption_backing">音符の帯と最後のまとめ · 伴奏つき</string>
+    <string name="share_notes_caption_processed">音符の帯と最後のまとめ · 加工したサウンド</string>
+    <string name="share_notes_caption_original">音符の帯と最後のまとめ · 録音したままのサウンド</string>
+    <string name="share_notes_too_long_one">%1$d分までの動画のみ</string>
+    <string name="share_notes_too_long_few">%1$d分までの動画のみ</string>
+    <string name="share_notes_too_long_many">%1$d分までの動画のみ</string>
+    <string name="overlay_badge">合っています %1$s</string>
+    <string name="overlay_best_note">いちばん合っている音</string>
+    <string name="overlay_drift_none">なし</string>
+    <string name="overlay_previous_take">前回のテイク</string>
 </resources>

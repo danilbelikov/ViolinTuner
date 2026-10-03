@@ -1556,4 +1556,16 @@
     <string name="camera_no_permission">Ohne Kamerazugriff kann nicht gefilmt werden — er lässt sich in den App-Einstellungen erteilen.</string>
     <string name="camera_permission_text">Die Kamera fotografiert Noten und filmt Video-Takes. Die Aufnahmen bleiben auf dem Telefon und werden nirgendwohin gesendet.</string>
     <string name="photos_add_permission_text">Ein Video, das Sie über „Teilen“ speichern, kommt in „Fotos“. Die App fügt es nur hinzu und sieht den Rest Ihrer Mediathek nicht.</string>
+    <!-- «Видео с нотами» (spec 3.37): the share variant and the words drawn on the picture -->
+    <string name="share_notes">Video mit Noten</string>
+    <string name="share_notes_caption_backing">Notenband und Fazit am Ende · mit Begleitspur</string>
+    <string name="share_notes_caption_processed">Notenband und Fazit am Ende · bearbeiteter Klang</string>
+    <string name="share_notes_caption_original">Notenband und Fazit am Ende · Klang wie aufgenommen</string>
+    <string name="share_notes_too_long_one">nur für Videos bis %1$d Minute</string>
+    <string name="share_notes_too_long_few">nur für Videos bis %1$d Minuten</string>
+    <string name="share_notes_too_long_many">nur für Videos bis %1$d Minuten</string>
+    <string name="overlay_badge">sauber %1$s</string>
+    <string name="overlay_best_note">Beste Note</string>
+    <string name="overlay_drift_none">nichts</string>
+    <string name="overlay_previous_take">Vorheriger Take</string>
 </resources>

@@ -1556,4 +1556,16 @@
     <string name="camera_no_permission">Sem acesso à câmera não dá para filmar — dá para permitir nos ajustes do app.</string>
     <string name="camera_permission_text">A câmera fotografa as partituras e grava os takes em vídeo. Eles ficam no telefone e não são enviados a lugar nenhum.</string>
     <string name="photos_add_permission_text">Um vídeo salvo a partir de “Compartilhar” vai para “Fotos”. O app só o adiciona e não vê o resto da biblioteca.</string>
+    <!-- «Видео с нотами» (spec 3.37): the share variant and the words drawn on the picture -->
+    <string name="share_notes">Vídeo com as notas</string>
+    <string name="share_notes_caption_backing">faixa de notas e resumo no final · com o playback</string>
+    <string name="share_notes_caption_processed">faixa de notas e resumo no final · som processado</string>
+    <string name="share_notes_caption_original">faixa de notas e resumo no final · som como foi gravado</string>
+    <string name="share_notes_too_long_one">só para vídeos de até %1$d minuto</string>
+    <string name="share_notes_too_long_few">só para vídeos de até %1$d minutos</string>
+    <string name="share_notes_too_long_many">só para vídeos de até %1$d minutos</string>
+    <string name="overlay_badge">afinado %1$s</string>
+    <string name="overlay_best_note">Melhor nota</string>
+    <string name="overlay_drift_none">nada</string>
+    <string name="overlay_previous_take">Take anterior</string>
 </resources>

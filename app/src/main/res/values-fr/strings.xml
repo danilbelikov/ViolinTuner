@@ -1556,4 +1556,16 @@
     <string name="camera_no_permission">Sans accès à la caméra, impossible de filmer — on peut l\'accorder dans les réglages de l\'app.</string>
     <string name="camera_permission_text">La caméra photographie les partitions et filme les prises vidéo. Elles restent sur le téléphone et ne sont envoyées nulle part.</string>
     <string name="photos_add_permission_text">Une vidéo que vous enregistrez depuis « Partager » va dans « Photos ». L\'app se contente de l\'ajouter et ne voit pas le reste de votre photothèque.</string>
+    <!-- «Видео с нотами» (spec 3.37): the share variant and the words drawn on the picture -->
+    <string name="share_notes">Vidéo avec les notes</string>
+    <string name="share_notes_caption_backing">bande des notes et bilan à la fin · avec l\'accompagnement</string>
+    <string name="share_notes_caption_processed">bande des notes et bilan à la fin · son traité</string>
+    <string name="share_notes_caption_original">bande des notes et bilan à la fin · son tel qu\'enregistré</string>
+    <string name="share_notes_too_long_one">seulement pour les vidéos de %1$d minute au plus</string>
+    <string name="share_notes_too_long_few">seulement pour les vidéos de %1$d minutes au plus</string>
+    <string name="share_notes_too_long_many">seulement pour les vidéos de %1$d minutes au plus</string>
+    <string name="overlay_badge">juste %1$s</string>
+    <string name="overlay_best_note">Meilleure note</string>
+    <string name="overlay_drift_none">rien</string>
+    <string name="overlay_previous_take">Prise précédente</string>
 </resources>

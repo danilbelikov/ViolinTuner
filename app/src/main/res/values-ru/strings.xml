@@ -1556,4 +1556,16 @@
     <string name="camera_no_permission">Без доступа к камере снять не получится — его можно дать в настройках приложения.</string>
     <string name="camera_permission_text">Камера снимает фото нот и видео-дубли. Снимки остаются на телефоне и никуда не отправляются.</string>
     <string name="photos_add_permission_text">Видео, которое вы сохраняете из «Поделиться», попадает в «Фото». Приложение только добавляет его и не видит остальную галерею.</string>
+    <!-- «Видео с нотами» (spec 3.37): the share variant and the words drawn on the picture -->
+    <string name="share_notes">Видео с нотами</string>
+    <string name="share_notes_caption_backing">лента нот и итог в конце · с минусовкой</string>
+    <string name="share_notes_caption_processed">лента нот и итог в конце · звук с обработкой</string>
+    <string name="share_notes_caption_original">лента нот и итог в конце · звук как записан</string>
+    <string name="share_notes_too_long_one">только для видео до %1$d минуты</string>
+    <string name="share_notes_too_long_few">только для видео до %1$d минут</string>
+    <string name="share_notes_too_long_many">только для видео до %1$d минут</string>
+    <string name="overlay_badge">в строе %1$s</string>
+    <string name="overlay_best_note">Лучшая нота</string>
+    <string name="overlay_drift_none">ничего</string>
+    <string name="overlay_previous_take">Прошлый дубль</string>
 </resources>

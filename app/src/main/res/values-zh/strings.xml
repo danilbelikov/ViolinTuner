@@ -1556,4 +1556,16 @@
     <string name="camera_no_permission">没有摄像头权限就无法拍摄——可以在应用设置中开启。</string>
     <string name="camera_permission_text">相机用于拍摄乐谱照片和视频录制。拍摄内容只保存在手机上，不会发送到任何地方。</string>
     <string name="photos_add_permission_text">从“分享”保存的视频会存入“照片”。应用只会添加视频，看不到图库中的其他内容。</string>
+    <!-- «Видео с нотами» (spec 3.37): the share variant and the words drawn on the picture -->
+    <string name="share_notes">带音符的视频</string>
+    <string name="share_notes_caption_backing">音符条与结尾小结 · 带伴奏</string>
+    <string name="share_notes_caption_processed">音符条与结尾小结 · 处理后的声音</string>
+    <string name="share_notes_caption_original">音符条与结尾小结 · 原样声音</string>
+    <string name="share_notes_too_long_one">仅限 %1$d 分钟以内的视频</string>
+    <string name="share_notes_too_long_few">仅限 %1$d 分钟以内的视频</string>
+    <string name="share_notes_too_long_many">仅限 %1$d 分钟以内的视频</string>
+    <string name="overlay_badge">准 %1$s</string>
+    <string name="overlay_best_note">最准的音</string>
+    <string name="overlay_drift_none">无</string>
+    <string name="overlay_previous_take">上次录制</string>
 </resources>
