@@ -40,6 +40,7 @@ import com.violinjourney.app.core.io.openInput
 import com.violinjourney.app.core.io.openOutput
 import com.violinjourney.app.core.io.sizeBytes
 import com.violinjourney.app.core.io.writeBytes
+import com.violinjourney.app.core.recording.video.FakeVideoThumbRuleStore
 import com.violinjourney.app.core.settings.DataStoreSettingsRepository
 import com.violinjourney.app.core.time.SystemWallClock
 import kotlin.test.AfterTest
@@ -158,7 +159,7 @@ class IosStorageTest {
     }
 
     private fun storeOf(data: PlatformFile, database: AppDatabase, practice: RoomPracticeRepository) = IosBackupStore(
-        data, database, RoomSessionRepository(database.sessionDao(), IntonationConfig(), NoAudioFiles, SystemWallClock, NoOpAnalytics()),
+        data, database, RoomSessionRepository(database.sessionDao(), IntonationConfig(), NoAudioFiles, SystemWallClock, NoOpAnalytics(), FakeVideoThumbRuleStore()),
         RoomRepertoireRepository(database.repertoireDao(), NoSheetFiles, RepertoireConfig(), SystemWallClock, NoOpAnalytics()),
         practice, RoomTrophyRepository(database.trophyDao()), eventsOf(database), ProgressConfig(), SystemWallClock, Dispatchers.Default,
     )

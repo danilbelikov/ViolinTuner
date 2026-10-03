@@ -14,6 +14,7 @@ import com.violinjourney.app.core.domain.practice.RunningPracticeStore
 import com.violinjourney.app.core.domain.progress.ProfileRepository
 import com.violinjourney.app.core.domain.repertoire.StandHintStore
 import com.violinjourney.app.core.domain.venue.VenueStore
+import com.violinjourney.app.core.recording.video.VideoThumbRuleStore
 import com.violinjourney.app.core.settings.DataStoreBackupPrefs
 import com.violinjourney.app.core.settings.DataStoreBlockStore
 import com.violinjourney.app.core.settings.DataStoreProfileRepository
@@ -21,6 +22,7 @@ import com.violinjourney.app.core.settings.DataStoreRunningPracticeStore
 import com.violinjourney.app.core.settings.DataStoreSettingsRepository
 import com.violinjourney.app.core.settings.DataStoreStandHintStore
 import com.violinjourney.app.core.settings.DataStoreVenueStore
+import com.violinjourney.app.core.settings.DataStoreVideoThumbRuleStore
 import com.violinjourney.app.core.settings.IntonationConfigSource
 import com.violinjourney.app.core.settings.SettingsConfigSource
 import com.violinjourney.app.core.settings.SettingsRepository
@@ -75,6 +77,10 @@ abstract class SettingsModule {
         @Provides
         @Singleton
         fun provideVenueStore(dataStore: DataStore<Preferences>): VenueStore = DataStoreVenueStore(dataStore)
+
+        @Provides
+        @Singleton
+        fun provideVideoThumbRuleStore(dataStore: DataStore<Preferences>): VideoThumbRuleStore = DataStoreVideoThumbRuleStore(dataStore)
 
         private const val TAG = "Settings"
 

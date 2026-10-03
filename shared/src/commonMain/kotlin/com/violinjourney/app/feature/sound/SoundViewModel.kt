@@ -285,7 +285,7 @@ open class SoundViewModel(
             .collect { (all, own, titles, best, under, ofEvents) ->
                 fun nameOf(session: SessionSummary) = RecordingName(
                     session.id, session.title, session.pieceId?.let(titles::get), session.startedAtEpochMs, hasVideo = session.videoPath != null,
-                    event = session.eventId?.let(ofEvents::get),
+                    thumbPath = session.thumbPath, event = session.eventId?.let(ofEvents::get),
                 )
                 val mine = all.firstOrNull { it.id == sessionId }
                 if (mode == SoundMode.RECORDING && mine == null) {

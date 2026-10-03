@@ -99,6 +99,51 @@ class AppVideoFilesTest {
         assertFalse(thumb.exists())
     }
 
+    /** How bright a thumbnail is, the mean of its grey: the frames of [TestVideo] are grey, their brightness says which they are. */
+    private fun brightnessOf(thumb: File): Int {
+        val picture = BitmapFactory.decodeFile(thumb.path)
+        var sum = 0L
+        for (y in 0 until picture.height) for (x in 0 until picture.width) sum += picture.getPixel(x, y) and 0xFF
+        return (sum / (picture.width * picture.height)).toInt()
+    }
+
+    @Test
+    fun theThumbnailIsTheFrameOfTheMiddle() {
+        // four seconds, a key frame every second: the middle is frame 30, as bright as 130 of 255; the first is 40
+        val stored = files.adopt(shoot(seconds = 4))!!.also { made += it }
+        assertTrue(files.makeThumb(stored))
+        val brightness = brightnessOf(files.thumbOf(stored.name)!!)
+        assertTrue("the middle, not the first frame: $brightness", brightness in 100..160)
+    }
+
+    @Test
+    fun aDarkMiddleGivesWayToTheFirstFrameAndAThumbnailIsMadeAnew() {
+        // the second second is black: the middle is dark, the first frame is not
+        val dark = files.adopt(TestVideo.make(files.newCameraFile(), seconds = 4, luma = { if (it in 15 until 45) 16 else 120 }))!!.also { made += it }
+        assertTrue(files.makeThumb(dark))
+        val thumb = files.thumbOf(dark.name)!!
+        assertTrue("the first frame, not the dark middle: ${brightnessOf(thumb)}", brightnessOf(thumb) > 80)
+
+        // made again, the thumbnail takes the place of the old one whole and leaves no partial file
+        thumb.writeBytes(ByteArray(16))
+        assertTrue(files.makeThumb(dark))
+        assertTrue(brightnessOf(files.thumbOf(dark.name)!!) > 80)
+        assertTrue(dark.parentFile!!.listFiles()!!.none { it.name.endsWith(".part") })
+    }
+
+    @Test
+    fun aVideoOfAnIphoneFindsTheThumbnailBesideIt() {
+        // a `.mov` comes to Android with a copy of the data, and its `<uuid>-thumb.jpg` with it (spec 5.31)
+        val mp4 = files.adopt(shoot())!!.also { made += it }
+        val mov = File(mp4.parentFile, mp4.nameWithoutExtension + ".mov")
+        assertTrue(mp4.renameTo(mov))
+        made.remove(mp4)
+        made += mov
+        assertTrue(files.makeThumb(mov))
+        assertEquals(mp4.nameWithoutExtension + "-thumb.jpg", files.thumbOf(mov.name)!!.name)
+        assertEquals(files.thumbOf(mov.name), audioFiles.thumbOf(mov.name))
+    }
+
     @Test
     fun anOrphanVideoIsGivenADayAndAStoredOneKeepsItsThumbnail() {
         val kept = files.adopt(shoot())!!.also { made += it }

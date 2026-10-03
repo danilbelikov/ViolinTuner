@@ -73,6 +73,7 @@ import com.violinjourney.app.core.settings.DataStoreProfileRepository
 import com.violinjourney.app.core.settings.DataStoreRunningPracticeStore
 import com.violinjourney.app.core.settings.DataStoreSettingsRepository
 import com.violinjourney.app.core.settings.DataStoreStandHintStore
+import com.violinjourney.app.core.settings.DataStoreVideoThumbRuleStore
 import com.violinjourney.app.core.settings.DataStoreVenueStore
 import com.violinjourney.app.core.settings.SettingsConfigSource
 import com.violinjourney.app.core.settings.SettingsRepository
@@ -123,6 +124,8 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val blockStore = DataStoreBlockStore(dataStore)
     val profiles = DataStoreProfileRepository(dataStore)
     val standHints = DataStoreStandHintStore(dataStore)
+    /** Which rule the thumbnails of videos were made by (spec 5.31): the lists show frames once they are all of the current one. */
+    private val thumbRules = DataStoreVideoThumbRuleStore(dataStore)
     val practiceNotes = DataStorePracticeNotesStore(dataStore)
     private val venueStore = DataStoreVenueStore(dataStore)
 
@@ -130,7 +133,7 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val avatarFiles = IosAvatarFiles(io, clock)
     val sheetFiles = IosSheetFiles(io, repertoireConfig)
 
-    val sessions = RoomSessionRepository(database.sessionDao(), intonationConfig, audioFiles, clock, analytics, io)
+    val sessions = RoomSessionRepository(database.sessionDao(), intonationConfig, audioFiles, clock, analytics, thumbRules, io)
     val events = RoomEventRepository(database.eventDao(), eventsConfig, clock, analytics, io)
     val practice = RoomPracticeRepository(database.practiceDao())
     val blockHistory = RoomPieceBlockRepository(database.pieceBlockDao())
@@ -198,7 +201,9 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     // reckoned again from the sound whenever it is missing: not for the backup of the phone (spec 5.14)
     val waveforms = IosSessionWaveforms({ IosFolders.deviceOnlyFolder(DataLayout.WAVEFORMS) }, io)
     val shareFiles = IosShareFiles(io)
-    val housekeeping = Housekeeping(sessions, waveforms, avatarFiles, profiles, shareFiles, repertoire, backings, backingPcm, clock, io)
+    val housekeeping = Housekeeping(
+        sessions, waveforms, avatarFiles, profiles, shareFiles, repertoire, backings, backingPcm, videoFiles, thumbRules, clock, io,
+    )
     val renderer = IosSoundRenderer(soundConfig, io)
     val notesVideoConfig = NotesVideoConfig()
     /** «Видео с нотами» (spec 3.37): the picture encoded again with the notes drawn into its frames. */

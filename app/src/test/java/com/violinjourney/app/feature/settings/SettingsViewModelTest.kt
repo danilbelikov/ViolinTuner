@@ -20,6 +20,8 @@ import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.progress.TrophyAwarder
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
+import com.violinjourney.app.core.recording.video.FakeVideoFiles
+import com.violinjourney.app.core.recording.video.FakeVideoThumbRuleStore
 import com.violinjourney.app.core.domain.sound.BuiltInPreset
 import com.violinjourney.app.core.domain.sound.FakeSoundRepository
 import com.violinjourney.app.core.domain.sound.SoundConfig
@@ -153,7 +155,7 @@ class SettingsViewModelTest {
             repertoire,
             Housekeeping(
                 sessions, FakeSessionWaveforms(), FakeAvatarFiles(), FakeProfileRepository(), FakeShareFiles(), repertoire, NoBackings, NoBackingPcm,
-                clock, Dispatchers.Main,
+                FakeVideoFiles(), FakeVideoThumbRuleStore(), clock, Dispatchers.Main,
             ), blocks = NoBlocks, events = FakeEventRepository(),
         )
     }

@@ -47,6 +47,20 @@ class SessionMapperTest {
     }
 
     @Test
+    fun `the thumbnail of a video is looked for only while its file is there`() {
+        val video = SessionMapper.toEntity(newSession.copy(audioPath = "shot.mp4", videoPath = "shot.mp4")).copy(id = 8)
+        val asked = mutableListOf<String>()
+        val found = { name: String -> asked += name; "/files/sessions/${name.substringBefore('.')}-thumb.jpg" }
+
+        assertEquals("/files/sessions/shot-thumb.jpg", SessionMapper.toSummary(video, found) { true }.thumbPath)
+        assertNull(SessionMapper.toSummary(video, found) { false }.thumbPath, "the frame of a video that is gone is not shown")
+        assertNull(SessionMapper.toSummary(video, { null }) { true }.thumbPath, "a video without a thumbnail keeps its camera")
+        val sound = SessionMapper.toEntity(newSession.copy(audioPath = "take.m4a")).copy(id = 9)
+        assertNull(SessionMapper.toSummary(sound, found) { true }.thumbPath)
+        assertEquals(listOf("shot.mp4"), asked, "asked of the video whose file is there, and of nothing else")
+    }
+
+    @Test
     fun `a recording of an event keeps its event and every other one has none`() {
         val ofEvent = SessionMapper.toEntity(newSession.copy(eventId = 12)).copy(id = 4)
         assertEquals(12L, ofEvent.eventId)

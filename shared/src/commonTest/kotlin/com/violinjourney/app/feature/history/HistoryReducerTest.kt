@@ -121,6 +121,14 @@ class HistoryReducerTest {
     }
 
     @Test
+    fun `the card of a video carries the thumbnail its tile shows`() {
+        val framed = videoTake.copy(thumbPath = "/files/sessions/video-thumb.jpg")
+        val cards = state(list = listOf(free, framed)).cards
+        assertEquals(listOf(null, "/files/sessions/video-thumb.jpg"), cards.map { it.thumbPath })
+        assertEquals("/files/sessions/video-thumb.jpg", HistoryReducer.cardOf(framed, today, moscow).thumbPath, "the card of every other list too")
+    }
+
+    @Test
     fun `from Live is what is bound to no piece and has no video`() {
         assertEquals(listOf(11L), state(HistoryFilter.LIVE, list = kinds).cards.map { it.id })
     }

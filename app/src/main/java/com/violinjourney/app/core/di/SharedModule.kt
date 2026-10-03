@@ -39,6 +39,7 @@ import com.violinjourney.app.core.recording.audio.PickedSounds
 import com.violinjourney.app.core.recording.video.AnalysisSpeed
 import com.violinjourney.app.feature.share.RenderSpeed
 import com.violinjourney.app.core.recording.video.VideoFiles
+import com.violinjourney.app.core.recording.video.VideoThumbRuleStore
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
 import com.violinjourney.app.core.settings.IntonationConfigSource
 import com.violinjourney.app.core.time.WallClock
@@ -73,9 +74,11 @@ object SharedModule {
         repertoire: RepertoireRepository,
         backings: BackingRepository,
         backingPcm: BackingPcm,
+        videoFiles: VideoFiles,
+        thumbRules: VideoThumbRuleStore,
         clock: WallClock,
         @IoDispatcher io: CoroutineDispatcher,
-    ) = Housekeeping(sessions, waveforms, avatarFiles, profile, shareFiles, repertoire, backings, backingPcm, clock, io)
+    ) = Housekeeping(sessions, waveforms, avatarFiles, profile, shareFiles, repertoire, backings, backingPcm, videoFiles, thumbRules, clock, io)
 
     /** One per app: the ask travels from Live to «Занятия» (spec 3.12). */
     @Provides

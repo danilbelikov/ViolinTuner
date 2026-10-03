@@ -8,6 +8,7 @@ import com.violinjourney.app.core.di.DefaultDispatcher
 import com.violinjourney.app.core.di.IoDispatcher
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.recording.video.VideoThumbRuleStore
 import com.violinjourney.app.core.time.WallClock
 import dagger.Module
 import dagger.Provides
@@ -27,7 +28,8 @@ object SessionDataModule {
         audioFiles: SessionAudioFiles,
         clock: WallClock,
         analytics: Analytics,
+        thumbRules: VideoThumbRuleStore,
         @IoDispatcher io: CoroutineDispatcher,
         @DefaultDispatcher compute: CoroutineDispatcher,
-    ): SessionRepository = RoomSessionRepository(dao, defaultConfig, audioFiles, clock, analytics, io, compute)
+    ): SessionRepository = RoomSessionRepository(dao, defaultConfig, audioFiles, clock, analytics, thumbRules, io, compute)
 }

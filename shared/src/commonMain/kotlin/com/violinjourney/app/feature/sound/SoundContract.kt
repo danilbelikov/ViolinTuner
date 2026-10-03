@@ -41,6 +41,8 @@ data class RecordingName(
     val startedAtEpochMs: Long,
     /** The sound being set is that of a video take: the header says so (spec 3.19). */
     val hasVideo: Boolean = false,
+    /** The thumbnail of that video: its frame stands in the tile of «Слушать на» (spec 3.38). */
+    val thumbPath: String? = null,
     /** The event it is a recording of (spec 3.35): «Осенний концерт · 24 октября» until it is given a name of its own. */
     val event: SessionEvent? = null,
 )

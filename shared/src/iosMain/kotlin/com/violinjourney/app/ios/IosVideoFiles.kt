@@ -9,6 +9,7 @@ import com.violinjourney.app.core.io.isOwnFileName
 import com.violinjourney.app.core.io.pathOfFileUri
 import com.violinjourney.app.core.recording.video.VideoFiles
 import com.violinjourney.app.core.recording.video.VideoInfo
+import com.violinjourney.app.core.recording.video.VideoThumbs
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
@@ -45,7 +46,7 @@ import platform.UIKit.UIImage
 
 /**
  * Videos of takes on iOS (spec 3.19), where Android keeps them: beside the sound of sessions, `sessions/<uuid>.<ext>`
- * with `<uuid>-thumb.jpg`. The camera writes into `camera/`, a folder out of the backup of the phone; the pickers hand
+ * with `<uuid>-thumb.jpg` ([VideoThumbs]). The camera writes into `camera/`, a folder out of the backup of the phone; the pickers hand
  * over copies in `tmp/picked/` as `file:` URIs ([PickedCopies]), and every copy goes once it is in or will not come in.
  * The container is kept as it came (`.mov` from the camera of an iPhone). AVAudioFile on iOS opens no file with a picture
  * in it: the sound of a video is read by AVAssetReader (`IosPcmFileOpener`).
@@ -109,18 +110,16 @@ internal class IosVideoFiles(private val config: RepertoireConfig, private val i
             appliesPreferredTrackTransform = true
             maximumSize = CGSizeMake(config.thumbMaxSidePx.toDouble(), config.thumbMaxSidePx.toDouble())
         }
-        // A video that fades in from black: the frame a second in says more — it is decoded only when the first one is dark
-        // or missing (spec 5.13). Both are the caller's under the Copy rule, and Kotlin/Native frees no CoreGraphics object:
-        // each is released here, the one not taken at once, the one taken once UIImage holds its own reference.
-        var frame = generator.copyCGImageAtTime(CMTimeMakeWithSeconds(0.0, TIMESCALE), null, null)
-        if (frame == null || IosPictures.isDark(frame)) {
-            val later = generator.copyCGImageAtTime(CMTimeMakeWithSeconds(LATER_FRAME_SECONDS, TIMESCALE), null, null)
-            if (later != null) {
-                CGImageRelease(frame)
-                frame = later
-            }
-        }
-        if (frame == null) return false
+        // The middle of the video, then its start and a second in, each decoded only when the one before is dark or missing (spec
+        // 5.31). Every frame is the caller's under the Copy rule, and Kotlin/Native frees no CoreGraphics object: each is released
+        // here, the ones not taken at once, the one taken once UIImage holds its own reference.
+        val durationMs = (CMTimeGetSeconds(asset.duration) * MS_PER_SECOND).takeIf { it.isFinite() }?.roundToLong() ?: 0L
+        val frame = VideoThumbs.pick(
+            VideoThumbs.momentsMs(durationMs),
+            frameAt = { ms -> generator.copyCGImageAtTime(CMTimeMakeWithSeconds(ms / MS_PER_SECOND, TIMESCALE), null, null) },
+            isDark = IosPictures::isDark,
+            discard = ::CGImageRelease,
+        ) ?: return false
         return try {
             IosPictures.writeJpeg(UIImage.imageWithCGImage(frame), thumbPath(file.path.substringAfterLast('/')), THUMB_QUALITY)
         } finally {
@@ -138,7 +137,7 @@ internal class IosVideoFiles(private val config: RepertoireConfig, private val i
         IosFolders.delete(file.path)
     }
 
-    private fun thumbPath(name: String) = "$directory/${name.substringBeforeLast('.')}$THUMB_SUFFIX"
+    private fun thumbPath(name: String) = "$directory/${VideoThumbs.nameOf(name)}"
 
     private fun sizeOfPath(path: String): Long = (files.attributesOfItemAtPath(path, null)?.get(NSFileSize) as? NSNumber)?.longLongValue ?: 0
 
@@ -154,12 +153,8 @@ internal class IosVideoFiles(private val config: RepertoireConfig, private val i
     private companion object {
         const val CAMERA_EXTENSION = ".mov"
         const val DEFAULT_EXTENSION = "mp4"
-        const val THUMB_SUFFIX = "-thumb.jpg"
         const val THUMB_QUALITY = 85
         const val MS_PER_SECOND = 1_000.0
         const val TIMESCALE = 600
-
-        /** The frame a thumbnail takes when the first one is dark (spec 5.13). */
-        const val LATER_FRAME_SECONDS = 1.0
     }
 }

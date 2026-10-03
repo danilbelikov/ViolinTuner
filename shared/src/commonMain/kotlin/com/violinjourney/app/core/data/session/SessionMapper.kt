@@ -32,8 +32,15 @@ internal object SessionMapper {
     /**
      * [soundFound] answers whether the file of the sound is there: a recording whose file is gone — a copy restored
      * without «Звук записей», a file lost — is read as one without sound (spec 3.17, 3.20). The row keeps its name.
+     * [thumbOf] finds the thumbnail of a video by its name (spec 3.38): it is asked only of a video whose file is there —
+     * the frame of a video that is gone is not shown, even if its thumbnail stayed.
      */
-    fun toSummary(entity: SessionEntity, soundFound: (String) -> Boolean = { true }): SessionSummary = SessionSummary(
+    fun toSummary(entity: SessionEntity, thumbOf: (String) -> String? = { null }, soundFound: (String) -> Boolean = { true }): SessionSummary {
+        val audio = entity.audioPath?.takeIf(soundFound)
+        return summaryOf(entity, audio, thumbPath = entity.videoPath?.takeIf { audio != null }?.let(thumbOf))
+    }
+
+    private fun summaryOf(entity: SessionEntity, audioPath: String?, thumbPath: String?) = SessionSummary(
         id = entity.id,
         title = entity.title,
         startedAtEpochMs = entity.startedAtEpochMs,
@@ -47,10 +54,11 @@ internal object SessionMapper {
         maeCents = entity.maeCents,
         biasCents = entity.biasCents,
         previewZones = decodeZones(entity.previewZones),
-        audioPath = entity.audioPath?.takeIf(soundFound),
+        audioPath = audioPath,
         pieceId = entity.pieceId,
         videoPath = entity.videoPath,
         eventId = entity.eventId,
+        thumbPath = thumbPath,
     )
 
     fun encodeZones(zones: List<Zone>): String = zones.joinToString(separator = "") {

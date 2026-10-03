@@ -21,7 +21,7 @@ data class VideoInfo(
 
 /**
  * Videos of takes (spec 3.19). They live beside the sound of sessions — `files/sessions/<uuid>.mp4`
- * with `<uuid>-thumb.jpg` — because for a video take the file *is* the sound: the session's
+ * with `<uuid>-thumb.jpg` ([VideoThumbs]) — because for a video take the file *is* the sound: the session's
  * `audioPath` names it. A shot comes through `cache/camera/`, where the system camera may write.
  */
 interface VideoFiles {
@@ -49,7 +49,10 @@ interface VideoFiles {
 
     fun info(file: PlatformFile): VideoInfo?
 
-    /** Writes the thumbnail beside [file]; false leaves the take without one. */
+    /**
+     * Writes the thumbnail beside [file] — the frame [VideoThumbs] picks (spec 5.31), through a partial file that takes the place of
+     * the one already there whole; false leaves what there was, a take without a thumbnail or with its old one.
+     */
     fun makeThumb(file: PlatformFile): Boolean
 
     /** The thumbnail of the video stored under [name], if there is one. */

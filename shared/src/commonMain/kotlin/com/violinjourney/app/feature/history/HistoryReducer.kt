@@ -109,6 +109,7 @@ object HistoryReducer {
             pieceId = session.pieceId,
             hasAudio = session.audioPath != null,
             hasVideo = session.videoPath != null,
+            thumbPath = session.thumbPath,
             best = best,
             underBacking = underBacking,
             event = event,

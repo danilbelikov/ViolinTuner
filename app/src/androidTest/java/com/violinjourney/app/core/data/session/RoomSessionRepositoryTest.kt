@@ -13,9 +13,12 @@ import com.violinjourney.app.core.domain.Zone
 import com.violinjourney.app.core.domain.session.NewSession
 import com.violinjourney.app.core.domain.session.SessionAnalyzer
 import com.violinjourney.app.core.domain.session.SessionSample
+import com.violinjourney.app.core.recording.video.VideoThumbRuleStore
+import com.violinjourney.app.core.recording.video.VideoThumbs
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.time.ZonedSystemWallClock
 import java.io.File
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.TimeZone
@@ -33,6 +36,12 @@ class RoomSessionRepositoryTest {
     private lateinit var database: AppDatabase
     private lateinit var repository: RoomSessionRepository
     private val audioFiles = RecordingAudioFiles()
+
+    /** The thumbnails are of the current rule: the store looks for them (spec 5.31). */
+    private object CurrentThumbRule : VideoThumbRuleStore {
+        override val rule = MutableStateFlow(VideoThumbs.RULE)
+        override suspend fun markRule(rule: Int) = Unit
+    }
 
     private class RecordingAudioFiles : SessionAudioFiles {
         val deleted = mutableListOf<String>()
@@ -63,7 +72,7 @@ class RoomSessionRepositoryTest {
     @Before
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java).build()
-        repository = RoomSessionRepository(database.sessionDao(), IntonationConfig(), audioFiles, ZonedSystemWallClock(TimeZone.UTC), analytics)
+        repository = RoomSessionRepository(database.sessionDao(), IntonationConfig(), audioFiles, ZonedSystemWallClock(TimeZone.UTC), analytics, CurrentThumbRule)
     }
 
     @After

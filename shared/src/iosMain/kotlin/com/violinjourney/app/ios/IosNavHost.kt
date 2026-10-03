@@ -303,7 +303,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 onOpenEvent = navController::navigateToEvent,
                 onAddPerformance = { navController.navigateToEventForm(Routes.eventForm(kind = BuiltInKind.PERFORMANCE)) },
                 viewModel = viewModel {
-                    PerformancesViewModel(graph.events, graph.sessions, graph.repertoire, graph.videoFiles, graph.eventsConfig, graph.clock)
+                    PerformancesViewModel(graph.events, graph.sessions, graph.repertoire, graph.eventsConfig, graph.clock)
                 },
             )
         }

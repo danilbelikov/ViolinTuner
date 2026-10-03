@@ -5,7 +5,6 @@ import com.violinjourney.app.core.domain.events.EventRepository
 import com.violinjourney.app.core.domain.events.EventsConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
-import com.violinjourney.app.core.recording.video.VideoFiles
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.events.performances.PerformancesViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,8 +17,7 @@ class HiltPerformancesViewModel @Inject constructor(
     events: EventRepository,
     sessions: SessionRepository,
     repertoire: RepertoireRepository,
-    videos: VideoFiles,
     config: EventsConfig,
     clock: WallClock,
     @DefaultDispatcher background: CoroutineDispatcher,
-) : PerformancesViewModel(events, sessions, repertoire, videos, config, clock, background)
+) : PerformancesViewModel(events, sessions, repertoire, config, clock, background)

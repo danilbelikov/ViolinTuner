@@ -15,8 +15,6 @@ import com.violinjourney.app.core.domain.repertoire.Piece
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.session.SessionSummary
-import com.violinjourney.app.core.io.filePath
-import com.violinjourney.app.core.recording.video.VideoFiles
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.time.ticksAt
 import kotlin.time.Instant
@@ -28,9 +26,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -42,8 +38,8 @@ import kotlinx.coroutines.flow.stateIn
  * number of its recordings. Worked out anew whenever the events, their kinds, the programmes, the recordings or the repertoire change,
  * and by itself at the moments it can change ([Performances.nextChangeAt], plan D42): the end of a concert of today — it goes over to
  * «Прошли» while the screen is open — and midnight, when the terms move on; never in between ([ticksAt], plan D9). Off the main thread
- * ([background]): the thumbnails are looked for in the file system, once a collection for each video — a video never changes under its
- * name, and one not found is asked again: a copy restored may bring it back.
+ * ([background]). The thumbnail of a video is the one the store of the recordings found with it (spec 3.38, 5.31): of a video whose file
+ * is there, made by the current rule — the frame these rows show is the one of the lists of recordings.
  *
  * A press leaves the screen once ([PerformancesIntent.Shown] — the screen in sight again — lets presses count anew): a second tap of a
  * double tap does not open a second screen over the first, nor go back twice (the lesson of stage 120).
@@ -52,7 +48,6 @@ open class PerformancesViewModel(
     private val events: EventRepository,
     private val sessions: SessionRepository,
     private val repertoire: RepertoireRepository,
-    private val videos: VideoFiles,
     private val config: EventsConfig,
     private val clock: WallClock,
     private val background: CoroutineDispatcher = Dispatchers.Default,
@@ -68,15 +63,9 @@ open class PerformancesViewModel(
     private val stored: Flow<Stored> = combine(events.events, events.kinds, events.programs, sessions.sessions, repertoire.pieces, ::Stored)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val state: StateFlow<PerformancesState> = flow {
-        // the thumbnails found by the name of their video, for this collection: its steps run one after another
-        val thumbs = HashMap<String, String>()
-        emitAll(
-            stored.flatMapLatest { now ->
-                // the zone is read at each wake: a flight changes it under an open screen
-                clock.ticksAt { at -> Performances.nextChangeAt(now.events, at, clock.zone, config) }.map { at -> stateOf(now, at, thumbs) }
-            },
-        )
+    val state: StateFlow<PerformancesState> = stored.flatMapLatest { now ->
+        // the zone is read at each wake: a flight changes it under an open screen
+        clock.ticksAt { at -> Performances.nextChangeAt(now.events, at, clock.zone, config) }.map { at -> stateOf(now, at) }
     }.flowOn(background).stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), loading())
 
     private val effectChannel = Channel<PerformancesEffect>(Channel.BUFFERED)
@@ -100,12 +89,10 @@ open class PerformancesViewModel(
         effectChannel.trySend(effect)
     }
 
-    private fun stateOf(stored: Stored, at: Instant, thumbs: MutableMap<String, String>): PerformancesState {
+    private fun stateOf(stored: Stored, at: Instant): PerformancesState {
         val rows = Performances.rows(stored.events, stored.programs, stored.pieces, stored.sessions, at, clock.zone, config)
-        fun cardOf(row: PerformanceRow) = PerformanceCard(
-            row = row,
-            thumbPath = row.lastVideo?.let { name -> thumbs[name] ?: videos.thumbOf(name)?.filePath?.also { thumbs[name] = it } },
-        )
+        val thumbs = stored.sessions.mapNotNull { session -> session.thumbPath?.let { path -> session.videoPath?.let { it to path } } }.toMap()
+        fun cardOf(row: PerformanceRow) = PerformanceCard(row = row, thumbPath = row.lastVideo?.let(thumbs::get))
         return PerformancesState(
             loading = false,
             ahead = rows.ahead.map(::cardOf),

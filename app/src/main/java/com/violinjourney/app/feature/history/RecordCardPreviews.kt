@@ -105,6 +105,19 @@ private fun KindsPreview() = Cards {
     InRecords(SilentTake)
 }
 
+// The frame of a video (spec 3.38; thumbs.html): a preview has no file to read, so the square stands as it does while its frame is
+// read — with the camera; under it a video without a thumbnail keeps its circle, a lost one its ring.
+private val FramedVideo = VideoTake.copy(thumbPath = "/preview/menuet-thumb.jpg")
+private val LostVideo = card(15, "2026-09-26T07:12:00", 58, piece = "Гамма ре мажор", video = true, audio = false)
+
+@Preview(name = "Card · a video with its frame (the square while it is read), one without a thumbnail, a lost one", widthDp = 412, heightDp = 240, locale = "ru")
+@Composable
+private fun FramePreview() = Cards {
+    InRecords(FramedVideo)
+    InRecords(VideoTake)
+    InRecords(LostVideo)
+}
+
 // The recordings of events (spec 3.36.9; events-views.html 8): named by their event and its date, the word of the kind of the event in the
 // place of «дубль» / «видео» — the tile tells a video from a sound; on the screen of the event — no word, a chevron, no «⋯».
 private val Concert = SessionEvent(4, "Осенний концерт", LocalDate(2026, 10, 24), KindRef.BuiltIn(BuiltInKind.PERFORMANCE), ownName = null)

@@ -3,6 +3,7 @@ package com.violinjourney.app.core.audio.recording
 import android.content.Context
 import com.violinjourney.app.core.backup.DataLayout
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
+import com.violinjourney.app.core.recording.video.VideoThumbs
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.util.UUID
@@ -30,12 +31,15 @@ class AppSessionAudioFiles @Inject constructor(
     override fun delete(name: String) {
         existing(name)?.delete()
         // a video take keeps a thumbnail beside it (spec 3.19)
-        File(directory, thumbNameOf(name)).takeIf { it.parentFile == directory }?.delete()
+        File(directory, VideoThumbs.nameOf(name)).takeIf { it.parentFile == directory }?.delete()
     }
+
+    override fun thumbOf(name: String): File? =
+        File(directory, VideoThumbs.nameOf(name)).takeIf { it.parentFile == directory && it.isFile }
 
     override fun deleteOrphans(referenced: Set<String>, nowEpochMs: Long, minAgeMs: Long) {
         val videoMinAgeMs = maxOf(minAgeMs, repertoireConfig.orphanVideoMinAgeMs)
-        val thumbs = referenced.mapTo(HashSet(), ::thumbNameOf)
+        val thumbs = referenced.mapTo(HashSet(), VideoThumbs::nameOf)
         directory.listFiles().orEmpty()
             .filter { it.name !in referenced && it.name !in thumbs }
             // A video may be the only copy of a shot, and its import takes longer than any take: it is given a day.
@@ -43,10 +47,7 @@ class AppSessionAudioFiles @Inject constructor(
             .forEach { it.delete() }
     }
 
-    private fun thumbNameOf(name: String) = name.substringBeforeLast('.') + THUMB_SUFFIX
-
     private companion object {
         const val EXTENSION = ".m4a"
-        const val THUMB_SUFFIX = "-thumb.jpg"
     }
 }

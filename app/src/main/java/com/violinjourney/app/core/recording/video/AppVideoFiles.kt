@@ -168,14 +168,25 @@ class AppVideoFiles @Inject constructor(
 
     override fun makeThumb(file: File): Boolean {
         val retriever = MediaMetadataRetriever()
+        val thumb = thumbFile(file.name)
+        val part = File(directory, thumb.name + PARTIAL_SUFFIX)
         return try {
             retriever.setDataSource(file.absolutePath)
-            val first = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC) ?: return false
-            // a video that fades in from black: the frame a second in says more
-            val frame = if (isDark(first)) retriever.getFrameAtTime(SECOND_US, MediaMetadataRetriever.OPTION_CLOSEST_SYNC) ?: first else first
+            val durationMs = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0
+            // the middle of the video, then its start and a second in (spec 5.31); a frame is megabytes, the ones not taken go at once
+            val frame = VideoThumbs.pick(
+                VideoThumbs.momentsMs(durationMs),
+                frameAt = { ms -> retriever.getFrameAtTime(ms * US_PER_MS, MediaMetadataRetriever.OPTION_CLOSEST_SYNC) },
+                isDark = ::isDark,
+                discard = Bitmap::recycle,
+            ) ?: return false
             val scale = config.thumbMaxSidePx.toFloat() / maxOf(frame.width, frame.height)
             val small = if (scale < 1f) Bitmap.createScaledBitmap(frame, (frame.width * scale).toInt().coerceAtLeast(1), (frame.height * scale).toInt().coerceAtLeast(1), true) else frame
-            thumbFile(file.name).outputStream().use { small.compress(Bitmap.CompressFormat.JPEG, THUMB_QUALITY, it) }
+            if (small !== frame) frame.recycle()
+            val written = part.outputStream().use { small.compress(Bitmap.CompressFormat.JPEG, THUMB_QUALITY, it) }
+            small.recycle()
+            // the old thumbnail is replaced whole: whoever reads it sees the one or the other, never half of the new one
+            written && part.renameTo(thumb)
         } catch (e: IOException) {
             Log.w(TAG, "no thumbnail for ${file.name}", e)
             false
@@ -184,6 +195,7 @@ class AppVideoFiles @Inject constructor(
             false
         } finally {
             retriever.release()
+            part.delete()
         }
     }
 
@@ -202,7 +214,8 @@ class AppVideoFiles @Inject constructor(
         return count > 0 && sum / count < DARK_BELOW
     }
 
-    private fun thumbFile(name: String) = File(directory, name.removeSuffix(EXTENSION) + THUMB_SUFFIX)
+    // without the extension of whatever kind: a `.mov` of an iPhone comes here with a copy of the data (spec 5.31)
+    private fun thumbFile(name: String) = File(directory, VideoThumbs.nameOf(name))
 
     override fun thumbOf(name: String): File? = thumbFile(name).takeIf { it.parentFile == directory && it.isFile }
 
@@ -217,11 +230,10 @@ class AppVideoFiles @Inject constructor(
     private companion object {
         const val TAG = "VideoFiles"
         const val EXTENSION = ".mp4"
-        const val THUMB_SUFFIX = "-thumb.jpg"
         const val PARTIAL_SUFFIX = ".part"
         const val COPY_BUFFER = 256 * 1024
         const val THUMB_QUALITY = 85
-        const val SECOND_US = 1_000_000L
+        const val US_PER_MS = 1_000L
         const val HALF_TURN = 180L
         const val SAMPLES_PER_SIDE = 16
         const val DARK_BELOW = 16

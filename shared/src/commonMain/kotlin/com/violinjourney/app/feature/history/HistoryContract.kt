@@ -33,8 +33,10 @@ data class HistoryCard(
      * file is gone has no sound either (spec 3.20): the repository reads it so.
      */
     val hasAudio: Boolean = false,
-    /** A video take (spec 3.19): the tile shows a camera instead of a note. */
+    /** A video take (spec 3.19): the tile shows a camera instead of a note — the frame of [thumbPath] where there is one. */
     val hasVideo: Boolean = false,
+    /** The thumbnail of the video, whose frame stands in its tile (spec 3.38); null without a video, a found file of it, or a thumbnail. */
+    val thumbPath: String? = null,
     /** The take its player marked as the best of its piece (spec 3.21): a star after the title. */
     val best: Boolean = false,
     /** Size of the video, for the dialog that deletes it; zero without one or when the file is gone. */

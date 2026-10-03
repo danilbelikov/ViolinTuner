@@ -56,7 +56,13 @@ class FakeVideoFiles : VideoFiles {
         released += uri
     }
     override fun info(file: File): VideoInfo? = onInfo?.invoke(file) ?: info
-    override fun makeThumb(file: File): Boolean = thumbs.add(file.name)
+    /** Every thumbnail made, in order — made anew too; [thumbFails] names the videos whose frame cannot be had. */
+    val thumbsMade = mutableListOf<String>()
+    var thumbFails = emptySet<String>()
+    override fun makeThumb(file: File): Boolean {
+        thumbsMade += file.name
+        return file.name !in thumbFails && thumbs.add(file.name)
+    }
     override fun thumbOf(name: String): File? = File("/files/sessions/$name-thumb.jpg").takeIf { name in thumbs }
     /** How often a video was looked for: the piece screen does it when its takes change, not on every tap. */
     var existingCalls = 0

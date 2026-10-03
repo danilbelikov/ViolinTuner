@@ -547,7 +547,7 @@ private fun ListenOnRow(recording: RecordingName, latest: Boolean, canPick: Bool
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ListenGap),
     ) {
-        RecordTile(hasAudio = true, hasVideo = recording.hasVideo)
+        RecordTile(hasAudio = true, hasVideo = recording.hasVideo, thumbPath = recording.thumbPath)
         Column(Modifier.weight(1f)) {
             Text(caption, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp))
             Text(

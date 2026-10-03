@@ -163,8 +163,9 @@ fun recordCardTitle(card: HistoryCard): String =
 
 /**
  * The one card of a recording — in «Записи», in «Записи этого дня» of «Занятия», a take on the screen of its piece, a recording on
- * the screen of its event (spec 3.21, 3.36.5, 3.36.9; which list — [place]). Quiet on purpose: a tile of one colour, a title, one line — no score, no zone, no bars. A take
- * marked as the best carries a star after its title; [highlighted] belongs to a take recorded a moment ago.
+ * the screen of its event (spec 3.21, 3.36.5, 3.36.9; which list — [place]). Quiet on purpose: a tile of one colour — of a video, a
+ * frame of it (spec 3.38) — a title, one line — no score, no zone, no bars. A take marked as the best carries a star after its title;
+ * [highlighted] belongs to a take recorded a moment ago.
  *
  * The line: [start] — the time of the start, or the date of a take with a name of its own — and the length, then what the recording
  * is ([RecordLine.wordsOf]): «18:42 · 2:05 · дубль», «· видео», of a recording of an event the word of its kind — «19:02 · 3:40 ·
@@ -277,7 +278,7 @@ fun RecordCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Crossfade(targetState = selected, animationSpec = tween(TILE_MORPH_MS), label = "recordTile") { mark ->
-                if (mark == null) RecordTile(hasAudio = card.hasAudio, hasVideo = card.hasVideo) else SelectionMark(mark)
+                if (mark == null) RecordTile(hasAudio = card.hasAudio, hasVideo = card.hasVideo, thumbPath = card.thumbPath) else SelectionMark(mark)
             }
             Column(modifier = Modifier.weight(1f)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(TitleGap), verticalAlignment = Alignment.CenterVertically) {

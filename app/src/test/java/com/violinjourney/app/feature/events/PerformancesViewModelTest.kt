@@ -12,7 +12,6 @@ import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
 import com.violinjourney.app.core.domain.session.SessionSummary
-import com.violinjourney.app.core.recording.video.FakeVideoFiles
 import com.violinjourney.app.core.time.MutableWallClock
 import com.violinjourney.app.feature.events.performances.PerformancesEffect
 import com.violinjourney.app.feature.events.performances.PerformancesIntent
@@ -54,7 +53,6 @@ class PerformancesViewModelTest {
     private val events = FakeEventRepository()
     private val sessions = FakeSessionRepository()
     private val repertoire = FakeRepertoireRepository()
-    private val videos = FakeVideoFiles()
 
     @Before
     fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
@@ -63,7 +61,7 @@ class PerformancesViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     private fun TestScope.viewModel(): PerformancesViewModel {
-        val viewModel = PerformancesViewModel(events, sessions, repertoire, videos, config, clock, background = StandardTestDispatcher(testScheduler))
+        val viewModel = PerformancesViewModel(events, sessions, repertoire, config, clock, background = StandardTestDispatcher(testScheduler))
         backgroundScope.launch { viewModel.state.collect {} }
         return viewModel
     }
@@ -126,12 +124,12 @@ class PerformancesViewModelTest {
         events.programs.value = mapOf(1L to listOf(melody, vivaldi), 3L to listOf(vivaldi))
         sessions.sessions.value = listOf(
             recording(11, eventId = 3, startedAt = 1_789_300_000_000, video = "academic-1.mp4"),
-            recording(12, eventId = 3, startedAt = 1_789_300_600_000, video = "academic-2.mp4"),
+            // the thumbnail as the store found it (spec 3.38): of the newest video, the one at the end of the row
+            recording(12, eventId = 3, startedAt = 1_789_300_600_000, video = "academic-2.mp4").copy(thumbPath = "/files/sessions/academic-2-thumb.jpg"),
             recording(13, eventId = 4, startedAt = 1_779_000_000_000),
             recording(14, eventId = 4, startedAt = 1_779_000_100_000),
             recording(15, eventId = null, startedAt = 1_789_300_000_000),
         )
-        videos.thumbs += "academic-2.mp4"
         val viewModel = viewModel()
         assertTrue("the bar and an empty zone while the events are read", viewModel.state.value.loading)
         runCurrent()
@@ -148,7 +146,7 @@ class PerformancesViewModelTest {
         assertEquals("the round has no programme — not another's", emptyList<String>(), state.ahead[1].row.program)
         assertEquals("the academic concert has its own", listOf("А. Вивальди"), state.past[0].row.program)
         assertEquals(emptyList<String>(), state.past[1].row.program)
-        assertEquals("/files/sessions/academic-2.mp4-thumb.jpg", state.past[0].thumbPath)
+        assertEquals("/files/sessions/academic-2-thumb.jpg", state.past[0].thumbPath)
         assertEquals(2, state.past[0].row.records)
         assertNull("recordings without a video: their number", state.past[1].thumbPath)
         assertEquals(2, state.past[1].row.records)

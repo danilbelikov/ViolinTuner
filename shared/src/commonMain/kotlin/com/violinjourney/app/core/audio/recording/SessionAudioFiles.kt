@@ -12,6 +12,13 @@ interface SessionAudioFiles {
     fun delete(name: String)
 
     /**
+     * The thumbnail beside the video stored under [name] (spec 3.38): the frame its tile shows in the lists; null without one. The
+     * thumbnails are the videos' ([com.violinjourney.app.core.recording.video.VideoFiles] makes them); a store that keeps no videos
+     * has none.
+     */
+    fun thumbOf(name: String): PlatformFile? = null
+
+    /**
      * Removes files no session points at, e.g. after a crash in the middle of a take. Files
      * touched within [minAgeMs] are left alone: one of them may be the take being recorded.
      * Whatever is not plain session audio — a video, its thumbnail, a half-copied import — is

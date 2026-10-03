@@ -9,6 +9,7 @@ import com.violinjourney.app.core.domain.session.NewSession
 import com.violinjourney.app.core.domain.session.SessionAnalyzer
 import com.violinjourney.app.core.domain.session.SessionSample
 import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.recording.video.FakeVideoThumbRuleStore
 import com.violinjourney.app.core.time.SystemWallClock
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -61,7 +62,7 @@ class IosSessionRepositoryTest {
     fun `a recording whose sound file is gone is read without sound — the row keeps it`() = runTest {
         val database = IosStorage.database(directory)
         val files = Files(present = setOf("here.m4a"))
-        val repository = RoomSessionRepository(database.sessionDao(), config, files, SystemWallClock, io = Dispatchers.Default, analytics = NoOpAnalytics())
+        val repository = RoomSessionRepository(database.sessionDao(), config, files, SystemWallClock, io = Dispatchers.Default, analytics = NoOpAnalytics(), thumbRules = FakeVideoThumbRuleStore())
         val here = repository.save(take("here.m4a"))
         val gone = repository.save(take("gone.m4a"))
 
@@ -80,7 +81,7 @@ class IosSessionRepositoryTest {
         val database = IosStorage.database(directory)
         val files = Files(present = emptySet())
         val analytics = FakeAnalytics()
-        val repository = RoomSessionRepository(database.sessionDao(), config, files, SystemWallClock, analytics, io = Dispatchers.Default)
+        val repository = RoomSessionRepository(database.sessionDao(), config, files, SystemWallClock, analytics, FakeVideoThumbRuleStore(), io = Dispatchers.Default)
         val sound = repository.save(take("one.m4a"))
         val silent = repository.save(take(null))
         val video = repository.save(take("shot.mp4", video = "shot.mp4"))

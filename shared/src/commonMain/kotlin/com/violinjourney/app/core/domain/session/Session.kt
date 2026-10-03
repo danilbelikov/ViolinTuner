@@ -36,6 +36,11 @@ data class SessionSummary(
      * `EventRepository.recordEvents` gives them (plan D11) — an edit of the events re-reads that short query, not the list.
      */
     val eventId: Long? = null,
+    /**
+     * Where the thumbnail of the video lies — the frame its tile shows in the lists (spec 3.38): found with the sound, as [audioPath]
+     * is, and only for a video whose file is there and that has one. Not stored: the store looks for the file.
+     */
+    val thumbPath: String? = null,
 )
 
 data class SessionDetails(

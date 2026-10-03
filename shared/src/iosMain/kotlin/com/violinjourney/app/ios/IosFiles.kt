@@ -12,6 +12,7 @@ import com.violinjourney.app.core.io.deleteFile
 import com.violinjourney.app.core.io.isOwnFileName
 import com.violinjourney.app.core.io.isRegularFile
 import com.violinjourney.app.core.io.pathOfFileUri
+import com.violinjourney.app.core.recording.video.VideoThumbs
 import com.violinjourney.app.core.time.WallClock
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.IntVar
@@ -75,6 +76,7 @@ import platform.UIKit.UIGraphicsImageRenderer
 import platform.UIKit.UIGraphicsImageRendererFormat
 import platform.UIKit.UIImage
 import platform.UIKit.UIImageJPEGRepresentation
+import platform.posix.rename
 
 /**
  * The files of the iOS app, as the app keeps them on Android: bare names in the database, the files in folders of
@@ -114,6 +116,9 @@ internal object IosFolders {
         ((files.attributesOfItemAtPath(path, null)?.get(NSFileModificationDate) as? NSDate)?.timeIntervalSince1970 ?: 0.0).times(MS).toLong()
 
     fun move(from: String, to: String): Boolean = files.moveItemAtPath(from, to, null)
+
+    /** [from] takes the name [to] in one step, the file already there replaced whole (rename(2)); false when it cannot. */
+    fun replace(from: String, to: String): Boolean = rename(from, to) == 0
 
     private const val MS = 1000.0
 }
@@ -202,7 +207,8 @@ internal object IosPictures {
     fun writeJpeg(image: UIImage, path: String, quality: Int): Boolean {
         val data = UIImageJPEGRepresentation(image, quality / PERCENT) ?: return false
         val partial = "$path$PARTIAL_SUFFIX"
-        if (data.writeToFile(partial, atomically = true) && IosFolders.move(partial, path)) return true
+        // a thumbnail made anew takes the place of the old one (spec 5.31): a move would refuse a name that is taken
+        if (data.writeToFile(partial, atomically = true) && IosFolders.replace(partial, path)) return true
         IosFolders.delete(partial)
         return false
     }
@@ -252,23 +258,23 @@ internal class IosSessionAudioFiles(private val repertoireConfig: RepertoireConf
     override fun delete(name: String) {
         if (!isOwnFileName(name)) return
         IosFolders.delete("$directory/$name")
-        IosFolders.delete("$directory/${thumbNameOf(name)}")
+        IosFolders.delete("$directory/${VideoThumbs.nameOf(name)}")
     }
+
+    override fun thumbOf(name: String): PlatformFile? =
+        "$directory/${VideoThumbs.nameOf(name)}".takeIf { isOwnFileName(name) && IosFolders.isFile(it) }?.let(::PlatformFile)
 
     override fun deleteOrphans(referenced: Set<String>, nowEpochMs: Long, minAgeMs: Long) {
         val videoMinAgeMs = maxOf(minAgeMs, repertoireConfig.orphanVideoMinAgeMs)
-        val thumbs = referenced.mapTo(HashSet(), ::thumbNameOf)
+        val thumbs = referenced.mapTo(HashSet(), VideoThumbs::nameOf)
         IosFolders.names(directory)
             .filter { it !in referenced && it !in thumbs }
             .filter { nowEpochMs - IosFolders.modifiedMs("$directory/$it") > if (it.endsWith(EXTENSION)) minAgeMs else videoMinAgeMs }
             .forEach { IosFolders.delete("$directory/$it") }
     }
 
-    private fun thumbNameOf(name: String) = name.substringBeforeLast('.') + THUMB_SUFFIX
-
     private companion object {
         const val EXTENSION = ".m4a"
-        const val THUMB_SUFFIX = "-thumb.jpg"
     }
 }
 

@@ -6,7 +6,8 @@ import com.violinjourney.app.core.domain.events.PerformanceRow
 /**
  * A row of «Выступления» as the screen shows it (spec 3.36.9): what the domain says of the performance ([row]) and the file of the
  * thumbnail of its newest video ([thumbPath], plan D43) — null without a video, and for a video whose thumbnail is not there (a copy
- * restored without the videos, a thumbnail never made): then the row says the number of its recordings.
+ * restored without the videos, a thumbnail never made, a video lost) or not yet made anew by the current rule (spec 5.31): then the
+ * row says the number of its recordings.
  */
 data class PerformanceCard(val row: PerformanceRow, val thumbPath: String?)
 

@@ -26,6 +26,8 @@ import com.violinjourney.app.core.domain.progress.TrophyAwarder
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
+import com.violinjourney.app.core.recording.video.FakeVideoFiles
+import com.violinjourney.app.core.recording.video.FakeVideoThumbRuleStore
 import com.violinjourney.app.core.settings.FakeSettingsRepository
 import com.violinjourney.app.core.time.MutableWallClock
 import com.violinjourney.app.core.ui.format.Formats
@@ -97,8 +99,8 @@ class AppStartViewModelTest {
     ) = AppStartViewModel(
         FakeSettingsRepository(), store, finisher, config, clock, repository, TrophyAwarder(trophies, ProgressConfig(), clock), repertoire,
         Housekeeping(
-            FakeSessionRepository(), FakeSessionWaveforms(), avatarFiles, profile, shareFiles, repertoire, NoBackings, backingPcm, clock,
-            io = Dispatchers.Main,
+            FakeSessionRepository(), FakeSessionWaveforms(), avatarFiles, profile, shareFiles, repertoire, NoBackings, backingPcm,
+            FakeVideoFiles(), FakeVideoThumbRuleStore(), clock, io = Dispatchers.Main,
         ),
         blocks,
         events,

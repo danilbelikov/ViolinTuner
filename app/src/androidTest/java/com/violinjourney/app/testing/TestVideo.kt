@@ -33,7 +33,7 @@ object TestVideo {
 
     /**
      * [hzAt] is the pitch of the tone at a second of the file; null is silence. [withSound] false makes a mute video. The picture is
-     * stored [width] × [height], multiples of 16.
+     * stored [width] × [height], multiples of 16; [luma] is the brightness of each frame by its index.
      */
     fun make(
         file: File,
@@ -42,6 +42,7 @@ object TestVideo {
         rotation: Int = 0,
         width: Int = WIDTH,
         height: Int = HEIGHT,
+        luma: (Int) -> Int = ::lumaOf,
         hzAt: (Double) -> Double? = { 440.0 },
     ): File {
         val audio = if (withSound) encodeSound(File(file.parentFile, file.name + ".m4a"), seconds, hzAt) else null
@@ -75,7 +76,7 @@ object TestVideo {
                         inputDone = true
                     } else {
                         val image = checkNotNull(codec.getInputImage(index))
-                        image.planes.forEachIndexed { plane, p -> fill(p.buffer, if (plane == 0) lumaOf(frame) else 128) }
+                        image.planes.forEachIndexed { plane, p -> fill(p.buffer, if (plane == 0) luma(frame) else 128) }
                         val size = width * height * 3 / 2
                         codec.queueInputBuffer(index, 0, size, frame * 1_000_000L / FPS, 0)
                         frame++
