@@ -14,6 +14,8 @@ import com.violinjourney.app.core.recording.overlay.OverlayText
 import com.violinjourney.app.core.ui.theme.Manrope
 import com.violinjourney.app.feature.share.AppShareTexts
 import com.violinjourney.app.core.di.ElapsedClock
+import com.violinjourney.app.core.di.NotesVideoSpeed
+import com.violinjourney.app.feature.share.RenderSpeed
 import com.violinjourney.app.feature.share.ShareTexts
 import dagger.Binds
 import dagger.Module
@@ -46,6 +48,12 @@ abstract class ShareModule {
         @Provides
         @Singleton
         fun provideNotesVideoConfig(): NotesVideoConfig = NotesVideoConfig()
+
+        /** One per app: it measures how fast «Видео с нотами» is made on this phone (spec 5.30). */
+        @Provides
+        @Singleton
+        @NotesVideoSpeed
+        fun provideNotesVideoSpeed(config: NotesVideoConfig): RenderSpeed = RenderSpeed(config.renderSpeedStart)
 
         /** The font of the notes drawn on a video, outside any composition: the app's own Manrope. */
         @Provides

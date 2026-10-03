@@ -79,7 +79,12 @@ class MediaNotesVideoRenderer @Inject constructor(
         val lastFrame = File(target.parentFile, target.name + LAST_FRAME_SUFFIX)
         var whole = false
         try {
-            val probe = withContext(io) { VideoProbe.of(picture) } ?: return false
+            // the folder of a file to share is made by whoever writes into it first: here that may be this renderer — the sound
+            // of the video goes in as it is, and nothing has written there yet
+            val probe = withContext(io) {
+                target.parentFile?.mkdirs()
+                VideoProbe.of(picture)
+            } ?: return false
             val format = NotesVideoFormat.of(probe.width, probe.height, probe.frameRate, config)
             if (!withContext(io) { saveLastFrame(picture, probe, format, lastFrame) }) return false
             val painter = NotesOverlayPainter(overlay, words, text, format.width.toFloat(), format.height.toFloat())

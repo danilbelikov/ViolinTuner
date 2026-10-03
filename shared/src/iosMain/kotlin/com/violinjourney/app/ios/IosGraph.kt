@@ -203,6 +203,8 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val notesVideoConfig = NotesVideoConfig()
     /** «Видео с нотами» (spec 3.37): the picture encoded again with the notes drawn into its frames. */
     val notesVideoRenderer: NotesVideoRenderer = IosNotesVideoRenderer(IosOverlayText::load, notesVideoConfig, io)
+    /** How fast «Видео с нотами» is made on this iPhone (spec 5.30): apart from the sound's measure. */
+    val notesRenderSpeed = RenderSpeed(notesVideoConfig.renderSpeedStart)
     val renderSpeed = RenderSpeed()
 
     // A copy of the data (spec 3.20): the same manager as on Android, over the files and the pickers of iOS.

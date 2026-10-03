@@ -24,6 +24,10 @@ import com.violinjourney.app.core.domain.sound.FakeSoundRepository
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundPresets
 import com.violinjourney.app.core.domain.sound.SoundSettings
+import com.violinjourney.app.core.recording.overlay.NotesOverlay
+import com.violinjourney.app.core.recording.overlay.NotesVideoConfig
+import com.violinjourney.app.core.recording.overlay.NotesVideoRenderer
+import com.violinjourney.app.core.recording.overlay.OverlayWords
 import com.violinjourney.app.feature.events.EventWords
 import com.violinjourney.app.feature.sound.SoundCaption
 import java.io.File
@@ -125,7 +129,8 @@ class ShareViewModelTest {
         var originalFails = false
         var originalTakesMs = 0L
         val handedOver = mutableListOf<File>()
-        override fun processed(audioName: String, settings: SoundSettings, fileName: String) = File(folder.root, "share/${settings.hashCode()}/$fileName")
+        // by the key of the recording and its settings, as the real folders are: a mix, the notes in another language are files of their own
+        override fun processed(audioName: String, settings: SoundSettings, fileName: String) = File(folder.root, "share/$audioName-${settings.hashCode()}/$fileName")
         override suspend fun original(audio: File, fileName: String): File? {
             delay(originalTakesMs)
             return if (originalFails) null else File(folder.root, "share/original/$fileName").also { it.parentFile?.mkdirs(); audio.copyTo(it, overwrite = true) }
@@ -819,5 +824,215 @@ class ShareViewModelTest {
         runCurrent()
         assertEquals(1, effects.size)
         assertNull(viewModel.sheet.value)
+    }
+
+    // «Видео с нотами» (spec 3.37, 5.30)
+
+    /** Makes the video with the notes in [tookMs] of virtual time, telling its progress; fails when told to. */
+    private class NotesRenderer(var tookMs: Long = 400, var fails: Boolean = false) : NotesVideoRenderer {
+        var renders = 0
+        var soundHeard: String? = null
+        var overlay: NotesOverlay? = null
+        var words: OverlayWords? = null
+
+        override suspend fun render(picture: File, sound: File, overlay: NotesOverlay, words: OverlayWords, target: File, onProgress: (Float) -> Unit): Boolean {
+            renders++
+            // read now: the sound made for it is deleted once the video is made
+            soundHeard = sound.readText()
+            this.overlay = overlay
+            this.words = words
+            repeat(STEPS) { step ->
+                delay(tookMs / STEPS)
+                onProgress((step + 1f) / STEPS)
+            }
+            if (fails) return false
+            target.parentFile?.mkdirs()
+            target.writeText("video with notes")
+            return true
+        }
+    }
+
+    /** The language the words of the picture are «read» in: a JVM test has no resources. */
+    private var language = "ru"
+
+    private fun TestScope.shareWithNotes(renderer: SoundRenderer, notes: NotesRenderer): Pair<ShareViewModel, MutableList<ShareEffect>> {
+        val viewModel = ShareViewModel(
+            sessions, repertoire, sound, audioFiles, files, renderer, texts, speed, { testScheduler.currentTime }, config, videoFiles, backings, backingPcm,
+            NoOpAnalytics(), events = events, eventWords = eventWords, notesRenderer = notes, notesSpeed = RenderSpeed(NotesVideoConfig().renderSpeedStart),
+            overlayWords = { overlay ->
+                OverlayWords(
+                    badge = "в строе ${overlay.scorePercent}% ($language)", toleranceLine = language, bestNote = language, drift = language,
+                    driftCents = null, driftNone = language, previousTake = language, previousScore = null,
+                )
+            },
+            io = StandardTestDispatcher(testScheduler),
+        )
+        val effects = mutableListOf<ShareEffect>()
+        backgroundScope.launch { viewModel.effects.collect { effects += it } }
+        return viewModel to effects
+    }
+
+    @Test
+    fun `a video take offers the notes first and chosen - with the sound heard in the app`() = runTest {
+        sound.setDefault(hall)
+        val notes = NotesRenderer()
+        val (viewModel, effects) = shareWithNotes(Renderer(tookMs = 100), notes)
+        viewModel.start(videoTake())
+        runCurrent()
+        val sheet = viewModel.sheet.value as ShareSheet.Choose
+        assertEquals(ShareVariant.NOTES, sheet.variant)
+        val offer = sheet.info.notes!!
+        assertEquals(NotesSound.PROCESSED, offer.sound)
+        assertFalse(offer.tooLong)
+        assertEquals("1920 × 1080 stays 1080p", 1_080, offer.resolution)
+        assertEquals(".mp4", sheet.info.extensionOf(ShareVariant.NOTES))
+
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(5_000)
+        runCurrent()
+        assertEquals(1, notes.renders)
+        assertEquals("the processed sound, made beside the file", "sound", notes.soundHeard)
+        assertEquals("the summary is titled as the file", "Менуэт · 18 сентября", notes.overlay!!.title)
+        val sent = effects.single() as ShareEffect.Send
+        assertEquals("Менуэт · 18 сентября.mp4", sent.file.name)
+        assertEquals("video with notes", sent.file.readText())
+        assertEquals("video/mp4", sent.type)
+        assertTrue("nothing is left beside the file: ${sent.file.parentFile!!.list()!!.toList()}", sent.file.parentFile!!.list()!!.all { it == sent.file.name })
+    }
+
+    @Test
+    fun `without processing the notes carry the sound of the video itself`() = runTest {
+        val renderer = Renderer(tookMs = 100)
+        val notes = NotesRenderer()
+        val (viewModel, _) = shareWithNotes(renderer, notes)
+        viewModel.start(videoTake())
+        runCurrent()
+        val sheet = viewModel.sheet.value as ShareSheet.Choose
+        assertEquals(ShareVariant.NOTES, sheet.variant)
+        assertEquals(NotesSound.ORIGINAL, sheet.info.notes!!.sound)
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(5_000)
+        runCurrent()
+        assertEquals("no sound is made", 0, renderer.renders)
+        assertEquals("the track of the video as it is", "original video", notes.soundHeard)
+    }
+
+    @Test
+    fun `under a backing the notes carry the mix`() = runTest {
+        val id = videoTake()
+        val backingId = backings.add(backings.backing())
+        backings.saveTake(
+            com.violinjourney.app.core.domain.backing.TakeBacking(
+                id, backingId, 215, 200, -6f, 10_000, com.violinjourney.app.core.domain.backing.BackingOutput.WIRED, null,
+            ),
+        )
+        val renderer = Renderer(tookMs = 100)
+        val notes = NotesRenderer()
+        val (viewModel, _) = shareWithNotes(renderer, notes)
+        viewModel.start(id)
+        runCurrent()
+        val sheet = viewModel.sheet.value as ShareSheet.Choose
+        assertEquals("the notes come before the mix", ShareVariant.NOTES, sheet.variant)
+        assertEquals(NotesSound.BACKING, sheet.info.notes!!.sound)
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(5_000)
+        runCurrent()
+        assertEquals(1, renderer.backingRenders)
+        assertEquals(215, renderer.backingOffset)
+        assertEquals(1, notes.renders)
+    }
+
+    @Test
+    fun `a recording longer than fifteen minutes cannot have the notes`() = runTest {
+        sound.setDefault(hall)
+        val (viewModel, _) = shareWithNotes(Renderer(tookMs = 100), NotesRenderer())
+        val id = videoTake()
+        sessions.sessions.value = sessions.sessions.value.map { if (it.id == id) it.copy(durationMs = 15 * 60_000L + 1) else it }
+        viewModel.start(id)
+        runCurrent()
+        val sheet = viewModel.sheet.value as ShareSheet.Choose
+        assertTrue(sheet.info.notes!!.tooLong)
+        assertEquals(15, sheet.info.notes!!.limitMinutes)
+        assertEquals("the first variant without the notes is chosen", ShareVariant.PROCESSED, sheet.variant)
+        viewModel.onIntent(ShareIntent.VariantSelected(ShareVariant.NOTES))
+        assertEquals("the dimmed row cannot be chosen", ShareVariant.PROCESSED, (viewModel.sheet.value as ShareSheet.Choose).variant)
+    }
+
+    @Test
+    fun `fifteen minutes exactly still has the notes`() = runTest {
+        val (viewModel, _) = shareWithNotes(Renderer(tookMs = 100), NotesRenderer())
+        val id = videoTake()
+        sessions.sessions.value = sessions.sessions.value.map { if (it.id == id) it.copy(durationMs = 15 * 60_000L) else it }
+        viewModel.start(id)
+        runCurrent()
+        assertEquals(ShareVariant.NOTES, (viewModel.sheet.value as ShareSheet.Choose).variant)
+    }
+
+    @Test
+    fun `the same notes are not made twice - but in another language they are`() = runTest {
+        val notes = NotesRenderer()
+        val (viewModel, effects) = shareWithNotes(Renderer(tookMs = 100), notes)
+        val id = videoTake()
+        repeat(2) {
+            viewModel.start(id)
+            runCurrent()
+            viewModel.onIntent(ShareIntent.ContinueClicked)
+            advanceTimeBy(5_000)
+            runCurrent()
+        }
+        assertEquals("the second share takes the file made", 1, notes.renders)
+        assertEquals(2, effects.size)
+
+        language = "en"
+        viewModel.start(id)
+        runCurrent()
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(5_000)
+        runCurrent()
+        assertEquals("other words on the picture: another file", 2, notes.renders)
+    }
+
+    @Test
+    fun `notes that could not be made fail the sheet - the video can still go as shot`() = runTest {
+        val notes = NotesRenderer(fails = true)
+        val (viewModel, effects) = shareWithNotes(Renderer(tookMs = 100), notes)
+        viewModel.start(videoTake())
+        runCurrent()
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(5_000)
+        runCurrent()
+        assertTrue(viewModel.sheet.value is ShareSheet.Failed)
+        assertTrue(effects.isEmpty())
+        viewModel.onIntent(ShareIntent.SendOriginalClicked)
+        advanceTimeBy(1_000)
+        runCurrent()
+        assertEquals("original video", (effects.single() as ShareEffect.Send).file.readText())
+    }
+
+    @Test
+    fun `the notes show their progress by their own measure of speed`() = runTest {
+        val notes = NotesRenderer(tookMs = 2_000)
+        val (viewModel, _) = shareWithNotes(Renderer(tookMs = 100), notes)
+        viewModel.start(videoTake())
+        runCurrent()
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        runCurrent()
+        // ten seconds of video at the start factor 0.6: six seconds expected — the progress screen at once
+        assertTrue(viewModel.sheet.value is ShareSheet.Preparing)
+        advanceTimeBy(1_100)
+        val midway = viewModel.sheet.value as ShareSheet.Preparing
+        assertEquals(ShareVariant.NOTES, midway.variant)
+        assertTrue("past the sound (10 %) and on its way: ${midway.percent} %", midway.percent in 11..99)
+    }
+
+    @Test
+    fun `a sound recording has no notes to offer`() = runTest {
+        sound.setDefault(hall)
+        val (viewModel, _) = shareWithNotes(Renderer(tookMs = 100), NotesRenderer())
+        viewModel.start(recording())
+        runCurrent()
+        val sheet = viewModel.sheet.value as ShareSheet.Choose
+        assertNull(sheet.info.notes)
+        assertEquals(ShareVariant.PROCESSED, sheet.variant)
     }
 }

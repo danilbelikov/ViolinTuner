@@ -11,6 +11,7 @@ import com.violinjourney.app.core.audio.share.ShareFiles
 import com.violinjourney.app.core.audio.share.ShareNames
 import com.violinjourney.app.core.audio.share.SoundRenderer
 import com.violinjourney.app.core.di.ElapsedClock
+import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingRepository
 import com.violinjourney.app.core.domain.backing.TakeBacking
@@ -27,7 +28,14 @@ import com.violinjourney.app.core.io.fileName
 import com.violinjourney.app.core.io.moveTo
 import com.violinjourney.app.core.io.sibling
 import com.violinjourney.app.core.io.sizeBytes
+import com.violinjourney.app.core.recording.overlay.NotesOverlay
+import com.violinjourney.app.core.recording.overlay.NotesOverlays
+import com.violinjourney.app.core.recording.overlay.NotesVideoConfig
+import com.violinjourney.app.core.recording.overlay.NotesVideoFormat
+import com.violinjourney.app.core.recording.overlay.NotesVideoRenderer
+import com.violinjourney.app.core.recording.overlay.OverlayWords
 import com.violinjourney.app.core.recording.video.VideoFiles
+import com.violinjourney.app.core.recording.video.VideoInfo
 import com.violinjourney.app.feature.events.EventWords
 import com.violinjourney.app.feature.events.ResourceEventWords
 import com.violinjourney.app.feature.sound.SoundReducer
@@ -69,8 +77,8 @@ interface ShareTexts {
  * How long a render takes against the length of what is rendered — measured on this device, by
  * the renders themselves (spec 5.11). Decides whether a progress screen is worth showing.
  */
-class RenderSpeed {
-    @Volatile var factor: Double = START_FACTOR
+class RenderSpeed(startFactor: Double = START_FACTOR) {
+    @Volatile var factor: Double = startFactor
         private set
 
     fun measured(soundMs: Long, tookMs: Long) {
@@ -108,6 +116,15 @@ open class ShareViewModel(
     /** The events of recordings (spec 3.35): a recording of one is named by it, its title and the file too. */
     private val events: EventRepository,
     private val eventWords: EventWords = ResourceEventWords,
+    /** «Видео с нотами» (spec 3.37): null where the platform makes none — the variant is not offered then. */
+    private val notesRenderer: NotesVideoRenderer? = null,
+    /** How fast «Видео с нотами» is made on this device: a measure of its own — the picture is encoded again (spec 5.30). */
+    private val notesSpeed: RenderSpeed = RenderSpeed(NotesVideoConfig().renderSpeedStart),
+    private val notesConfig: NotesVideoConfig = NotesVideoConfig(),
+    /** The config of now: the overlay of a recording takes the recording's own tolerance into it, as its screen does. */
+    private val intonation: IntonationConfig = IntonationConfig(),
+    /** The words drawn on the picture, in the language of the interface; a JVM test has no resources to read them from. */
+    private val overlayWords: suspend (NotesOverlay) -> OverlayWords = { OverlayWords.of(it) },
     private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 
@@ -121,6 +138,9 @@ open class ShareViewModel(
     private var settings: SoundSettings? = null
     private var takeBacking: Pair<Backing, TakeBacking>? = null
     private var job: Job? = null
+
+    /** «Менуэт соль мажор · 3 октября» — the title of the recording being shared: the summary of «Видео с нотами» says it. */
+    private var shareTitle = ""
 
     /**
      * Held by the work that writes files to share ([writingAlone]). A render sees a cancel only between its chunks, and
@@ -156,6 +176,7 @@ open class ShareViewModel(
             val under = backings.takeBackings.first().firstOrNull { it.sessionId == sessionId }
                 ?.let { take -> backings.backing(take.backingId)?.takeIf { backingPcm != null }?.let { it to take } }
             takeBacking = under
+            shareTitle = title
             val info = ShareInfo(
                 sessionId = sessionId,
                 fileName = ShareNames.fileName(title),
@@ -172,10 +193,13 @@ open class ShareViewModel(
                 processed = !SoundRules.isNeutral(effective),
                 backing = under != null,
                 backingBytes = ((session.durationMs + SoundRules.tailSec(effective, config) * MS_PER_SECOND) / MS_PER_SECOND * SoundRenderer.STEREO_BIT_RATE / BITS_PER_BYTE).toLong(),
+                notes = notesOffer(session.durationMs, picture.takeIf { session.videoPath != null }, backing = under != null, processed = !SoundRules.isNeutral(effective)),
             )
             audio = file
             settings = effective
             when {
+                // The notes on the picture come first and are chosen, where the recording is not too long for them (spec 3.37).
+                info.notes?.tooLong == false -> mutableSheet.value = ShareSheet.Choose(info, ShareVariant.NOTES, withText = true, busy = false)
                 // Under a backing there is always a choice, and the backing comes first (spec 3.32).
                 info.backing -> mutableSheet.value = ShareSheet.Choose(info, ShareVariant.BACKING, withText = true, busy = false)
                 // A video take always has a choice to make — the video or its sound alone (spec 3.19).
@@ -201,6 +225,7 @@ open class ShareViewModel(
                     ShareVariant.SOUND -> choice.info.video
                     ShareVariant.PROCESSED -> choice.info.processed
                     ShareVariant.ORIGINAL -> true
+                    ShareVariant.NOTES -> choice.info.notes?.tooLong == false
                 }
                 if (offered) choice.copy(variant = intent.variant) else choice
             }
@@ -289,12 +314,23 @@ open class ShareViewModel(
         val source = audio ?: return
         val current = settings ?: return
         val info = choice.info
-        val under = takeBacking?.takeIf { choice.variant == ShareVariant.BACKING }
-        // the mix is a file of its own: another shift or level is another file
-        val key = under?.let { (backing, take) -> "${source.fileName}-backing-${backing.id}-${take.offsetMs}-${take.gainDb}" } ?: source.fileName
-        val target = files.processed(key, current, info.fileNameOf(choice.variant))
+        val notesSound = info.notes?.sound?.takeIf { choice.variant == ShareVariant.NOTES }
+        val under = takeBacking?.takeIf { choice.variant == ShareVariant.BACKING || notesSound == NotesSound.BACKING }
+        // the notes are drawn from the stored analysis in the words of now; the recording may be gone meanwhile
+        val notes = if (choice.variant == ShareVariant.NOTES) {
+            notesOf(info.sessionId) ?: run {
+                mutableSheet.value = ShareSheet.Failed(info)
+                return
+            }
+        } else {
+            null
+        }
+        // the mix is a file of its own: another shift or level is another file; so are the notes in another language
+        val backingKey = under?.let { (backing, take) -> "-backing-${backing.id}-${take.offsetMs}-${take.gainDb}" }.orEmpty()
+        val notesKey = notes?.let { NOTES_KEY + it.key }.orEmpty()
+        val target = files.processed(source.fileName + notesKey + backingKey, current, info.fileNameOf(choice.variant))
         if (withContext(io) { target.sizeBytes() } == 0L) {
-            if (!prepare(choice, source, current, target)) {
+            if (!prepare(choice, source, current, target, under, notes)) {
                 mutableSheet.value = ShareSheet.Failed(info)
                 return
             }
@@ -307,12 +343,21 @@ open class ShareViewModel(
     }
 
     /** Renders into a `.part` beside [target] and renames: what lies under the final name is always whole. */
-    private suspend fun prepare(choice: ShareSheet.Choose, source: PlatformFile, settings: SoundSettings, target: PlatformFile): Boolean = coroutineScope {
+    private suspend fun prepare(
+        choice: ShareSheet.Choose,
+        source: PlatformFile,
+        settings: SoundSettings,
+        target: PlatformFile,
+        under: Pair<Backing, TakeBacking>?,
+        notes: NotesWork?,
+    ): Boolean = coroutineScope {
         val info = choice.info
-        val soundMs = info.durationMs + (SoundRules.tailSec(settings, config) * MS_PER_SECOND).toLong()
+        // the picture of «Видео с нотами» is encoded again: a measure of its own, counted against the length of the video
+        val pace = if (notes != null) notesSpeed else speed
+        val soundMs = if (notes != null) info.durationMs else info.durationMs + (SoundRules.tailSec(settings, config) * MS_PER_SECOND).toLong()
         val started = clock.nowMs()
         lastPercent = 0
-        if (soundMs * speed.factor > SHOW_PROGRESS_FROM_MS) {
+        if (soundMs * pace.factor > SHOW_PROGRESS_FROM_MS) {
             showProgress(info, choice.variant, 0, null)
         } else if (mutableSheet.value !is ShareSheet.Preparing) {
             mutableSheet.value = choice.copy(busy = true)
@@ -331,13 +376,14 @@ open class ShareViewModel(
         val whole = try {
             // the picture of a video take is copied as it is; only the sound is rendered, so the estimate of the sound holds
             val video = info.video && (choice.variant == ShareVariant.PROCESSED || choice.variant == ShareVariant.BACKING)
-            val under = takeBacking?.takeIf { choice.variant == ShareVariant.BACKING }?.let { (backing, take) ->
+            val mix = under?.let { (backing, take) ->
                 val pcm = backingPcm
                 RenderBacking(pcm = { rate -> pcm?.prepare(backing, rate) }, offsetMs = take.offsetMs, gainDb = take.gainDb)
             }
             val render: suspend (PlatformFile, SoundSettings, PlatformFile, (Float) -> Unit) -> Boolean = when {
-                under != null && video -> { from, with, to, progress -> renderer.renderVideoWithBacking(from, with, under, to, progress) }
-                under != null -> { from, with, to, progress -> renderer.renderWithBacking(from, with, under, to, progress) }
+                notes != null -> { from, with, to, progress -> renderNotes(info, notes, mix, from, with, to, progress) }
+                mix != null && video -> { from, with, to, progress -> renderer.renderVideoWithBacking(from, with, mix, to, progress) }
+                mix != null -> { from, with, to, progress -> renderer.renderWithBacking(from, with, mix, to, progress) }
                 video -> renderer::renderVideo
                 else -> renderer::render
             }
@@ -378,8 +424,78 @@ open class ShareViewModel(
                 false
             }
         }
-        if (kept) speed.measured(soundMs, clock.nowMs() - started)
+        if (kept) pace.measured(soundMs, clock.nowMs() - started)
         kept
+    }
+
+    /** What «Видео с нотами» of [sessionId] draws: its stored analysis made into the overlay, and the words of now; null when it is gone. */
+    private suspend fun notesOf(sessionId: Long): NotesWork? {
+        val details = sessions.details(sessionId) ?: return null
+        val overlay = NotesOverlays.of(details, sessions.sessions.first(), intonation, shareTitle, notesConfig)
+        return NotesWork(overlay, overlayWords(overlay))
+    }
+
+    /**
+     * «Видео с нотами» (spec 3.37): the sound of the variant first — the mix or the processed sound into an `.m4a` beside the file, the
+     * video's own track as it is — then the picture with the notes beside it; the sound is the first [NotesVideoConfig.soundShare] of
+     * the progress.
+     */
+    private suspend fun renderNotes(
+        info: ShareInfo,
+        notes: NotesWork,
+        mix: RenderBacking?,
+        source: PlatformFile,
+        settings: SoundSettings,
+        target: PlatformFile,
+        onProgress: (Float) -> Unit,
+    ): Boolean {
+        val makes = notesRenderer ?: return false
+        val share = notesConfig.soundShare
+        val made = target.sibling(target.fileName + NOTES_SOUND)
+        try {
+            val sound = when (info.notes?.sound) {
+                NotesSound.BACKING -> made.takeIf { mix != null && renderer.renderWithBacking(source, settings, mix, made) { onProgress(it * share) } }
+                NotesSound.PROCESSED -> made.takeIf { renderer.render(source, settings, made) { onProgress(it * share) } }
+                NotesSound.ORIGINAL, null -> source
+            } ?: return false
+            return makes.render(source, sound, notes.overlay, notes.words, target) { onProgress(share + it * (1f - share)) }
+        } finally {
+            withContext(NonCancellable + io) { made.deleteFile() }
+        }
+    }
+
+    /**
+     * «Видео с нотами» for a recording of [durationMs] whose picture is [picture] (spec 3.37, 5.30): the size of the file, about what it
+     * will weigh, the sound in it; null without a picture or where the platform makes none. The frame rate is not known before the
+     * video is opened: the estimate counts the most frames a file may have.
+     */
+    private fun notesOffer(durationMs: Long, picture: VideoInfo?, backing: Boolean, processed: Boolean): NotesOffer? {
+        if (notesRenderer == null || picture == null) return null
+        val format = NotesVideoFormat.of(picture.width, picture.height, frameRate = 0f, config = notesConfig)
+        val sound = when {
+            backing -> NotesSound.BACKING
+            processed -> NotesSound.PROCESSED
+            else -> NotesSound.ORIGINAL
+        }
+        val soundBitrate = when (sound) {
+            NotesSound.BACKING -> SoundRenderer.STEREO_BIT_RATE
+            NotesSound.PROCESSED -> SoundRenderer.BIT_RATE
+            NotesSound.ORIGINAL -> notesConfig.soundBitrateGuess
+        }
+        return NotesOffer(
+            resolution = format.shortSide,
+            bytes = NotesVideoFormat.bytes(format, soundBitrate, durationMs, notesConfig),
+            sound = sound,
+            tooLong = durationMs > notesConfig.maxDurationMs,
+            limitMinutes = (notesConfig.maxDurationMs / MS_PER_MINUTE).toInt(),
+        )
+    }
+
+    /** The overlay of a recording and the words it is drawn in. */
+    private class NotesWork(val overlay: NotesOverlay, val words: OverlayWords) {
+        /** The file of these notes: another language, another title or another previous take is another file. */
+        val key: String
+            get() = (HASH_STEP * (HASH_STEP * words.hashCode() + overlay.title.hashCode()) + overlay.previous.hashCode()).toUInt().toString(HEX)
     }
 
     /** A progress screen that was shown is shown long enough to be read: nothing on this app's screens flashes by. */
@@ -401,5 +517,12 @@ open class ShareViewModel(
         const val MS_PER_SECOND = 1_000.0
         const val BITS_PER_BYTE = 8
         const val PART = ".part"
+        const val MS_PER_MINUTE = 60_000L
+
+        /** The sound of «Видео с нотами» on its way into the file, beside it. */
+        const val NOTES_SOUND = ".sound.m4a"
+        const val NOTES_KEY = "-notes-"
+        const val HASH_STEP = 31
+        const val HEX = 16
     }
 }

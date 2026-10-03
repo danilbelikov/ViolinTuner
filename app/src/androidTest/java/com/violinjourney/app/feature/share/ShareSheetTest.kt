@@ -40,6 +40,13 @@ import com.violinjourney.app.shared.resources.dot_separator
 import com.violinjourney.app.shared.resources.share_backing
 import com.violinjourney.app.shared.resources.share_busy
 import com.violinjourney.app.shared.resources.share_large_file
+import com.violinjourney.app.shared.resources.share_notes
+import com.violinjourney.app.shared.resources.share_notes_caption_backing
+import com.violinjourney.app.shared.resources.share_notes_caption_original
+import com.violinjourney.app.shared.resources.share_notes_caption_processed
+import com.violinjourney.app.shared.resources.share_notes_too_long_few
+import com.violinjourney.app.shared.resources.share_notes_too_long_many
+import com.violinjourney.app.shared.resources.share_notes_too_long_one
 import com.violinjourney.app.shared.resources.share_preparing
 import com.violinjourney.app.shared.resources.share_preparing_video
 import com.violinjourney.app.shared.resources.share_remaining
@@ -113,6 +120,15 @@ class ShareSheetTest {
         words[VIDEO_ORIGINAL] = stringResource(Res.string.share_video_original)
         words[PREPARING_FILE] = stringResource(Res.string.share_preparing)
         words[PREPARING_VIDEO] = stringResource(Res.string.share_preparing_video)
+        words[NOTES] = stringResource(Res.string.share_notes)
+        words[NOTES_BACKING] = stringResource(Res.string.share_notes_caption_backing)
+        words[NOTES_PROCESSED] = stringResource(Res.string.share_notes_caption_processed)
+        words[NOTES_ORIGINAL] = stringResource(Res.string.share_notes_caption_original)
+        words[NOTES_TOO_LONG] = stringResource(
+            Formats.plural(LIMIT, Res.string.share_notes_too_long_one, Res.string.share_notes_too_long_few, Res.string.share_notes_too_long_many),
+            LIMIT,
+        )
+        words[NOTES_DETAILS] = stringResource(Res.string.share_video_details, Formats.duration(VIDEO.durationMs), NOTES_RESOLUTION, Formats.fileSize(NOTES_BYTES))
     }
 
     private fun word(key: String): String = words.getValue(key)
@@ -281,6 +297,44 @@ class ShareSheetTest {
         compose.onAllNodesWithText(word(CANCEL)).assertCountEquals(0)
     }
 
+    /**
+     * «Видео с нотами» (spec 3.37): the first variant and the one chosen — before «С минусовкой» — its caption saying the sound it carries,
+     * the chip «.mp4», the line of the file at the resolution of the file with the notes.
+     */
+    @Test
+    fun theVideoWithTheNotesComesFirstAndChosen() {
+        show(ShareSheet.Choose(VIDEO.copy(notes = offer(NotesSound.BACKING)), ShareVariant.NOTES, withText = true, busy = false))
+        compose.onAllNodes(radios).assertCountEquals(VARIANTS + 1)
+        compose.onNode(radios and hasText(word(NOTES))).assertIsSelected()
+        compose.onNode(radios and hasText(word(NOTES_BACKING))).assertIsDisplayed()
+        val tops = listOf(NOTES, BACKING).map { key -> compose.onNode(radios and hasText(word(key))).getUnclippedBoundsInRoot().top }
+        assertTrue("the notes stand over the mix: $tops", tops[0] < tops[1])
+        compose.onNodeWithText(word(NOTES_DETAILS), useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    /** The caption names the sound the notes carry (spec 3.37): the processed one, or the track of the video as it is. */
+    @Test
+    fun theCaptionOfTheNotesNamesTheirSound() {
+        var sheet by mutableStateOf<ShareSheet>(ShareSheet.Choose(VIDEO.copy(backing = false, notes = offer(NotesSound.PROCESSED)), ShareVariant.NOTES, withText = true, busy = false))
+        show { sheet }
+        compose.onNode(radios and hasText(word(NOTES_PROCESSED))).assertIsDisplayed()
+        sheet = ShareSheet.Choose(VIDEO.copy(backing = false, processed = false, notes = offer(NotesSound.ORIGINAL)), ShareVariant.NOTES, withText = true, busy = false)
+        compose.waitForIdle()
+        compose.onNode(radios and hasText(word(NOTES_ORIGINAL))).assertIsDisplayed()
+    }
+
+    /** A recording longer than fifteen minutes (spec 3.37): the row is there, dimmed, says why — and answers nothing. */
+    @Test
+    fun theNotesOfATooLongRecordingCannotBeChosenAndSayWhy() {
+        show(ShareSheet.Choose(VIDEO.copy(notes = offer(NotesSound.BACKING).copy(tooLong = true)), ShareVariant.BACKING, withText = true, busy = false))
+        compose.onNode(radios and hasText(word(NOTES))).assertIsNotEnabled()
+        compose.onNode(radios and hasText(word(NOTES_TOO_LONG))).assertIsDisplayed().performClick()
+        compose.runOnIdle { assertEquals(emptyList<ShareIntent>(), intents) }
+        compose.onNode(radios and hasText(word(BACKING))).assertIsSelected()
+    }
+
+    private fun offer(sound: NotesSound) = NotesOffer(resolution = NOTES_RESOLUTION, bytes = NOTES_BYTES, sound = sound, tooLong = false, limitMinutes = LIMIT)
+
     private companion object {
         const val BACKING = "backing"
         const val SOUND_ONLY = "soundOnly"
@@ -297,6 +351,17 @@ class ShareSheetTest {
         const val VIDEO_ORIGINAL = "videoOriginal"
         const val PREPARING_FILE = "preparingFile"
         const val PREPARING_VIDEO = "preparingVideo"
+        const val NOTES = "notes"
+        const val NOTES_BACKING = "notesBacking"
+        const val NOTES_PROCESSED = "notesProcessed"
+        const val NOTES_ORIGINAL = "notesOriginal"
+        const val NOTES_TOO_LONG = "notesTooLong"
+        const val NOTES_DETAILS = "notesDetails"
+        const val LIMIT = 15
+
+        /** The file with the notes is made at 720p here, against the 1080p of the take: the line says the file's own. */
+        const val NOTES_RESOLUTION = 720
+        const val NOTES_BYTES = 40L * 1024 * 1024
         const val SWIPE = 700
         const val SWIPE_MS = 150L
         const val MP4 = ".mp4"

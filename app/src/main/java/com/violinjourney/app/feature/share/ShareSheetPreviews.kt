@@ -42,6 +42,33 @@ private fun Sheet(sheet: ShareSheet, landscape: Boolean = false) = ViolinTheme {
 @Composable
 private fun SoundPreview() = Sheet(ShareSheet.Choose(SoundInfo, ShareVariant.PROCESSED, withText = true, busy = false))
 
+@Preview(name = "Поделиться · видео с нотами (3.37): первым и выбрано, звук — с минусовкой, строка файла с разрешением файла с нотами", locale = "ru", widthDp = 412, heightDp = 860)
+@Composable
+private fun VideoNotesPreview() = Sheet(
+    ShareSheet.Choose(
+        VideoInfo.copy(notes = NotesOffer(resolution = 1080, bytes = 140L * MIB, sound = NotesSound.BACKING, tooLong = false, limitMinutes = 15)),
+        ShareVariant.NOTES, withText = true, busy = false,
+    ),
+)
+
+@Preview(name = "Поделиться · видео с нотами, запись длиннее 15 минут: строка приглушена и говорит почему", locale = "ru", widthDp = 412, heightDp = 860)
+@Composable
+private fun VideoNotesTooLongPreview() = Sheet(
+    ShareSheet.Choose(
+        VideoInfo.copy(notes = NotesOffer(resolution = 1080, bytes = 900L * MIB, sound = NotesSound.BACKING, tooLong = true, limitMinutes = 15)),
+        ShareVariant.BACKING, withText = true, busy = false,
+    ),
+)
+
+@Preview(name = "Поделиться · готовим видео с нотами", locale = "ru", widthDp = 412, heightDp = 420)
+@Composable
+private fun VideoNotesPreparingPreview() = Sheet(
+    ShareSheet.Preparing(
+        VideoInfo.copy(notes = NotesOffer(resolution = 1080, bytes = 140L * MIB, sound = NotesSound.BACKING, tooLong = false, limitMinutes = 15)),
+        ShareVariant.NOTES, percent = 42, remainingSec = 40,
+    ),
+)
+
 @Preview(name = "Поделиться · видео под минусовку: четыре варианта, «С минусовкой» первым, строка файла видео", locale = "ru", widthDp = 412, heightDp = 780)
 @Composable
 private fun VideoBackingPreview() = Sheet(ShareSheet.Choose(VideoInfo, ShareVariant.BACKING, withText = true, busy = false))

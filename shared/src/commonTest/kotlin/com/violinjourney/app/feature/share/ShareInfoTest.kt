@@ -35,6 +35,18 @@ class ShareInfoTest {
     }
 
     @Test
+    fun `the video with the notes is an mp4 made here that weighs what its new picture will`() {
+        val notes = video.copy(
+            originalVideoFileName = "Менуэт · 27 сентября.mov",
+            notes = NotesOffer(resolution = 1_080, bytes = 81_674_240, sound = NotesSound.PROCESSED, tooLong = false, limitMinutes = 15),
+        )
+        assertEquals(".mp4", notes.extensionOf(ShareVariant.NOTES), "made here, never the container of the camera")
+        assertEquals("Менуэт · 27 сентября.mp4", notes.fileNameOf(ShareVariant.NOTES))
+        assertEquals("video/mp4", notes.typeOf(ShareVariant.NOTES))
+        assertEquals(81_674_240L, notes.bytesOf(ShareVariant.NOTES))
+    }
+
+    @Test
     fun `a file is large from one hundred mebibytes on`() {
         assertFalse(ShareInfo.isLarge(ShareInfo.LARGE_BYTES - 1))
         assertTrue(ShareInfo.isLarge(ShareInfo.LARGE_BYTES))

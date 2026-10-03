@@ -545,7 +545,8 @@ private fun shareViewModel(graph: IosGraph, texts: IosTexts) = ShareViewModel(
     sessions = graph.sessions, repertoire = graph.repertoire, sound = graph.sound, audioFiles = graph.audioFiles,
     files = graph.shareFiles, renderer = graph.renderer, texts = texts.share, speed = graph.renderSpeed, clock = graph.elapsed,
     config = graph.soundConfig, videos = graph.videoFiles, backings = graph.backings, backingPcm = graph.backingPcm,
-    analytics = graph.analytics, events = graph.events, io = graph.io,
+    analytics = graph.analytics, events = graph.events, notesRenderer = graph.notesVideoRenderer, notesSpeed = graph.notesRenderSpeed,
+    notesConfig = graph.notesVideoConfig, intonation = graph.intonationConfig, io = graph.io,
 )
 
 private fun homeViewModel(graph: IosGraph) = HomeViewModel(graph.home, graph.journey, graph.clock, graph.venues, graph.journeyConfig)

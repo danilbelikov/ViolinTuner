@@ -16,7 +16,31 @@ enum class ShareVariant {
 
     /** A video take only (spec 3.19): its sound alone, an `.m4a` like any recording's — processed when the processing does something. */
     SOUND,
+
+    /**
+     * «Видео с нотами» (spec 3.37): the picture encoded again with the lane of notes and the summary at the end, beside the sound the
+     * first variant without the notes would carry ([NotesOffer.sound]). Offered first for a recording with a video.
+     */
+    NOTES,
 }
+
+/** The sound «Видео с нотами» carries (spec 3.37): the one of the variant that would come first without it. */
+enum class NotesSound {
+    /** A take under a backing: the processed violin and the backing, as «С минусовкой». */
+    BACKING,
+
+    /** The processing does something: what is heard in the app. */
+    PROCESSED,
+
+    /** The sound track of the video as it is. */
+    ORIGINAL,
+}
+
+/**
+ * «Видео с нотами» as the sheet offers it (spec 3.37, 5.30): the short side of the file and about how much it weighs, the sound in it,
+ * and whether the recording is longer than [limitMinutes] — the row is dimmed then and cannot be chosen.
+ */
+data class NotesOffer(val resolution: Int, val bytes: Long, val sound: NotesSound, val tooLong: Boolean, val limitMinutes: Int)
 
 /** What the sheet says about the recording to be sent. */
 data class ShareInfo(
@@ -51,6 +75,8 @@ data class ShareInfo(
      * file (spec 5.28), «….m4a» of a take. What is made here — the processed sound — is always an `.m4a` ([fileName]). Null — [fileName].
      */
     val originalAudioFileName: String? = null,
+    /** «Видео с нотами» (spec 3.37): set for a recording with a video where the platform makes such a file; null otherwise. */
+    val notes: NotesOffer? = null,
 ) {
     val video: Boolean get() = videoFileName != null
 
@@ -78,8 +104,12 @@ data class ShareInfo(
         return if (video) ShareNames.mimeTypeOf(name) else ShareNames.soundTypeOf(name)
     }
 
-    /** An estimate for what is rendered, the real size for what is sent as it is. A processed video weighs what its picture does. */
+    /**
+     * An estimate for what is rendered, the real size for what is sent as it is. A processed video weighs what its picture does; one
+     * with the notes, what its new picture will (spec 5.30).
+     */
     fun bytesOf(variant: ShareVariant): Long = when {
+        variant == ShareVariant.NOTES -> notes?.bytes ?: originalBytes
         video && (variant == ShareVariant.PROCESSED || variant == ShareVariant.BACKING) -> originalBytes
         variant == ShareVariant.BACKING -> backingBytes
         variant == ShareVariant.ORIGINAL -> originalBytes

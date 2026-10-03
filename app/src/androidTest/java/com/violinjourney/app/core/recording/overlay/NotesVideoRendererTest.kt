@@ -104,6 +104,15 @@ class NotesVideoRendererTest {
         assertEquals(listOf("notes.mp4", "take.mp4"), directory.list()!!.filter { !it.endsWith(".m4a") }.sorted())
     }
 
+    /** The folder of a file to share is not there until something writes into it: with the video's own sound, that is this renderer. */
+    @Test
+    fun aFileIsMadeInAFolderNotThereYet() {
+        val source = TestVideo.make(File(directory, "take.mp4"), seconds = SECONDS)
+        val target = File(directory, "share/notes-of-take/notes.mp4")
+        assertTrue(render(source, target))
+        assertTrue(target.length() > 0)
+    }
+
     @Test
     fun theNoteUnderThePlayheadIsDrawnInItsColour() {
         val source = TestVideo.make(File(directory, "take.mp4"), seconds = SECONDS)

@@ -26,6 +26,11 @@ annotation class DefaultDispatcher
 @Retention(AnnotationRetention.BINARY)
 annotation class IoDispatcher
 
+/** The measure of how fast «Видео с нотами» is made on this phone (spec 5.30): apart from that of the sound, which is far quicker. */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class NotesVideoSpeed
+
 @Module
 @InstallIn(SingletonComponent::class)
 object CoreModule {

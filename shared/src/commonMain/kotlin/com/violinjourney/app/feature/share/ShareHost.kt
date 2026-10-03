@@ -27,6 +27,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
@@ -73,6 +74,13 @@ import com.violinjourney.app.shared.resources.share_failed_video_title
 import com.violinjourney.app.shared.resources.share_file_details
 import com.violinjourney.app.shared.resources.share_file_details_stereo
 import com.violinjourney.app.shared.resources.share_large_file
+import com.violinjourney.app.shared.resources.share_notes
+import com.violinjourney.app.shared.resources.share_notes_caption_backing
+import com.violinjourney.app.shared.resources.share_notes_caption_original
+import com.violinjourney.app.shared.resources.share_notes_caption_processed
+import com.violinjourney.app.shared.resources.share_notes_too_long_few
+import com.violinjourney.app.shared.resources.share_notes_too_long_many
+import com.violinjourney.app.shared.resources.share_notes_too_long_one
 import com.violinjourney.app.shared.resources.share_original
 import com.violinjourney.app.shared.resources.share_original_caption
 import com.violinjourney.app.shared.resources.share_percent
@@ -136,6 +144,9 @@ private val FailedGap = 10.dp
 private val FailedButtonsTop = 16.dp
 private val FailedButtonsGap = 10.dp
 private const val PERCENT = 100f
+
+/** A variant that cannot be chosen — «Видео с нотами» of a recording too long for it (spec 3.37) — stands at the dimming of R1. */
+private const val UNAVAILABLE_ALPHA = 0.38f
 private const val BYTES_PER_KB = 1_024L
 private const val TABULAR_FIGURES = "tnum"
 
@@ -261,12 +272,14 @@ private fun Choose(sheet: ShareSheet.Choose, onIntent: (ShareIntent) -> Unit, la
         verticalArrangement = Arrangement.spacedBy(VariantsGap),
     ) {
         variantsOf(info).forEach { variant ->
+            val unavailable = variant == ShareVariant.NOTES && info.notes?.tooLong == true
             Variant(
                 title = variantTitle(info, variant),
                 caption = variantCaption(info, variant),
                 format = info.extensionOf(variant),
                 selected = sheet.variant == variant,
-                enabled = !sheet.busy,
+                enabled = !sheet.busy && !unavailable,
+                unavailable = unavailable,
                 landscape = landscape,
             ) { onIntent(ShareIntent.VariantSelected(variant)) }
         }
@@ -276,11 +289,12 @@ private fun Choose(sheet: ShareSheet.Choose, onIntent: (ShareIntent) -> Unit, la
 }
 
 /**
- * What the sheet offers, in its order (spec 3.17, 3.19, 3.32): the mix of a take under a backing first; a video — with its processed
- * sound, as shot, its sound alone; a sound — processed, the original. Without processing «Обработанный звук» would be the original twice:
- * it is not offered then.
+ * What the sheet offers, in its order (spec 3.17, 3.19, 3.32, 3.37): the video with the notes first, where it is made; the mix of a take
+ * under a backing; a video — with its processed sound, as shot, its sound alone; a sound — processed, the original. Without processing
+ * «Обработанный звук» would be the original twice: it is not offered then.
  */
 private fun variantsOf(info: ShareInfo): List<ShareVariant> = buildList {
+    if (info.notes != null) add(ShareVariant.NOTES)
     if (info.backing) add(ShareVariant.BACKING)
     if (info.processed) add(ShareVariant.PROCESSED)
     add(ShareVariant.ORIGINAL)
@@ -298,6 +312,7 @@ private fun variantTitle(info: ShareInfo, variant: ShareVariant): String = strin
             else -> Res.string.share_video
         }
         ShareVariant.SOUND -> Res.string.share_sound_only
+        ShareVariant.NOTES -> Res.string.share_notes
     },
 )
 
@@ -314,18 +329,47 @@ private fun variantCaption(info: ShareInfo, variant: ShareVariant): String = whe
         },
     )
     ShareVariant.SOUND -> stringResource(if (info.processed) Res.string.share_sound_with_processing else Res.string.share_sound_as_recorded)
+    ShareVariant.NOTES -> notesCaption(info.notes)
+}
+
+/** «лента нот и итог в конце · звук с обработкой» — and the sound it carries; a recording too long for it says why it cannot be chosen. */
+@Composable
+private fun notesCaption(notes: NotesOffer?): String = when {
+    notes == null -> ""
+    notes.tooLong -> stringResource(
+        Formats.plural(notes.limitMinutes, Res.string.share_notes_too_long_one, Res.string.share_notes_too_long_few, Res.string.share_notes_too_long_many),
+        notes.limitMinutes,
+    )
+    else -> stringResource(
+        when (notes.sound) {
+            NotesSound.BACKING -> Res.string.share_notes_caption_backing
+            NotesSound.PROCESSED -> Res.string.share_notes_caption_processed
+            NotesSound.ORIGINAL -> Res.string.share_notes_caption_original
+        },
+    )
 }
 
 /**
  * A variant (5.29 R5): 64 at the least (56 lying), on the ground of the screen at a corner of 18; the chosen one framed in the accent
  * over the accent at 10 %; a radio of 22, the name, the caption and the chip of the format. A radio button for TalkBack, its words one.
+ * [unavailable] — it cannot be chosen at all (spec 3.37): dimmed, and TalkBack says so with the reason in the caption.
  */
 @Composable
-private fun Variant(title: String, caption: String, format: String, selected: Boolean, enabled: Boolean, landscape: Boolean, onClick: () -> Unit) {
+private fun Variant(
+    title: String,
+    caption: String,
+    format: String,
+    selected: Boolean,
+    enabled: Boolean,
+    unavailable: Boolean,
+    landscape: Boolean,
+    onClick: () -> Unit,
+) {
     val colors = MaterialTheme.colorScheme
     val ground = if (selected) colors.primary.copy(alpha = CHOSEN_GROUND_ALPHA).compositeOver(colors.surface) else colors.surface
     Row(
         modifier = Modifier
+            .alpha(if (unavailable) UNAVAILABLE_ALPHA else 1f)
             .fillMaxWidth()
             .heightIn(min = if (landscape) VariantMinHeightLandscape else VariantMinHeight)
             .clip(AppShapes.M)
@@ -405,7 +449,9 @@ private fun FileLine(info: ShareInfo, variant: ShareVariant) {
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold),
             )
             val details = if (asVideo) {
-                stringResource(Res.string.share_video_details, Formats.duration(info.durationMs), info.resolution, Formats.fileSize(bytes))
+                // «Видео с нотами» is made no larger than 1080 on its short side (spec 5.30): its own resolution
+                val resolution = info.notes?.takeIf { variant == ShareVariant.NOTES }?.resolution ?: info.resolution
+                stringResource(Res.string.share_video_details, Formats.duration(info.durationMs), resolution, Formats.fileSize(bytes))
             } else {
                 stringResource(
                     if (variant == ShareVariant.BACKING) Res.string.share_file_details_stereo else Res.string.share_file_details,
