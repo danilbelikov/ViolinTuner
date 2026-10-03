@@ -60,6 +60,7 @@ A practice companion for violinists. **Live** shows the note being played and wh
 | повтор | an event that comes every week or every other week | repeat | Wiederholung | récurrence | repetición | ripetizione | repetição | 반복 | 重复 | 繰り返し |
 | напоминание | the card on «Занятия» the day before an event and on its day; never a system notification | reminder | Erinnerung | rappel | recordatorio | promemoria | lembrete | 알림 | 提醒 | リマインダー |
 | программа (выступления) | the pieces played at a performance, in their order | programme | Programm | programme | programa | programma | programa | 프로그램 | 曲目单 | プログラム |
+| Впереди · Прошли («Выступления») | the two groups of the list of performances: those to come, those over; the term of one to come is a short chip («через 27 дн.») on the list and whole words («через 27 дней») in the row on «Записи» and for TalkBack | Ahead · Past | Demnächst · Vergangen | À venir · Passées | Próximas · Pasadas | In arrivo · Passate | Próximas · Passadas | 예정 · 지난 공연 | 即将到来 · 已结束 | これから · 終わったもの |
 
 Violin vocabulary (rosin, peg, bow, chin rest, tuning fork, music stand, case, scroll, varnish; détaché, legato, staccato, spiccato, martelé, sautillé, ricochet) — use the terms violinists of your language actually use; bow-stroke names usually stay French/Italian.
 
