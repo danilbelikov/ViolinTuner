@@ -52,6 +52,7 @@ Android-приложение: интонационный тренажёр для
 | Обезличенная статистика: AppMetrica | `docs/spec/analytics.md` (3.34, 5.27) | `docs/notes/analytics.md` | — |
 | События: уроки, выступления, свои виды в календаре (вид — 3.36.9, этапы R9) | `docs/spec/events.md` (3.35, 5.28) | `docs/notes/events.md` | `docs/plan-events.md` |
 | Редизайн всего приложения, этапы R1–R9 — **черновик 0.87, R1–R9 сделаны** (R1–R8 — этапы 100–122, R9 — этапы 96–99) (новее 3.1–3.35 в раскладке, виде и словах: где спорят — прав он; макеты и план — `docs/redesign/`) | `docs/spec/redesign.md` (3.36, 5.29) | `docs/notes/redesign.md` (оглавление; заметки — `docs/notes/redesign/r1.md` … `r9.md`, по файлу на часть R) | `docs/redesign/implementation/stages.md`; конвейер этапа — `.claude/workflows/redesign-stage.js` |
+| Видео с нотами: лента нот и итог на видео для «Поделиться» (spec 0.89, черновик, этапы 123–126 не начаты; Media3 Transformer 1.9.0 согласован владельцем 2026-10-03; идея — `docs/ideas/video-overlay/`, макет — `docs/design/project/overlay/project/overlay.html`) | `docs/spec/overlay.md` (3.37, 5.30) | `docs/notes/overlay.md` | `docs/plan-overlay.md` |
 
 - Прогресс считается только из времени занятий, не из сессий и баллов. «Занятие» (время) и «сессия» (запись с анализом; в текстах — «запись», в коде — `Session`) — разные сущности, не смешивать ни в коде, ни в текстах.
 - Макеты фич — `docs/design/project/<фича>/project/*.dc.html`; точный путь, кадры и секция `dev` названы в шапке раздела спеки.
@@ -123,7 +124,7 @@ Android-приложение: интонационный тренажёр для
 ## Процесс
 - Крупную задачу начинай с плана: список файлов, что меняется, какие тесты. Код — после подтверждения.
 - Один коммит — одна логическая единица: `feat(live): ...`, `fix(audio): ...`, `test(domain): ...`.
-- Зависимости и версии в `libs.versions.toml` не добавлять и не менять без явного согласия (CameraX 1.6.2 согласован владельцем 2026-09-23).
+- Зависимости и версии в `libs.versions.toml` не добавлять и не менять без явного согласия (CameraX 1.6.2 согласован владельцем 2026-09-23; Media3 Transformer и Effect 1.9.0 — той же версии, что `media3-common` и `media3-muxer` из CameraX, — 2026-10-03, для «Видео с нотами»).
 - В прод-коде нет `runBlocking`, `GlobalScope`, проглоченных исключений и TODO без пояснения.
 - Если спека не отвечает на вопрос — спроси, а не додумывай поведение.
 - Сборка для магазина (RuStore, Google Play) — только по порядку `docs/release.md`, раздел «Каждая сборка для магазина»: `versionCode` + 1, проверка обновления поверх предыдущей магазинной сборки. Новая версия базы = `AppDatabase.VERSION` + 1, миграция в `DatabaseMigrations.ALL`, закоммиченная схема в `shared/schemas`, рядом с базой (иначе `DatabaseSchemaFilesTest` и `DatabaseMigrationChainTest` в `:shared` роняют сборку) и тест шага в `DatabaseMigrationTest`. Миграции общие (`shared/commonMain`): шаг пишется на `SQLiteConnection` только через `connection.execSQL`, им открывают базу и Android (`DatabaseModule`), и iOS (`IosStorage`); на iOS цепочку от v1 проходит `IosDatabaseMigrationTest`.
