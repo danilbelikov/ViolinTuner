@@ -213,8 +213,8 @@ class IosNotesVideoRendererTest {
         assertTrue(solid < column.size / 2, "$solid of ${column.size} pixels are the capsule's colour")
 
         val summary = Frame.of(target, seconds = LONGER_PICTURE + 2.0, keep = "ios-summary-icon")
-        val top = summary.height - (config.signatureBottomLandscapeU + config.appLineMaxLines * config.signatureLineU) * geometry.u
-        val warm = (top.toInt() until summary.height).any { y ->
+        val top = geometry.signatureBottom - config.appLineMaxLines * geometry.signatureLineHeight
+        val warm = (top.toInt() until geometry.signatureBottom.toInt()).any { y ->
             (0 until summary.width).any { x -> summary.pixel(x, y).let { (it shr 16 and 0xFF) > WARM_RED && (it shr 16 and 0xFF) - (it and 0xFF) > WARM_LEAD } }
         }
         assertTrue(warm, "the sun of the icon under the summary")

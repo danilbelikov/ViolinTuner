@@ -14,6 +14,7 @@ import com.violinjourney.app.core.ui.theme.Manrope
 import com.violinjourney.app.testing.TestVideo
 import java.io.File
 import kotlin.math.abs
+import kotlin.math.ceil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.cancelAndJoin
@@ -208,8 +209,8 @@ class NotesVideoRendererTest {
         assertTrue("$solid of ${column.size} pixels are the capsule's colour", solid < column.size / 2)
 
         val summary = frameAt(target, SECONDS * 1_000L + 2_000, keep = "video-summary-icon")
-        val top = summary.height - (config.signatureBottomLandscapeU + config.appLineMaxLines * config.signatureLineU) * geometry.u
-        val warm = (top.toInt() until summary.height).any { y ->
+        val top = geometry.signatureBottom - config.appLineMaxLines * geometry.signatureLineHeight
+        val warm = (top.toInt() until geometry.signatureBottom.toInt()).any { y ->
             (0 until summary.width).any { x -> summary.getPixel(x, y).let { red(it) > WARM_RED && red(it) - blue(it) > WARM_LEAD } }
         }
         assertTrue("the sun of the icon under the summary", warm)
@@ -229,6 +230,33 @@ class NotesVideoRendererTest {
         assertTrue(geometry.portrait)
         val (low, high) = NotesOverlays.heights(listOf(69), config)
         assertColorNear(IN_TUNE, frame.getPixel((geometry.headX + AHEAD_U * geometry.u).toInt(), geometry.pillCenterY(69, low, high).toInt()))
+    }
+
+    /**
+     * A tall video — 9 : 16 filmed standing, for Shorts, Reels and TikTok (since 0.91): the lane stands over their interface and
+     * the badge over the tag, and both reach the file — the band Media3 is handed covers them; under the lane, the shade alone.
+     */
+    @Test
+    fun aTallVideoKeepsTheLaneAndTheBadgeOverTheInterface() {
+        val source = TestVideo.make(File(directory, "take.mp4"), seconds = SECONDS, rotation = 90, width = TALL_LONG, height = TALL_SHORT)
+        val target = File(directory, "notes.mp4")
+        assertTrue(render(source, target))
+        val frame = frameAt(target, 1_000, keep = "video-tall-1s")
+        frameAt(target, SECONDS * 1_000L + 2_000, keep = "video-tall-summary")
+        val geometry = NotesOverlayGeometry(frame.width.toFloat(), frame.height.toFloat(), config)
+        assertTrue("tall: ${frame.width} × ${frame.height}", geometry.tall)
+        val (low, high) = NotesOverlays.heights(listOf(69), config)
+        assertColorNear(IN_TUNE, frame.getPixel((geometry.headX + AHEAD_U * geometry.u).toInt(), geometry.pillCenterY(69, low, high).toInt()))
+        // the glass of the badge, before its spinner, against the shade alone in the same row under the playhead
+        val row = geometry.badgeCenterY.toInt()
+        val glass = frame.getPixel((geometry.badgeLeft + geometry.u).toInt(), row)
+        val shade = frame.getPixel(geometry.headX.toInt(), row)
+        assertTrue("the glass ${Integer.toHexString(glass)} against ${Integer.toHexString(shade)}", luminance(glass) < GLASS_SHARE * luminance(shade))
+        // under the lane and its playhead: one colour across every row, nothing drawn where the interface lies
+        ((ceil(geometry.playheadBottom).toInt() + 2) until frame.height - 2).forEach { y ->
+            val first = frame.getPixel(2, y)
+            assertTrue("row $y is the shade alone", (2 until frame.width - 2).all { abs(luminance(frame.getPixel(it, y)) - luminance(first)) < PLAIN_LUMINANCE })
+        }
     }
 
     @Test
@@ -299,5 +327,15 @@ class NotesVideoRendererTest {
 
         /** The test picture is mid grey wherever the frame count puts it: well above black. */
         const val PICTURE = 0.12
+
+        /** A tall video stored lying, turned to stand: 320 × 576 as the player shows it — 9 : 16. */
+        const val TALL_LONG = 576
+        const val TALL_SHORT = 320
+
+        /** The glass at 0.72 over the shade is well under the shade beside it. */
+        const val GLASS_SHARE = 0.7
+
+        /** A row of the shade, give or take what the encoder leaves on it. */
+        const val PLAIN_LUMINANCE = 0.04
     }
 }

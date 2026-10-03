@@ -177,6 +177,24 @@ data class NotesVideoConfig(
     /** Between the block of the summary and the signature, at the least: the block is centred in what is left above. */
     val signatureGapU: Float = 4f,
 
+    // The tall frame (since 0.91): a portrait at least [tallRatio] times as high as it is wide — what goes to Shorts, Reels and
+    // TikTok, whose interface lies over the frame. All that is drawn keeps inside the safe zone: [safeTopU] under the top,
+    // [safeBottomU] over the bottom, [safeLeftU] from the left edge and [safeRightU] from the right — the column of buttons.
+    // Measured on a screenshot of YouTube Shorts on an iPhone (`docs/ideas/video-overlay/img.png`): the interface at the bottom
+    // ≈ 26 u, at the top ≈ 31 u, the buttons ≈ 16 u, the edges cropped ≈ 5 u; the rest is room for the captions of Reels and TikTok.
+    val tallRatio: Float = 1.5f,
+    val safeTopU: Float = 32f,
+    val safeBottomU: Float = 36f,
+    val safeLeftU: Float = 8f,
+    val safeRightU: Float = 18f,
+    /** The shade under the lane of a tall frame: the lane, the tag and the badge over it stand higher. */
+    val scrimTallU: Float = 92f,
+    /** The badge of a tall frame stands over the tag, its bottom this far above the tag's top. */
+    val badgeTallGapU: Float = 2f,
+    /** The opening of a tall frame: the top of the name, and how far its shade reaches. */
+    val openingTopTallU: Float = 34f,
+    val openingScrimTallU: Float = 52f,
+
     // The rules of the summary (spec 5.30)
     /** «Лучшая нота» is one that sounded at least this long in all and was in tune at least this share of its samples. */
     val bestNoteMinMs: Long = 1_000,

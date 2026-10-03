@@ -2,6 +2,7 @@ package com.violinjourney.app.core.recording.overlay
 
 import android.content.Context
 import android.graphics.Bitmap
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.asImageBitmap
@@ -18,6 +19,7 @@ import com.violinjourney.app.core.ui.theme.DarkZoneColors
 import com.violinjourney.app.core.ui.theme.Manrope
 import java.io.File
 import kotlin.math.abs
+import kotlin.math.ceil
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -96,11 +98,18 @@ class NotesOverlayPainterTest {
 
     @Test
     fun theBadgeStandsOnTheGlass() {
-        val (bitmap, painter) = frame(1_080, 1_920, nowMs = 1_000, name = "portrait-badge")
+        val (bitmap, painter) = frame(1_080, 1_440, nowMs = 1_000, name = "portrait-badge")
         val g = painter.geometry
-        // the start of the badge, before its dot: the glass alone over the shade of the lane
-        val pixel = bitmap.getPixel((g.badgeLeft + g.u).toInt(), (g.badgeTop + g.badgeHeight / 2).toInt())
+        // the start of the badge, before its spinner: the glass alone over the shade of the lane, dark at the bottom of the frame
+        val pixel = bitmap.getPixel((g.badgeLeft + g.u).toInt(), g.badgeCenterY.toInt())
         assertTrue("dark glass: ${Integer.toHexString(pixel)}", luminance(pixel) < 0.12)
+        // a tall frame lifts the badge over the tag (since 0.91), where the shade is lighter: the glass is darker than the shade
+        // beside it — in its row under the playhead, which starts lower, at the tag
+        val (tall, tallPainter) = frame(1_080, 1_920, nowMs = 1_000, name = "tall-badge")
+        val t = tallPainter.geometry
+        val glass = tall.getPixel((t.badgeLeft + t.u).toInt(), t.badgeCenterY.toInt())
+        val shade = tall.getPixel(t.headX.toInt(), t.badgeCenterY.toInt())
+        assertTrue("glass ${Integer.toHexString(glass)} against the shade ${Integer.toHexString(shade)}", luminance(glass) < GLASS_SHARE * luminance(shade))
     }
 
     @Test
@@ -236,9 +245,47 @@ class NotesOverlayPainterTest {
 
     /** The rows under the summary's block and its gap: the signature alone, one or two lines of it. */
     private fun signatureBand(g: NotesOverlayGeometry): IntRange {
-        val bottomU = if (g.portrait) config.signatureBottomU else config.signatureBottomLandscapeU
-        val top = g.height - (bottomU + config.appLineMaxLines * config.signatureLineU) * g.u
-        return top.toInt() until g.height.toInt()
+        val top = g.signatureBottom - config.appLineMaxLines * g.signatureLineHeight
+        return top.toInt() until g.signatureBottom.toInt()
+    }
+
+    /**
+     * A tall frame — 9 : 16, for Shorts, Reels and TikTok (since 0.91) — leaves its edges to their interface: under the lane, over
+     * the opening and round the summary there is the shade or the veil alone, the same across a row. A 3 : 4 portrait is kept
+     * beside it to be looked at.
+     */
+    @Test
+    fun aTallFrameLeavesItsEdgesToTheInterface() {
+        // after the last note and its dust: the shade, the playhead, the badge and the line of the app
+        val (lane, painter) = frame(1_080, 1_920, nowMs = 6_800, name = "tall-6.8s")
+        val g = painter.geometry
+        val safe = checkNotNull(g.safe)
+        assertTrue("the badge over the tag", g.badgeTop + g.badgeHeight < g.tagBottom - g.tagHeight)
+        assertRowsPlain(lane, (ceil(g.playheadBottom).toInt() + 1) until lane.height, "under the lane")
+        frame(1_080, 1_920, nowMs = 1_000, name = "tall-1s")
+        frame(1_080, 1_440, nowMs = 1_000, name = "portrait-3x4-1s")
+        frame(1_080, 1_440, nowMs = videoEndMs + 1_000, name = "portrait-3x4-summary")
+
+        val (opening, _) = frame(1_080, 1_920, nowMs = 1_500, name = "tall-opening-1.5s")
+        assertRowsPlain(opening, 0 until safe.top.toInt(), "over the opening")
+        assertTrue("the name under the top of the safe zone", brightRows(opening, NAME_BRIGHT, 0 until g.openingScrimHeight.toInt()).first() >= safe.top)
+
+        val (summary, _) = frame(1_080, 1_920, nowMs = videoEndMs + 1_000, name = "tall-summary")
+        val veil = summary.getPixel(0, 0)
+        val outside = (0 until summary.height).flatMap { y ->
+            (0 until summary.width).filter { x -> !safe.contains(Offset(x + 0.5f, y + 0.5f)) }.map { x -> summary.getPixel(x, y) }
+        }
+        assertTrue("round the summary: the veil alone", outside.all { near(veil, it, PLAIN_SLACK) })
+        assertTrue("the icon in the signature of the tall frame", warmPixelIn(summary, signatureBand(g)))
+    }
+
+    /** Every row of [rows] is one colour from edge to edge: a shade, nothing drawn on it. */
+    private fun assertRowsPlain(bitmap: Bitmap, rows: IntRange, where: String) {
+        rows.forEach { y ->
+            val first = bitmap.getPixel(0, y)
+            val x = (0 until bitmap.width).firstOrNull { !near(first, bitmap.getPixel(it, y), PLAIN_SLACK) }
+            assertTrue("$where: row $y differs at $x", x == null)
+        }
     }
 
     /** Some pixel of [rows] is the icon's sun or dusk — warm and bright, which neither the veil nor the white text is. */
@@ -304,6 +351,12 @@ class NotesOverlayPainterTest {
         /** The sun of the icon is about ffe0a0, its dusk cc826a: red leads and is bright. */
         const val WARM_RED = 170
         const val WARM_LEAD = 50
+
+        /** The glass at 0.72 over the shade is well under the shade beside it. */
+        const val GLASS_SHARE = 0.7
+
+        /** One colour, give or take a level of the gradient. */
+        const val PLAIN_SLACK = 2
 
         /** Grey 0x80 under a veil of 0.9 × 0.75 is about 49; a linear fade would leave about 75. */
         val EASED_HALFWAY = 40..60

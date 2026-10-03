@@ -31,15 +31,26 @@ object TestVideo {
     /** Brightness of frame [index]: steps up through the mid greys and wraps. */
     fun lumaOf(index: Int): Int = LUMA_FROM + (index * LUMA_STEP) % 150
 
-    /** [hzAt] is the pitch of the tone at a second of the file; null is silence. [withSound] false makes a mute video. */
-    fun make(file: File, seconds: Int, withSound: Boolean = true, rotation: Int = 0, hzAt: (Double) -> Double? = { 440.0 }): File {
+    /**
+     * [hzAt] is the pitch of the tone at a second of the file; null is silence. [withSound] false makes a mute video. The picture is
+     * stored [width] × [height], multiples of 16.
+     */
+    fun make(
+        file: File,
+        seconds: Int,
+        withSound: Boolean = true,
+        rotation: Int = 0,
+        width: Int = WIDTH,
+        height: Int = HEIGHT,
+        hzAt: (Double) -> Double? = { 440.0 },
+    ): File {
         val audio = if (withSound) encodeSound(File(file.parentFile, file.name + ".m4a"), seconds, hzAt) else null
         val muxer = MediaMuxer(file.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
         muxer.setOrientationHint(rotation)
         val extractor = audio?.let { MediaExtractor().apply { setDataSource(it.absolutePath); selectTrack(0) } }
         val audioTrack = extractor?.let { muxer.addTrack(it.getTrackFormat(0)) }
 
-        val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, WIDTH, HEIGHT).apply {
+        val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, width, height).apply {
             setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible)
             setInteger(MediaFormat.KEY_BIT_RATE, 400_000)
             setInteger(MediaFormat.KEY_FRAME_RATE, FPS)
@@ -65,7 +76,7 @@ object TestVideo {
                     } else {
                         val image = checkNotNull(codec.getInputImage(index))
                         image.planes.forEachIndexed { plane, p -> fill(p.buffer, if (plane == 0) lumaOf(frame) else 128) }
-                        val size = WIDTH * HEIGHT * 3 / 2
+                        val size = width * height * 3 / 2
                         codec.queueInputBuffer(index, 0, size, frame * 1_000_000L / FPS, 0)
                         frame++
                     }

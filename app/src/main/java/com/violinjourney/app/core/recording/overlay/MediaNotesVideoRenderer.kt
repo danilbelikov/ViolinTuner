@@ -282,7 +282,7 @@ class MediaNotesVideoRenderer @Inject constructor(
      * multiplied by their alpha (`insert_overlay_fragment_shader_methods.glsl`), while a bitmap keeps them multiplied: what is drawn
      * goes to [upload] unmultiplied, or every half-clear colour — the dimmed notes, the glass, the edges of letters — would come
      * out darker than drawn. While the video runs only the band of the lane changes — and the band of the opening title over its
-     * first seconds (spec 5.30) — and only they are copied.
+     * first seconds (spec 5.30) — and only they are copied; in a tall frame both stand further in from the edges (since 0.91).
      */
     @OptIn(UnstableApi::class)
     private class NotesBitmapOverlay(
@@ -298,7 +298,8 @@ class MediaNotesVideoRenderer @Inject constructor(
         private val canvas = Canvas(drawn.asImageBitmap())
         private val scope = CanvasDrawScope()
         private val size = Size(width.toFloat(), height.toFloat())
-        private val laneBandTop = painter.geometry.scrimTop.toInt().coerceIn(0, height)
+        /** The band of the lane: its shade, and the tag and the badge, which stand over it in a tall frame (spec 5.30, since 0.91). */
+        private val laneBandTop = painter.geometry.laneBandTop.toInt().coerceIn(0, height)
 
         /** The band of the opening title, above the lane's (spec 5.30): it never reaches the lane, and is cut where it would. */
         private val openingBandBottom = ceil(painter.openingBottom).toInt().coerceIn(0, laneBandTop)

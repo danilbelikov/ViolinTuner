@@ -11,7 +11,9 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
@@ -110,9 +112,12 @@ private fun words(overlay: NotesOverlay) = OverlayWords(
     previousScore = overlay.previous?.let { stringResource(R.string.session_percent, it.scorePercent) },
 )
 
-/** A frame of [width] × [height] pixels at the moment [nowMs], shown [shownWidthDp] wide; [cropTo] — only that part of it, enlarged. */
+/**
+ * A frame of [width] × [height] pixels at the moment [nowMs], shown [shownWidthDp] wide; [cropTo] — only that part of it, enlarged;
+ * [showSafe] — the safe zone of a tall frame dashed over it (since 0.91), as overlay.html (section 7) draws it.
+ */
 @Composable
-private fun Frame(width: Int, height: Int, nowMs: Long, shownWidthDp: Int, overlay: NotesOverlay, cropTo: Rect? = null) {
+private fun Frame(width: Int, height: Int, nowMs: Long, shownWidthDp: Int, overlay: NotesOverlay, cropTo: Rect? = null, showSafe: Boolean = false) {
     val words = words(overlay)
     val text = OverlayText(LocalFontFamilyResolver.current, Manrope, imageResource(Res.drawable.overlay_app_icon))
     val painter = remember(overlay, words, width, height) { NotesOverlayPainter(overlay, words, text, width.toFloat(), height.toFloat()) }
@@ -122,10 +127,24 @@ private fun Frame(width: Int, height: Int, nowMs: Long, shownWidthDp: Int, overl
             translate(-shown.left, -shown.top) {
                 picture(width.toFloat(), height.toFloat())
                 painter.draw(this, nowMs, VideoEndMs)
+                painter.geometry.safe?.takeIf { showSafe }?.let { safe ->
+                    drawRect(
+                        SafeLine,
+                        safe.topLeft,
+                        safe.size,
+                        style = Stroke(width = SAFE_LINE_PX, pathEffect = PathEffect.dashPathEffect(floatArrayOf(SAFE_DASH_PX, SAFE_GAP_PX))),
+                    )
+                }
             }
         }
     }
 }
+
+/** The dashes of the safe zone, in pixels of the frame: a mark of the preview, never in a file. */
+private val SafeLine = Color(0xCCFF5FA0)
+private const val SAFE_LINE_PX = 4f
+private const val SAFE_DASH_PX = 24f
+private const val SAFE_GAP_PX = 16f
 
 /** A warm room and a player with a violin: something to draw over. */
 private fun DrawScope.picture(width: Float, height: Float) {
@@ -146,9 +165,13 @@ private fun DrawScope.picture(width: Float, height: Float) {
     }
 }
 
-@Preview(name = "Видео с нотами · лента, портрет 1080 × 1920: ярлык ноты над чертой, бейдж «Анализ игры» и строка приложения", locale = "ru", widthDp = 300, heightDp = 534)
+@Preview(name = "Видео с нотами · лента, портрет 3 : 4, 1080 × 1440: ярлык ноты над чертой, бейдж «Анализ игры» и строка приложения", locale = "ru", widthDp = 300, heightDp = 400)
 @Composable
-private fun LanePortraitPreview() = Frame(1_080, 1_920, nowMs = 7_200, shownWidthDp = 300, overlay = overlay(previous = true, drift = true))
+private fun LanePortraitPreview() = Frame(1_080, 1_440, nowMs = 7_200, shownWidthDp = 300, overlay = overlay(previous = true, drift = true))
+
+@Preview(name = "Видео с нотами · лента, высокий кадр 1080 × 1920: всё в безопасной зоне (пунктир), бейдж над ярлыком", locale = "ru", widthDp = 300, heightDp = 534)
+@Composable
+private fun LaneTallPreview() = Frame(1_080, 1_920, nowMs = 7_200, shownWidthDp = 300, overlay = overlay(previous = true, drift = true), showSafe = true)
 
 @Preview(name = "Видео с нотами · лента, landscape 1920 × 1080: полоса ниже, на ширину ≈ 16 с", locale = "ru", widthDp = 560, heightDp = 315)
 @Composable
@@ -158,9 +181,13 @@ private fun LaneLandscapePreview() = Frame(1_920, 1_080, nowMs = 7_200, shownWid
 @Composable
 private fun LaneSquarePausePreview() = Frame(1_080, 1_080, nowMs = 400, shownWidthDp = 360, overlay = overlay(previous = true, drift = true))
 
-@Preview(name = "Видео с нотами · итог, портрет: балл, допуск, полоска, три строки", locale = "ru", widthDp = 300, heightDp = 534)
+@Preview(name = "Видео с нотами · итог, портрет 3 : 4: балл, допуск, полоска, три строки", locale = "ru", widthDp = 300, heightDp = 400)
 @Composable
-private fun SummaryPortraitPreview() = Frame(1_080, 1_920, nowMs = VideoEndMs + 1_000, shownWidthDp = 300, overlay = overlay(previous = true, drift = true))
+private fun SummaryPortraitPreview() = Frame(1_080, 1_440, nowMs = VideoEndMs + 1_000, shownWidthDp = 300, overlay = overlay(previous = true, drift = true))
+
+@Preview(name = "Видео с нотами · итог, высокий кадр: блок и подпись в безопасной зоне (пунктир)", locale = "ru", widthDp = 300, heightDp = 534)
+@Composable
+private fun SummaryTallPreview() = Frame(1_080, 1_920, nowMs = VideoEndMs + 1_000, shownWidthDp = 300, overlay = overlay(previous = true, drift = true), showSafe = true)
 
 @Preview(name = "Видео с нотами · итог посреди проявления (200 мс), landscape", locale = "ru", widthDp = 560, heightDp = 315)
 @Composable
@@ -178,14 +205,18 @@ private fun SummaryEnglishPreview() = Frame(1_080, 1_920, nowMs = VideoEndMs + 1
 @Composable
 private fun SummaryGermanPreview() = Frame(1_080, 1_920, nowMs = VideoEndMs + 1_000, shownWidthDp = 300, overlay = overlay(previous = true, drift = true))
 
-/** A portrait frame of 1080 × 1920 cropped around its playhead, as overlay.html (section 6) crops it: the tag, the lane and the dust. */
+/** A tall frame of 1080 × 1920 cropped around its playhead, as overlay.html (section 6) crops it: the tag, the lane and the dust. */
 private val AroundThePlayhead = NotesOverlayGeometry(1_080f, 1_920f, Config).let { g ->
     Rect(g.headX - 26 * g.u, g.laneBottom - 39.6f * g.u, g.headX + 14 * g.u, g.laneBottom + 9.4f * g.u)
 }
 
-@Preview(name = "Видео с нотами · заставка, портрет: название и дата наверху, 1,5 с", locale = "ru", widthDp = 300, heightDp = 534)
+@Preview(name = "Видео с нотами · заставка, портрет 3 : 4: название и дата наверху, 1,5 с", locale = "ru", widthDp = 300, heightDp = 400)
 @Composable
-private fun OpeningPortraitPreview() = Frame(1_080, 1_920, nowMs = 1_500, shownWidthDp = 300, overlay = overlay(previous = true, drift = true))
+private fun OpeningPortraitPreview() = Frame(1_080, 1_440, nowMs = 1_500, shownWidthDp = 300, overlay = overlay(previous = true, drift = true))
+
+@Preview(name = "Видео с нотами · заставка, высокий кадр: под верхним интерфейсом, 1,5 с", locale = "ru", widthDp = 300, heightDp = 534)
+@Composable
+private fun OpeningTallPreview() = Frame(1_080, 1_920, nowMs = 1_500, shownWidthDp = 300, overlay = overlay(previous = true, drift = true), showSafe = true)
 
 @Preview(name = "Видео с нотами · заставка проявляется, опускаясь на место: 0,6 с", locale = "ru", widthDp = 300, heightDp = 534)
 @Composable

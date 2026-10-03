@@ -244,8 +244,9 @@ class NotesOverlayPainter(
         // by the baseline: the spec places the em boxes, and the top of a laid-out line is the font's ascent, higher than the em's
         val titleTop = g.openingTitleBaseline(emAscent) - title.firstBaseline - raise
         val dateTop = g.openingDateBaseline(emAscent) - date.firstBaseline - raise
-        drawText(title, Color.White, Offset((g.width - title.size.width) / 2, titleTop), shown.alpha)
-        drawText(date, Color.White, Offset((g.width - date.size.width) / 2, dateTop), config.openingDateAlpha * shown.alpha)
+        // centred in the column: in a tall frame it stops short of the buttons on the right (since 0.91)
+        drawText(title, Color.White, Offset(g.centredLeft(title.size.width.toFloat()), titleTop), shown.alpha)
+        drawText(date, Color.White, Offset(g.centredLeft(date.size.width.toFloat()), dateTop), config.openingDateAlpha * shown.alpha)
     }
 
     private fun DrawScope.summary(shown: Float) {

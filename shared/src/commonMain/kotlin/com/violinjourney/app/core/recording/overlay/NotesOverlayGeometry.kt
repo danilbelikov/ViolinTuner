@@ -1,23 +1,39 @@
 package com.violinjourney.app.core.recording.overlay
 
+import androidx.compose.ui.geometry.Rect
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
 
 /**
  * Where the parts of «Видео с нотами» stand in a frame of [width] × [height] pixels, as the player shows it (spec 5.30).
- * Pure: the painter asks it, and so do the tests. A frame no wider than it is high is a portrait (a square too).
+ * Pure: the painter asks it, and so do the tests. A frame no wider than it is high is a portrait (a square too); a portrait
+ * half as high again as it is wide is [tall], and keeps what it draws inside the [safe] zone (since 0.91).
  */
 class NotesOverlayGeometry(val width: Float, val height: Float, private val config: NotesVideoConfig) {
     val portrait: Boolean = width <= height
 
+    /** A frame for Shorts, Reels and TikTok: their interface lies over its edges (since 0.91). */
+    val tall: Boolean = portrait && height >= config.tallRatio * width
+
     /** A hundredth of the short side: every size of the overlay is counted in it. */
     val u: Float = min(width, height) / HUNDRED
 
+    /** What the interface of Shorts, Reels and TikTok leaves open over a [tall] frame; null for any other. */
+    val safe: Rect? = if (tall) {
+        Rect(config.safeLeftU * u, config.safeTopU * u, width - config.safeRightU * u, height - config.safeBottomU * u)
+    } else {
+        null
+    }
+
     // The lane
 
-    val scrimTop: Float = height - (if (portrait) config.scrimU else config.scrimLandscapeU) * u
-    val laneBottom: Float = height - (if (portrait) config.laneBottomU else config.laneBottomLandscapeU) * u
+    val scrimTop: Float = height - when {
+        tall -> config.scrimTallU
+        portrait -> config.scrimU
+        else -> config.scrimLandscapeU
+    } * u
+    val laneBottom: Float = safe?.bottom ?: (height - (if (portrait) config.laneBottomU else config.laneBottomLandscapeU) * u)
     val laneTop: Float = laneBottom - (if (portrait) config.laneU else config.laneLandscapeU) * u
     val pillHeight: Float = config.pillU * u
     val headX: Float = width * config.headShare
@@ -70,8 +86,10 @@ class NotesOverlayGeometry(val width: Float, val height: Float, private val conf
     // The badge
 
     val badgeHeight: Float = config.badgeU * u
-    val badgeLeft: Float = (if (portrait) config.badgeInsetU else config.badgeInsetLandscapeU) * u
-    val badgeTop: Float = height - badgeLeft - badgeHeight
+    val badgeLeft: Float = safe?.left ?: ((if (portrait) config.badgeInsetU else config.badgeInsetLandscapeU) * u)
+
+    /** As far from the bottom as from the left edge; in a tall frame — over the tag, out of the way of the interface below. */
+    val badgeTop: Float = if (tall) tagBottom - tagHeight - config.badgeTallGapU * u - badgeHeight else height - badgeLeft - badgeHeight
     val badgeCenterY: Float = badgeTop + badgeHeight / 2
     val spinnerCenterX: Float = badgeLeft + (config.badgePadStartU + config.badgeSpinnerU / 2) * u
 
@@ -86,20 +104,37 @@ class NotesOverlayGeometry(val width: Float, val height: Float, private val conf
     /** The line of the app right of a badge [badgeWidth] wide (since 0.90): where it begins and how wide it may grow. */
     fun appLineLeft(badgeWidth: Float): Float = badgeLeft + badgeWidth + config.appLineGapU * u
 
-    fun appLineMaxWidth(badgeWidth: Float): Float = width - badgeLeft - appLineLeft(badgeWidth)
+    fun appLineMaxWidth(badgeWidth: Float): Float = appLineRight - appLineLeft(badgeWidth)
+
+    /** Where the line of the app stops: as far from the right edge as the badge from the left; in a tall frame — short of the buttons. */
+    val appLineRight: Float = safe?.right ?: (width - badgeLeft)
 
     val appLineHeight: Float = config.appLineHeightU * u
 
+    /**
+     * The top of all the lane draws while the video runs — its shade, the tag, the badge and the line of the app beside it; the
+     * dust stays under the tag. What lies above is left to the opening title.
+     */
+    val laneBandTop: Float = minOf(scrimTop, tagBottom - tagHeight, badgeTop)
+
     // The opening title (since 0.90)
 
-    val openingScrimHeight: Float = (if (portrait) config.openingScrimU else config.openingScrimLandscapeU) * u
+    val openingScrimHeight: Float = when {
+        tall -> config.openingScrimTallU
+        portrait -> config.openingScrimU
+        else -> config.openingScrimLandscapeU
+    } * u
 
     /**
      * The top of the em box of the name, at rest — not of its capitals; the date's em box stands under the name's own size and a gap.
      * Text is placed by its baseline: [emAscent] is the share of the em above the baseline, the font's ascent over its ascent and
      * descent (what a canvas means by the top of a line).
      */
-    val openingTitleTop: Float = (if (portrait) config.openingTopU else config.openingTopLandscapeU) * u
+    val openingTitleTop: Float = when {
+        tall -> config.openingTopTallU
+        portrait -> config.openingTopU
+        else -> config.openingTopLandscapeU
+    } * u
     val openingDateTop: Float = openingTitleTop + (config.openingTitleU + config.openingDateGapU) * u
 
     fun openingTitleBaseline(emAscent: Float): Float = openingTitleTop + config.openingTitleU * u * emAscent
@@ -108,18 +143,27 @@ class NotesOverlayGeometry(val width: Float, val height: Float, private val conf
 
     // The summary
 
-    val columnWidth: Float = min(width - config.summaryMarginsU * u, config.summaryMaxWidthU * u)
-    val columnLeft: Float = (width - columnWidth) / 2
+    /**
+     * The column of the summary and of the opening title, in the middle of the frame — of the safe zone in a tall frame, where
+     * it keeps its left edge and stops short of the buttons on the right.
+     */
+    val columnWidth: Float = safe?.let { min(it.width, config.summaryMaxWidthU * u) } ?: min(width - config.summaryMarginsU * u, config.summaryMaxWidthU * u)
+    val columnLeft: Float = safe?.let { it.left + (it.width - columnWidth) / 2 } ?: ((width - columnWidth) / 2)
+
+    /** Where text centred in the column begins: the opening's name and date, the signature. */
+    fun centredLeft(textWidth: Float): Float = columnLeft + (columnWidth - textWidth) / 2
 
     /** The block of the summary with [rows] rows: title, score, the line of the tolerance, the strip, the rows. */
     fun summaryHeight(rows: Int): Float = summaryRowsTopOffset() + rows * config.rowU * u
 
     /**
      * Where the block of [rows] rows begins: in the middle of what is left above the signature [signatureHeight] high and its gap
-     * (since 0.90) — the two never touch.
+     * (since 0.90) — the two never touch; in a tall frame, of what is left between the top of the safe zone and the signature.
      */
-    fun summaryTop(rows: Int, signatureHeight: Float): Float =
-        (signatureTop(signatureHeight) - config.signatureGapU * u - summaryHeight(rows)) / 2
+    fun summaryTop(rows: Int, signatureHeight: Float): Float {
+        val top = safe?.top ?: 0f
+        return top + (signatureTop(signatureHeight) - config.signatureGapU * u - top - summaryHeight(rows)) / 2
+    }
 
     // the parts of a block that begins at [top]
 
@@ -149,11 +193,13 @@ class NotesOverlayGeometry(val width: Float, val height: Float, private val conf
     /** The signature with text [textHeight] high: as high as the icon at the least. */
     fun signatureHeight(textHeight: Float): Float = max(iconSize, textHeight)
 
-    fun signatureTop(signatureHeight: Float): Float =
-        height - (if (portrait) config.signatureBottomU else config.signatureBottomLandscapeU) * u - signatureHeight
+    /** The bottom of the signature: over the bottom of the frame, or of the safe zone in a tall frame. */
+    val signatureBottom: Float = safe?.bottom ?: (height - (if (portrait) config.signatureBottomU else config.signatureBottomLandscapeU) * u)
 
-    /** Where the icon begins: the icon, its gap and the text [textWidth] wide are centred in the frame. */
-    fun iconLeft(textWidth: Float): Float = (width - (iconSize + config.iconGapU * u + textWidth)) / 2
+    fun signatureTop(signatureHeight: Float): Float = signatureBottom - signatureHeight
+
+    /** Where the icon begins: the icon, its gap and the text [textWidth] wide are centred in the column. */
+    fun iconLeft(textWidth: Float): Float = centredLeft(iconSize + config.iconGapU * u + textWidth)
 
     fun signatureTextLeft(textWidth: Float): Float = iconLeft(textWidth) + iconSize + config.iconGapU * u
 
