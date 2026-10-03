@@ -91,6 +91,7 @@ import platform.CoreMedia.CMSampleBufferGetPresentationTimeStamp
 import platform.CoreMedia.CMSampleBufferRef
 import platform.CoreMedia.CMTimeGetSeconds
 import platform.CoreMedia.CMTimeMake
+import platform.CoreMedia.CMTimeMakeWithSeconds
 import platform.CoreMedia.CMTimeRangeGetEnd
 import platform.CoreMedia.CMTimeRangeMake
 import platform.CoreMedia.kCMTimeZero
@@ -173,6 +174,7 @@ class IosNotesVideoRenderer(
         val videoEndMs = (CMTimeGetSeconds(videoEnd) * MS_PER_SECOND).roundToLong()
         if (videoEndMs <= 0) return false
         val endMs = videoEndMs + config.summaryMs
+        val frameSeconds = 1.0 / format.frameRate
 
         val pictures = reader(asset) ?: return false
         val frames = AVAssetReaderVideoCompositionOutput(videoTracks = listOf(track), videoSettings = bgra())
@@ -206,6 +208,8 @@ class IosNotesVideoRenderer(
             if (!writer.canAddInput(audio)) return false
             writer.addInput(audio)
         }
+        // the sound is there but cannot be read or written: no file is better than one without it
+        if (soundTrack != null && (sounds == null || samples == null || audio == null)) return failed("the sound of ${sound.path.substringAfterLast('/')} cannot be read")
 
         val painter = NotesOverlayPainter(overlay, words, font, format.width.toFloat(), format.height.toFloat())
         var last: CVPixelBufferRef? = null
@@ -217,39 +221,58 @@ class IosNotesVideoRenderer(
 
             var pictureAt = 0.0
             var soundAt = 0.0
-            var picturesLeft = true
-            var soundsLeft = samples != null
-            // the track behind goes next: the writer interleaves, and it holds the one ahead until the other catches up
-            while (picturesLeft || soundsLeft) {
+            var framesLeft = true
+            // the summary goes on the timeline of the picture, frame after frame, in the same loop as the sound: the writer
+            // interleaves the two inputs and holds the one ahead — a sound longer than the picture would otherwise wait for frames
+            // that came only after it, for ever
+            val summaryFrames = (config.summaryMs * format.frameRate / MS_PER_SECOND_L).toInt()
+            var summaryIndex = 0
+            var summaryStart = 0.0
+            var soundsLeft = audio != null
+            while (framesLeft || summaryIndex < summaryFrames || soundsLeft) {
                 currentCoroutineContext().ensureActive()
                 if (writer.status != AVAssetWriterStatusWriting) return failed(writer.error?.localizedDescription)
-                val nextPicture = picturesLeft && (!soundsLeft || pictureAt <= soundAt)
+                val nextPicture = (framesLeft || summaryIndex < summaryFrames) && (!soundsLeft || pictureAt <= soundAt)
                 if (nextPicture) {
                     if (!video.readyForMoreMediaData) {
                         delay(WAIT_MS)
                         continue
                     }
-                    val sample = frames.copyNextSampleBuffer()
-                    if (sample == null) {
-                        if (pictures.status == AVAssetReaderStatusFailed) return failed(pictures.error?.localizedDescription)
-                        picturesLeft = false
-                        continue
-                    }
-                    try {
-                        val at = CMSampleBufferGetPresentationTimeStamp(sample)
-                        val source = CMSampleBufferGetImageBuffer(sample) ?: continue
-                        pictureAt = CMTimeGetSeconds(at)
+                    if (framesLeft) {
+                        val sample = frames.copyNextSampleBuffer()
+                        if (sample == null) {
+                            if (pictures.status == AVAssetReaderStatusFailed) return failed(pictures.error?.localizedDescription)
+                            framesLeft = false
+                            if (last == null) return failed("no frame in ${picture.path.substringAfterLast('/')}")
+                            // after the last frame, never on it: the end of a track may sit a hair past the last frame's time
+                            summaryStart = maxOf(CMTimeGetSeconds(videoEnd), pictureAt + frameSeconds)
+                            continue
+                        }
+                        try {
+                            val at = CMSampleBufferGetPresentationTimeStamp(sample)
+                            val source = CMSampleBufferGetImageBuffer(sample) ?: continue
+                            pictureAt = CMTimeGetSeconds(at)
+                            val ms = (pictureAt * MS_PER_SECOND).roundToLong()
+                            if (!appendDrawn(adaptor, source, at) { painter.draw(this, ms, videoEndMs) }) return failed(writer.error?.localizedDescription)
+                            // kept as it came, without the notes: the summary is drawn on it
+                            last?.let { CVPixelBufferRelease(it) }
+                            last = CVPixelBufferRetain(source)
+                            onProgress((ms.toFloat() / endMs).coerceIn(0f, 1f))
+                        } finally {
+                            CFRelease(sample)
+                        }
+                    } else {
+                        // the summary: the last frame stands, the veil and the summary come in over it
+                        val lastFrame = last ?: return failed("no frame in ${picture.path.substringAfterLast('/')}")
+                        pictureAt = summaryStart + summaryIndex * frameSeconds
                         val ms = (pictureAt * MS_PER_SECOND).roundToLong()
-                        if (!appendDrawn(adaptor, source, at) { painter.draw(this, ms, videoEndMs) }) return failed(writer.error?.localizedDescription)
-                        // kept as it came, without the notes: the summary is drawn on it
-                        last?.let { CVPixelBufferRelease(it) }
-                        last = CVPixelBufferRetain(source)
+                        val at = CMTimeMakeWithSeconds(pictureAt, VIDEO_TIMESCALE)
+                        if (!appendDrawn(adaptor, lastFrame, at) { painter.draw(this, ms, videoEndMs) }) return failed(writer.error?.localizedDescription)
+                        summaryIndex++
                         onProgress((ms.toFloat() / endMs).coerceIn(0f, 1f))
-                    } finally {
-                        CFRelease(sample)
                     }
                 } else {
-                    val audioInput = audio ?: break
+                    val audioInput = audio ?: return failed("no input for the sound")
                     if (!audioInput.readyForMoreMediaData) {
                         delay(WAIT_MS)
                         continue
@@ -258,13 +281,16 @@ class IosNotesVideoRenderer(
                     if (sample == null) {
                         if (sounds?.status == AVAssetReaderStatusFailed) return failed(sounds.error?.localizedDescription)
                         soundsLeft = false
+                        // finished at once: the writer stops waiting for sound to put beside the frames still to come
+                        audioInput.markAsFinished()
                         continue
                     }
                     try {
                         soundAt = CMTimeGetSeconds(CMSampleBufferGetPresentationTimeStamp(sample))
-                        // the hall rings on past the picture: what is past the summary is cut, as the plain video cuts it
+                        // what begins past the summary is not read; a buffer that runs over its end is cut by the end of the session
                         if (soundAt * MS_PER_SECOND >= endMs) {
                             soundsLeft = false
+                            audioInput.markAsFinished()
                         } else if (!audioInput.appendSampleBuffer(sample)) {
                             return failed(writer.error?.localizedDescription)
                         }
@@ -273,20 +299,9 @@ class IosNotesVideoRenderer(
                     }
                 }
             }
-            audio?.markAsFinished()
-
-            // the summary: the last frame stands, the veil and the summary come in over it
-            val lastFrame = last ?: return false
-            val frameCount = (config.summaryMs * format.frameRate / MS_PER_SECOND_L).toInt()
-            for (index in 0 until frameCount) {
-                currentCoroutineContext().ensureActive()
-                while (!video.readyForMoreMediaData) delay(WAIT_MS)
-                val ms = videoEndMs + index * MS_PER_SECOND_L / format.frameRate
-                val at = CMTimeMake(ms, MS_TIMESCALE)
-                if (!appendDrawn(adaptor, lastFrame, at) { painter.draw(this, ms, videoEndMs) }) return failed(writer.error?.localizedDescription)
-                onProgress((ms.toFloat() / endMs).coerceIn(0f, 1f))
-            }
             video.markAsFinished()
+            // a buffer of compressed sound holds many packets: the file ends where the summary does, not where its last buffer would
+            writer.endSessionAtSourceTime(CMTimeMakeWithSeconds(summaryStart + summaryFrames * frameSeconds, VIDEO_TIMESCALE))
             val written = suspendCancellableCoroutine { continuation ->
                 continuation.invokeOnCancellation { writer.cancelWriting() }
                 writer.finishWritingWithCompletionHandler { continuation.resume(writer.status == AVAssetWriterStatusCompleted) }
@@ -443,7 +458,8 @@ class IosNotesVideoRenderer(
     private companion object {
         const val MS_PER_SECOND = 1_000.0
         const val MS_PER_SECOND_L = 1_000L
-        const val MS_TIMESCALE = 1_000
+        /** Times of the frames and of the end of the file: fine enough for every frame rate a camera has. */
+        const val VIDEO_TIMESCALE = 30_000
         const val WAIT_MS = 2L
 
         /** A key of Core Foundation as the Objective-C string a dictionary of settings takes; the constant itself is not let go. */

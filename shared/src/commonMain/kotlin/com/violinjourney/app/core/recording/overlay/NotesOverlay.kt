@@ -50,11 +50,25 @@ class NotesOverlay(
     val ribbon: List<RecordingBar>,
     val config: NotesVideoConfig,
 ) {
-    /** Where each note's run of notes began: one with breaks shorter than [NotesVideoConfig.holdMs] between them. */
-    private val phraseStartMs: LongArray = LongArray(notes.size).also { starts ->
+    /** Where each note's run of notes began: one with breaks no longer than [NotesVideoConfig.holdMs] between them. */
+    private val phraseStartMs = LongArray(notes.size)
+
+    /**
+     * How bright the tag already was when each run began: a run that starts while the tag of the one before still fades goes on
+     * from there — the tag never drops to nothing between two notes.
+     */
+    private val phraseCarry = FloatArray(notes.size)
+
+    init {
         notes.forEachIndexed { index, note ->
-            val joined = index > 0 && note.startMs - notes[index - 1].endMs < config.holdMs
-            starts[index] = if (joined) starts[index - 1] else note.startMs
+            val previous = notes.getOrNull(index - 1)
+            if (previous != null && note.startMs - previous.endMs <= config.holdMs) {
+                phraseStartMs[index] = phraseStartMs[index - 1]
+                phraseCarry[index] = phraseCarry[index - 1]
+            } else {
+                phraseStartMs[index] = note.startMs
+                phraseCarry[index] = if (previous != null) tagAlphaOf(index - 1, note.startMs) else 0f
+            }
         }
     }
 
@@ -74,11 +88,18 @@ class NotesOverlay(
         val index = lastStartedAt(tMs)
         if (index < 0) return null
         val note = notes[index]
-        val shownUntil = note.endMs + config.holdMs
+        // gone out wholly: the pause is longer than the hold and the fade together
+        if (tMs >= note.endMs + config.holdMs + config.tagFadeMs) return null
+        return OverlayTag(note, tagAlphaOf(index, tMs))
+    }
+
+    /** How much of the tag of the note at [index] shows at [tMs], from the start of its run (and what it carried in) to its fading. */
+    private fun tagAlphaOf(index: Int, tMs: Long): Float {
+        val shownUntil = notes[index].endMs + config.holdMs
         val fade = config.tagFadeMs.toFloat()
-        val coming = ((minOf(tMs, shownUntil) - phraseStartMs[index]) / fade).coerceIn(0f, 1f)
-        val going = if (tMs < shownUntil) 1f else 1f - (tMs - shownUntil) / fade
-        return if (going <= 0f) null else OverlayTag(note, coming * going)
+        val coming = (phraseCarry[index] + (minOf(tMs, shownUntil) - phraseStartMs[index]) / fade).coerceIn(0f, 1f)
+        val going = if (tMs < shownUntil) 1f else (1f - (tMs - shownUntil) / fade).coerceIn(0f, 1f)
+        return coming * going
     }
 
     /** The notes that touch the span from [fromMs] to [toMs], in time order. */

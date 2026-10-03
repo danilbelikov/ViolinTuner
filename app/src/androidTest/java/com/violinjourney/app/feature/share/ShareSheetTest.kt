@@ -16,6 +16,7 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.isHeading
@@ -39,6 +40,7 @@ import com.violinjourney.app.shared.resources.dialog_cancel
 import com.violinjourney.app.shared.resources.dot_separator
 import com.violinjourney.app.shared.resources.share_backing
 import com.violinjourney.app.shared.resources.share_busy
+import com.violinjourney.app.shared.resources.share_format_description
 import com.violinjourney.app.shared.resources.share_large_file
 import com.violinjourney.app.shared.resources.share_notes
 import com.violinjourney.app.shared.resources.share_notes_caption_backing
@@ -120,6 +122,8 @@ class ShareSheetTest {
         words[VIDEO_ORIGINAL] = stringResource(Res.string.share_video_original)
         words[PREPARING_FILE] = stringResource(Res.string.share_preparing)
         words[PREPARING_VIDEO] = stringResource(Res.string.share_preparing_video)
+        words[FILE_MP4] = stringResource(Res.string.share_format_description, MP4.removePrefix("."))
+        words[FILE_M4A] = stringResource(Res.string.share_format_description, M4A.removePrefix("."))
         words[NOTES] = stringResource(Res.string.share_notes)
         words[NOTES_BACKING] = stringResource(Res.string.share_notes_caption_backing)
         words[NOTES_PROCESSED] = stringResource(Res.string.share_notes_caption_processed)
@@ -144,8 +148,10 @@ class ShareSheetTest {
         show(ShareSheet.Choose(VIDEO, ShareVariant.BACKING, withText = true, busy = false))
         compose.onAllNodes(radios).assertCountEquals(VARIANTS)
         compose.onNode(radios and hasText(word(BACKING))).assertIsSelected()
-        compose.onAllNodes(radios and hasText(MP4)).assertCountEquals(VIDEO_VARIANTS)
-        compose.onNode(radios and hasText(M4A)).performClick()
+        // the chip is read as «файл mp4», not as «.mp4» (spec 3.36.5, 3.37)
+        compose.onAllNodes(radios and hasContentDescription(word(FILE_MP4))).assertCountEquals(VIDEO_VARIANTS)
+        compose.onAllNodes(radios and hasText(MP4)).assertCountEquals(0)
+        compose.onNode(radios and hasContentDescription(word(FILE_M4A))).performClick()
         compose.runOnIdle { assertEquals(ShareVariant.SOUND, (intents.last() as ShareIntent.VariantSelected).variant) }
         compose.onNode(radios and hasText(word(SOUND_ONLY))).assertIsDisplayed()
     }
@@ -352,6 +358,8 @@ class ShareSheetTest {
         const val PREPARING_FILE = "preparingFile"
         const val PREPARING_VIDEO = "preparingVideo"
         const val NOTES = "notes"
+        const val FILE_MP4 = "fileMp4"
+        const val FILE_M4A = "fileM4a"
         const val NOTES_BACKING = "notesBacking"
         const val NOTES_PROCESSED = "notesProcessed"
         const val NOTES_ORIGINAL = "notesOriginal"

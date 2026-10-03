@@ -24,7 +24,9 @@ import platform.AVFoundation.AVURLAsset
 import platform.AVFoundation.creationDate
 import platform.AVFoundation.dateValue
 import platform.AVFoundation.duration
+import platform.AVFoundation.estimatedDataRate
 import platform.AVFoundation.naturalSize
+import platform.AVFoundation.nominalFrameRate
 import platform.AVFoundation.preferredTransform
 import platform.AVFoundation.tracksWithMediaType
 import platform.CoreGraphics.CGRectApplyAffineTransform
@@ -95,6 +97,9 @@ internal class IosVideoFiles(private val config: RepertoireConfig, private val i
             height = height,
             createdAtEpochMs = asset.creationDate?.dateValue?.timeIntervalSince1970?.let { (it * MS_PER_SECOND).roundToLong() },
             hasSound = asset.tracksWithMediaType(AVMediaTypeAudio).isNotEmpty(),
+            frameRate = video.nominalFrameRate,
+            soundBitrate = (asset.tracksWithMediaType(AVMediaTypeAudio).firstOrNull() as? AVAssetTrack)?.estimatedDataRate
+                ?.takeIf { it > 0f }?.roundToInt(),
         )
     }
 

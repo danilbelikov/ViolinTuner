@@ -25,7 +25,8 @@ object VideoMuxer {
      * The picture track of [picture], moved by [pictureShiftUs], and the sound track of [sound] as it is, into [target].
      * True when the whole thing worked; [target] is whole then, and gone otherwise. [onProgress] follows the picture, when
      * its length is known. [keepGoing] is asked before every sample — the render of «Поделиться» throws its cancellation
-     * from there, and it leaves this as it came: a given-up share is not a failed one.
+     * from there, and it leaves this as it came: a given-up share is not a failed one. [soundUntilUs] — no sound from that
+     * time on: «Видео с нотами» ends with its summary, not with the hall still ringing (spec 3.37); null keeps all of it.
      */
     fun splice(
         picture: File,
@@ -34,6 +35,7 @@ object VideoMuxer {
         pictureShiftUs: Long,
         onProgress: (Float) -> Unit = {},
         keepGoing: () -> Unit = {},
+        soundUntilUs: Long? = null,
     ): Boolean {
         val video = MediaExtractor()
         val audio = MediaExtractor()
@@ -72,7 +74,7 @@ object VideoMuxer {
                 val fromVideo = videoLeft && (!audioLeft || videoTime <= audio.sampleTime)
                 val from = if (fromVideo) video else audio
                 val size = from.readSampleData(buffer, 0)
-                if (size < 0) {
+                if (size < 0 || (!fromVideo && soundUntilUs != null && from.sampleTime >= soundUntilUs)) {
                     if (fromVideo) videoLeft = false else audioLeft = false
                     continue
                 }

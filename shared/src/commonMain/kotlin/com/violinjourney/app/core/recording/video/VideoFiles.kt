@@ -13,6 +13,10 @@ data class VideoInfo(
     /** When it was shot, by its own metadata; null when the file does not say. */
     val createdAtEpochMs: Long?,
     val hasSound: Boolean,
+    /** Frames a second of the picture; 0 when the file does not say. «Видео с нотами» sizes its file by it (spec 5.30). */
+    val frameRate: Float = 0f,
+    /** Bits a second of the sound track; null when the file does not say. */
+    val soundBitrate: Int? = null,
 )
 
 /**

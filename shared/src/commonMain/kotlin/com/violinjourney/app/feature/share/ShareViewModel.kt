@@ -40,6 +40,7 @@ import com.violinjourney.app.feature.events.EventWords
 import com.violinjourney.app.feature.events.ResourceEventWords
 import com.violinjourney.app.feature.sound.SoundReducer
 import kotlin.concurrent.Volatile
+import kotlin.math.roundToInt
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -59,6 +60,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -373,6 +375,10 @@ open class ShareViewModel(
         val work = coroutineContext.job
         val part = target.sibling(target.fileName + PART)
         var lastShown = 0L
+        // «осталось около…» of the notes is counted from the picture alone: the sound before it takes a moment or nothing at all,
+        // and its tenth of the progress would make the first estimate short and the next ones grow
+        val phase = if (notes != null) notesConfig.soundShare else 0f
+        phaseStartedAt = if (phase == 0f) started else null
         val whole = try {
             // the picture of a video take is copied as it is; only the sound is rendered, so the estimate of the sound holds
             val video = info.video && (choice.variant == ShareVariant.PROCESSED || choice.variant == ShareVariant.BACKING)
@@ -393,10 +399,12 @@ open class ShareViewModel(
                     val now = clock.nowMs()
                     val percent = (fraction * PERCENT).toInt().coerceIn(0, PERCENT)
                     lastPercent = percent
+                    if (phaseStartedAt == null && fraction >= phase) phaseStartedAt = now
                     if (mutableSheet.value is ShareSheet.Preparing && now - lastShown >= PROGRESS_EVERY_MS) {
                         lastShown = now
-                        val elapsed = now - started
-                        val remaining = if (fraction >= REMAINING_FROM) ((elapsed * (1 - fraction) / fraction) / MS_PER_SECOND).toInt().coerceAtLeast(1) else null
+                        val phaseFraction = (fraction - phase) / (1 - phase)
+                        val elapsed = now - (phaseStartedAt ?: now)
+                        val remaining = if (phaseFraction >= REMAINING_FROM) ((elapsed * (1 - phaseFraction) / phaseFraction) / MS_PER_SECOND).roundToInt().coerceAtLeast(1) else null
                         // in one step: a «Закрыть» or an «Отмена» written meanwhile is never written over
                         mutableSheet.update { if (it is ShareSheet.Preparing) it.copy(percent = percent, remainingSec = remaining) else it }
                     }
@@ -451,27 +459,32 @@ open class ShareViewModel(
     ): Boolean {
         val makes = notesRenderer ?: return false
         val share = notesConfig.soundShare
-        val made = target.sibling(target.fileName + NOTES_SOUND)
+        val soundFile = target.sibling(target.fileName + NOTES_SOUND)
         try {
             val sound = when (info.notes?.sound) {
-                NotesSound.BACKING -> made.takeIf { mix != null && renderer.renderWithBacking(source, settings, mix, made) { onProgress(it * share) } }
-                NotesSound.PROCESSED -> made.takeIf { renderer.render(source, settings, made) { onProgress(it * share) } }
+                NotesSound.BACKING -> soundFile.takeIf { mix != null && renderer.renderWithBacking(source, settings, mix, soundFile) { onProgress(it * share) } }
+                NotesSound.PROCESSED -> soundFile.takeIf { renderer.render(source, settings, soundFile) { onProgress(it * share) } }
                 NotesSound.ORIGINAL, null -> source
             } ?: return false
-            return makes.render(source, sound, notes.overlay, notes.words, target) { onProgress(share + it * (1f - share)) }
+            // the picture begins here: «осталось около…» is counted from this moment, made or not made the sound before it
+            onProgress(share)
+            val made = makes.render(source, sound, notes.overlay, notes.words, target) { onProgress(share + it * (1f - share)) }
+            // the renderers answer false and log why; the failure is counted, as an exception of any render is (spec 3.34)
+            if (!made && currentCoroutineContext().isActive) analytics.error(ErrorGroup.MEDIA, NOTES_FAILED)
+            return made
         } finally {
-            withContext(NonCancellable + io) { made.deleteFile() }
+            withContext(NonCancellable + io) { soundFile.deleteFile() }
         }
     }
 
     /**
      * «Видео с нотами» for a recording of [durationMs] whose picture is [picture] (spec 3.37, 5.30): the size of the file, about what it
-     * will weigh, the sound in it; null without a picture or where the platform makes none. The frame rate is not known before the
-     * video is opened: the estimate counts the most frames a file may have.
+     * will weigh — at the frame rate of the video and, with its own sound, the bit rate of its own track — and the sound in it; null
+     * without a picture or where the platform makes none.
      */
     private fun notesOffer(durationMs: Long, picture: VideoInfo?, backing: Boolean, processed: Boolean): NotesOffer? {
         if (notesRenderer == null || picture == null) return null
-        val format = NotesVideoFormat.of(picture.width, picture.height, frameRate = 0f, config = notesConfig)
+        val format = NotesVideoFormat.of(picture.width, picture.height, picture.frameRate, notesConfig)
         val sound = when {
             backing -> NotesSound.BACKING
             processed -> NotesSound.PROCESSED
@@ -480,7 +493,7 @@ open class ShareViewModel(
         val soundBitrate = when (sound) {
             NotesSound.BACKING -> SoundRenderer.STEREO_BIT_RATE
             NotesSound.PROCESSED -> SoundRenderer.BIT_RATE
-            NotesSound.ORIGINAL -> notesConfig.soundBitrateGuess
+            NotesSound.ORIGINAL -> picture.soundBitrate ?: notesConfig.soundBitrateGuess
         }
         return NotesOffer(
             resolution = format.shortSide,
@@ -508,6 +521,9 @@ open class ShareViewModel(
 
     @Volatile private var lastPercent = 0
 
+    /** When the part of a preparation that its «осталось около…» is counted from began: the picture of the notes, all of anything else. */
+    @Volatile private var phaseStartedAt: Long? = null
+
     private companion object {
         const val SHOW_PROGRESS_FROM_MS = 700L
         const val MIN_PROGRESS_SHOWN_MS = 1_200L
@@ -522,6 +538,7 @@ open class ShareViewModel(
         /** The sound of «Видео с нотами» on its way into the file, beside it. */
         const val NOTES_SOUND = ".sound.m4a"
         const val NOTES_KEY = "-notes-"
+        const val NOTES_FAILED = "a video with notes could not be made"
         const val HASH_STEP = 31
         const val HEX = 16
     }

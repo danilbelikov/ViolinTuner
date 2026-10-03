@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -73,6 +74,7 @@ import com.violinjourney.app.shared.resources.share_failed_video_text
 import com.violinjourney.app.shared.resources.share_failed_video_title
 import com.violinjourney.app.shared.resources.share_file_details
 import com.violinjourney.app.shared.resources.share_file_details_stereo
+import com.violinjourney.app.shared.resources.share_format_description
 import com.violinjourney.app.shared.resources.share_large_file
 import com.violinjourney.app.shared.resources.share_notes
 import com.violinjourney.app.shared.resources.share_notes_caption_backing
@@ -149,6 +151,7 @@ private const val PERCENT = 100f
 private const val UNAVAILABLE_ALPHA = 0.38f
 private const val BYTES_PER_KB = 1_024L
 private const val TABULAR_FIGURES = "tnum"
+private const val EXTENSION_DOT = "."
 
 /**
  * Hosts «Поделиться» on a screen: shows the sheet of [viewModel] and hands the finished file to the system. A route puts it beside its
@@ -403,11 +406,16 @@ private fun Radio(selected: Boolean) {
     )
 }
 
-/** «.m4a», «.mp4», «.mov» — the file a variant makes, before it is asked (5.29 R5: 24 at a corner of 7 on surface-2, 12 sp, 800). */
+/**
+ * «.m4a», «.mp4», «.mov» — the file a variant makes, before it is asked (5.29 R5: 24 at a corner of 7 on surface-2, 12 sp, 800). TalkBack
+ * says «файл mp4» (spec 3.36.5, 3.37), not the dot.
+ */
 @Composable
 private fun FormatChip(format: String) {
+    val description = stringResource(Res.string.share_format_description, format.removePrefix(EXTENSION_DOT))
     Box(
         modifier = Modifier
+            .clearAndSetSemantics { contentDescription = description }
             .height(FormatChipHeight)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh, FormatChipCorner)
             .padding(horizontal = FormatChipSide),

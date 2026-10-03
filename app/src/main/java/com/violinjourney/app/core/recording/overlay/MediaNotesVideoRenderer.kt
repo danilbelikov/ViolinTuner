@@ -32,7 +32,6 @@ import androidx.media3.transformer.EditedMediaItemSequence
 import androidx.media3.transformer.Effects
 import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
-import androidx.media3.transformer.ProgressHolder
 import androidx.media3.transformer.Transformer
 import androidx.media3.transformer.VideoEncoderSettings
 import com.violinjourney.app.core.di.IoDispatcher
@@ -96,6 +95,8 @@ class MediaNotesVideoRenderer @Inject constructor(
                     encoded, sound, target, pictureShiftUs = 0,
                     onProgress = { onProgress(config.pictureShare + it * (1f - config.pictureShare)) },
                     keepGoing = { job.ensureActive() },
+                    // the file ends with its summary: a hall that rings on past it is cut, as on iOS
+                    soundUntilUs = probe.durationUs + config.summaryMs * US_PER_MS,
                 )
             }
             if (whole) onProgress(1f)
@@ -155,9 +156,11 @@ class MediaNotesVideoRenderer @Inject constructor(
             .build()
         transformer.start(composition(picture, lastFrame, probe, format, drawing), output.absolutePath)
         try {
-            val progress = ProgressHolder()
+            // by the frames the overlay has drawn, against the video and its summary: Media3 shares its own progress evenly
+            // between the items of a sequence, and the still of three seconds would be half of it
+            val totalUs = (probe.durationUs + config.summaryMs * US_PER_MS).toFloat()
             while (!done.isCompleted) {
-                if (transformer.getProgress(progress) == Transformer.PROGRESS_STATE_AVAILABLE) onProgress(progress.progress / PERCENT)
+                onProgress((drawing.lastUs / totalUs).coerceIn(0f, 1f))
                 withTimeoutOrNull(PROGRESS_EVERY_MS) { done.await() }
             }
             done.await()
@@ -169,10 +172,16 @@ class MediaNotesVideoRenderer @Inject constructor(
 
     /** The video without its sound, then its last frame for the summary; at the size of the file, with the overlay on top. */
     private fun composition(picture: File, lastFrame: File, probe: VideoProbe, format: NotesVideoFormat, drawing: NotesBitmapOverlay): Composition {
-        // frames are dropped only where there are too many: a video of 30 frames or fewer keeps every one
-        val videoEffects: List<Effect> =
-            if (probe.frameRate > format.frameRate + FRAME_RATE_SLACK) listOf(FrameDropEffect.createDefaultFrameDropEffect(format.frameRate.toFloat())) else emptyList()
-        val video = EditedMediaItem.Builder(MediaItem.fromUri(Uri.fromFile(picture)))
+        // frames are dropped where there are too many, or may be — a file that does not say its rate; a stream of 30 frames
+        // or fewer passes the effect whole
+        val dropFrames = probe.frameRate <= 0f || probe.frameRate > format.frameRate + FRAME_RATE_SLACK
+        val videoEffects: List<Effect> = if (dropFrames) listOf(FrameDropEffect.createDefaultFrameDropEffect(format.frameRate.toFloat())) else emptyList()
+        // the item ends with its picture: Media3 would put the next one after the longest track, the sound left out included
+        val clipped = MediaItem.Builder()
+            .setUri(Uri.fromFile(picture))
+            .setClippingConfiguration(MediaItem.ClippingConfiguration.Builder().setEndPositionMs(probe.durationUs / US_PER_MS).build())
+            .build()
+        val video = EditedMediaItem.Builder(clipped)
             .setRemoveAudio(true)
             .setEffects(Effects(emptyList(), videoEffects))
             .build()
@@ -265,31 +274,46 @@ class MediaNotesVideoRenderer @Inject constructor(
     }
 
     /**
-     * The overlay of Media3: one bitmap the size of the file, drawn again for every frame — the lane moves — until the summary
-     * has come in; from then on every frame is the same, and the bitmap is neither drawn nor uploaded again.
+     * The overlay of Media3: drawn again for every frame — the lane moves — until the summary has come in; from then on every
+     * frame is the same, and the bitmap is neither drawn nor uploaded again. The shader of Media3 mixes an overlay as colours not
+     * multiplied by their alpha (`insert_overlay_fragment_shader_methods.glsl`), while a bitmap keeps them multiplied: what is drawn
+     * goes to [upload] unmultiplied, or every half-clear colour — the dimmed notes, the glass, the edges of letters — would come
+     * out darker than drawn. While the video runs only the band of the lane changes, and only it is copied.
      */
     @OptIn(UnstableApi::class)
     private class NotesBitmapOverlay(
         private val painter: NotesOverlayPainter,
         private val videoEndMs: Long,
         fadeMs: Long,
-        width: Int,
-        height: Int,
+        private val width: Int,
+        private val height: Int,
     ) : BitmapOverlay() {
-        private val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        private val canvas = Canvas(bitmap.asImageBitmap())
+        private val drawn = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        private val upload = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).apply { isPremultiplied = false }
+        private val pixels = IntArray(width * height)
+        private val canvas = Canvas(drawn.asImageBitmap())
         private val scope = CanvasDrawScope()
         private val size = Size(width.toFloat(), height.toFloat())
+        private val laneBandTop = painter.geometry.scrimTop.toInt().coerceIn(0, height)
         private val settledAtMs = videoEndMs + fadeMs
         private var settled = false
 
+        /** The time of the last frame drawn: how far the picture has come. */
+        @Volatile var lastUs = 0L
+            private set
+
         override fun getBitmap(presentationTimeUs: Long): Bitmap {
-            if (settled) return bitmap
+            lastUs = presentationTimeUs
+            if (settled) return upload
             val nowMs = presentationTimeUs / US_PER_MS
-            bitmap.eraseColor(Color.TRANSPARENT)
+            drawn.eraseColor(Color.TRANSPARENT)
             scope.draw(Density(1f), LayoutDirection.Ltr, canvas, size) { painter.draw(this, nowMs, videoEndMs) }
+            val top = if (nowMs < videoEndMs) laneBandTop else 0
+            // getPixels gives the colours unmultiplied; an unmultiplied bitmap keeps them so
+            drawn.getPixels(pixels, 0, width, 0, top, width, height - top)
+            upload.setPixels(pixels, 0, width, 0, top, width, height - top)
             settled = nowMs >= settledAtMs
-            return bitmap
+            return upload
         }
     }
 
@@ -299,7 +323,6 @@ class MediaNotesVideoRenderer @Inject constructor(
         const val LAST_FRAME_SUFFIX = ".last.jpg"
         const val US_PER_MS = 1_000L
         const val HALF_TURN = 180
-        const val PERCENT = 100f
         const val PROGRESS_EVERY_MS = 100L
 
         /** The last frame is asked a little before the end: a retriever finds no frame at the very end of some files. */

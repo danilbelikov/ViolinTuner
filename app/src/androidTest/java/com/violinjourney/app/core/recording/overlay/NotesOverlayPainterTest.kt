@@ -84,9 +84,9 @@ class NotesOverlayPainterTest {
     fun theOtherNotesAreDimmedAndTheNextOneKeepsItsColour() {
         val (bitmap, painter) = frame(1_080, 1_920, nowMs = 1_000, name = "portrait-1s-next")
         val g = painter.geometry
-        // C sharp starts 1.05 s ahead: dimmed, still red over the shade
+        // C sharp starts 1.05 s ahead: dimmed, still red over the shade — read under the middle of the capsule, below its name
         val x = g.x(2_500, 1_000).toInt()
-        val pixel = bitmap.getPixel(x, g.pillCenterY(73, low, high).toInt())
+        val pixel = bitmap.getPixel(x, (g.pillCenterY(73, low, high) + BELOW_NAME_U * g.u).toInt())
         assertTrue("red leads: ${Integer.toHexString(pixel)}", red(pixel) > green(pixel) + 40 && red(pixel) > blue(pixel) + 40)
         assertTrue("dimmed, not whole: ${Integer.toHexString(pixel)}", red(pixel) < 0xE0)
     }
@@ -116,8 +116,8 @@ class NotesOverlayPainterTest {
     fun theSummaryComesInOverTheLane() {
         val (bitmap, _) = frame(1_080, 1_920, nowMs = videoEndMs + config.summaryFadeMs / 2, name = "portrait-summary-coming")
         val corner = bitmap.getPixel(20, 20)
-        // half the time is more than half the way: the fade slows towards its end
-        assertTrue("on its way: ${red(corner)}", red(corner) in (veiled(0x80) + 4) until 0x80 - 30)
+        // half the time is three quarters of the way, the fade slowing towards its end: the veil at 0.675 — at 0.45 it would be linear
+        assertTrue("on its way, slowing: ${red(corner)}", red(corner) in EASED_HALFWAY)
     }
 
     private fun veiled(channel: Int): Int = (channel * (1 - config.veilAlpha) + INK * config.veilAlpha).toInt()
@@ -135,5 +135,11 @@ class NotesOverlayPainterTest {
     private companion object {
         const val GREY = 0xFF808080.toInt()
         const val INK = 0x0B
+
+        /** Inside the capsule, under the letters of its name: the capsule is 4.4 u high, the name about 2 u. */
+        const val BELOW_NAME_U = 1.6f
+
+        /** Grey 0x80 under a veil of 0.9 × 0.75 is about 49; a linear fade would leave about 75. */
+        val EASED_HALFWAY = 40..60
     }
 }

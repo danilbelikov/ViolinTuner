@@ -125,6 +125,46 @@ class NotesVideoRendererTest {
         assertColorNear(IN_TUNE, pixel)
     }
 
+    /**
+     * A dimmed note — drawn at 0.62 over the shade — comes out as bright as drawn: the shader of Media3 mixes an overlay as colours
+     * not multiplied by their alpha, and a bitmap keeps them multiplied; multiplied twice, it came out about a third darker.
+     */
+    @Test
+    fun aDimmedNoteIsAsBrightAsDrawn() {
+        val source = TestVideo.make(File(directory, "take.mp4"), seconds = SECONDS)
+        val target = File(directory, "notes.mp4")
+        // A until 1.5 s, then C# a little high, still ahead of the playhead at 1 s: dimmed
+        val notes = listOf(OverlayNote(A4, 0, 1_500, Zone.IN_TUNE), OverlayNote(C_SHARP_5, 1_550, SECONDS * 1_000L, Zone.NEAR))
+        val (low, high) = NotesOverlays.heights(notes.map { it.midi }, config)
+        val overlay = NotesOverlay(
+            notes = notes, lowMidi = low, highMidi = high, scorePercent = 80, toleranceCents = 8, title = "A", bestMidi = A4, drift = null,
+            previous = null, ribbon = listOf(RecordingBar(SECONDS * 20, Zone.IN_TUNE)), config = config,
+        )
+        assertTrue(runBlocking { renderer.render(source, source, overlay, words, target) {} })
+        val frame = frameAt(target, 1_000, keep = "video-dimmed")
+        val geometry = NotesOverlayGeometry(frame.width.toFloat(), frame.height.toFloat(), config)
+        val x = geometry.x(2_200, 1_000).toInt()
+        val y = geometry.pillCenterY(C_SHARP_5, low, high)
+        // the capsule under its name, and the shade beside it, a capsule higher
+        val pill = frame.getPixel(x, (y + BELOW_NAME_U * geometry.u).toInt())
+        val shade = frame.getPixel(x, (y - geometry.pillHeight * 1.5f).toInt())
+        val expected = blend(NEAR, shade, config.otherNotesAlpha)
+        assertColorNear(expected, pill)
+    }
+
+    /** The hall rings on past the summary: the sound is cut where the file ends, as on iOS (spec 3.37). */
+    @Test
+    fun theSoundEndsWithTheSummary() {
+        val source = TestVideo.make(File(directory, "take.mp4"), seconds = SECONDS)
+        // a sound five seconds longer than the picture, two past the end of the summary: the track of a longer video
+        val longSound = TestVideo.make(File(directory, "long.mp4"), seconds = SECONDS + 5)
+        val target = File(directory, "notes.mp4")
+        assertTrue(runBlocking { renderer.render(source, longSound, overlay(SECONDS * 1_000L), words, target) {} })
+        val soundMs = checkNotNull(trackFormat(target, "audio/")).getLong(MediaFormat.KEY_DURATION) / 1_000
+        val pictureMs = checkNotNull(trackFormat(source, "video/")).getLong(MediaFormat.KEY_DURATION) / 1_000
+        assertTrue("the sound of $soundMs ms ends with the file", soundMs <= pictureMs + config.summaryMs + SOUND_SLACK_MS)
+    }
+
     @Test
     fun theSummaryEndsTheVideoOnADarkVeil() {
         val source = TestVideo.make(File(directory, "take.mp4"), seconds = SECONDS)
@@ -172,6 +212,12 @@ class NotesVideoRendererTest {
         assertTrue("expected about ${Integer.toHexString(expected)}, was ${Integer.toHexString(actual)}", near)
     }
 
+    /** [color] at [alpha] over [under], as the frame shows it. */
+    private fun blend(color: Int, under: Int, alpha: Float): Int {
+        fun channel(shift: Int) = ((color shr shift and 0xFF) * alpha + (under shr shift and 0xFF) * (1 - alpha)).toInt()
+        return (0xFF shl 24) or (channel(16) shl 16) or (channel(8) shl 8) or channel(0)
+    }
+
     private fun red(pixel: Int) = pixel shr 16 and 0xFF
     private fun green(pixel: Int) = pixel shr 8 and 0xFF
     private fun blue(pixel: Int) = pixel and 0xFF
@@ -179,6 +225,15 @@ class NotesVideoRendererTest {
 
     private companion object {
         const val SECONDS = 3
+        const val A4 = 69
+        const val C_SHARP_5 = 73
+        const val NEAR = 0xFFE5B03C.toInt()
+
+        /** Inside a capsule, under the letters of its name. */
+        const val BELOW_NAME_U = 1.6f
+
+        /** One packet of AAC: what a cut of sound may run over. */
+        const val SOUND_SLACK_MS = 50L
         const val LONG_SECONDS = 20
         const val IN_TUNE = 0xFF47C97E.toInt()
 

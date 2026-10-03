@@ -137,6 +137,34 @@ class IosNotesVideoRendererTest {
     }
 
     @Test
+    fun `a sound longer than the picture rings on into the summary`() = runTest {
+        // the hall of the processed sound, a backing: the sound goes on past the last frame — the writer must get the frames of the
+        // summary in time, or it waits for them while the sound waits for it
+        val picture = PlatformFile("$folder/take.mp4")
+        writePicture(picture, SECONDS, turned = false)
+        val sound = PlatformFile("$folder/take.m4a")
+        writeAacTones(sound.path, RATE, listOf(Tone(440.0, SECONDS + 4.0)))
+        val target = PlatformFile("$folder/notes.mp4")
+        assertTrue(withContext(Dispatchers.Default) { renderer.render(picture, sound, overlay(SECONDS * 1_000L), words, target) {} })
+        val asset = AVURLAsset(uRL = NSURL.fileURLWithPath(target.path), options = null)
+        val seconds = CMTimeGetSeconds(asset.duration)
+        assertTrue(abs(seconds - (SECONDS + config.summaryMs / 1_000.0)) <= FRAME_SLACK_S, "$seconds s")
+    }
+
+    @Test
+    fun `a sound shorter than the picture leaves the rest of the picture whole`() = runTest {
+        // the sound ends at a second: finished at once, so the writer stops waiting for sound to put beside the frames to come
+        val picture = PlatformFile("$folder/take.mp4")
+        writePicture(picture, LONGER_PICTURE, turned = false)
+        val sound = PlatformFile("$folder/take.m4a")
+        writeAacTones(sound.path, RATE, listOf(Tone(440.0, 1.0)))
+        val target = PlatformFile("$folder/notes.mp4")
+        assertTrue(withContext(Dispatchers.Default) { renderer.render(picture, sound, overlay(LONGER_PICTURE * 1_000L), words, target) {} })
+        val seconds = CMTimeGetSeconds(AVURLAsset(uRL = NSURL.fileURLWithPath(target.path), options = null).duration)
+        assertTrue(abs(seconds - (LONGER_PICTURE + config.summaryMs / 1_000.0)) <= FRAME_SLACK_S, "$seconds s")
+    }
+
+    @Test
     fun `the note under the playhead is drawn in its colour`() = runTest {
         val (picture, sound) = take(SECONDS)
         val target = PlatformFile("$folder/notes.mp4")
@@ -276,6 +304,7 @@ class IosNotesVideoRendererTest {
         const val A4 = 69
         const val SECONDS = 2
         const val LONG_SECONDS = 20
+        const val LONGER_PICTURE = 4
         const val WIDTH = 320
         const val HEIGHT = 240
         const val FPS = 15

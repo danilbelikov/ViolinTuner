@@ -97,6 +97,25 @@ class NotesOverlayTest {
     }
 
     @Test
+    fun `a break of the hold itself keeps the run going — the tag does not blink`() {
+        // A 0–500, a break of exactly 300 ms, B 800–1300: B is current at once, and the tag of the run stays whole
+        val overlay = overlay(run(69, 10) + run(null, 6) + run(71, 10))
+        assertEquals(1f, overlay.tagAt(799)!!.alpha, EPSILON)
+        assertEquals(71, overlay.tagAt(800)!!.note.midi)
+        assertEquals(1f, overlay.tagAt(800)!!.alpha, EPSILON)
+    }
+
+    @Test
+    fun `a run that begins while the tag still fades goes on from its brightness`() {
+        // A 0–500, a break of 350 ms, B 850–1350: A's tag fades from 800 and has a third gone at 850 — B takes it from there
+        val overlay = overlay(run(69, 10) + run(null, 7) + run(71, 10))
+        assertEquals(2f / 3, overlay.tagAt(849)!!.alpha, 0.01f)
+        assertEquals(71, overlay.tagAt(850)!!.note.midi)
+        assertEquals(2f / 3, overlay.tagAt(850)!!.alpha, 0.01f)
+        assertEquals(1f, overlay.tagAt(900)!!.alpha, EPSILON)
+    }
+
+    @Test
     fun `the notes of a span are those that touch it`() {
         val overlay = overlay(phrases)
         assertEquals(listOf(69, 71), overlay.notesBetween(400, 800).map { it.midi })
@@ -129,6 +148,12 @@ class NotesOverlayTest {
     }
 
     @Test
+    fun `the best note is judged by the tolerance of the recording`() {
+        // 10 cents is near by the ±8 of the settings of now, in tune by the ±12 the recording was made with
+        assertEquals(69, overlay(run(69, 30, 10.0), summary(tolerance = 12.0)).bestMidi)
+    }
+
+    @Test
     fun `what drifts is the first problem note in the colour of its mean`() {
         val overlay = overlay(run(69, 10, 12.0) + run(71, 10, -30.0) + run(72, 10, 0.0))
         assertEquals(OverlayDrift(71, -30.0, Zone.OFF), overlay.drift)
@@ -156,12 +181,14 @@ class NotesOverlayTest {
 
     @Test
     fun `the summary keeps the score — the tolerance — the title and the ribbon of the recording`() {
-        val samples = run(69, 10, 2.0) + run(69, 4, 12.0)
-        val overlay = overlay(samples, summary(score = 71, tolerance = 8.0))
+        val samples = run(69, 10, 2.0) + run(69, 4, 10.0)
+        val overlay = overlay(samples, summary(score = 71, tolerance = 12.0))
         assertEquals(71, overlay.scorePercent)
-        assertEquals(8, overlay.toleranceCents)
+        assertEquals(12, overlay.toleranceCents)
         assertEquals(TITLE, overlay.title)
-        assertEquals(SessionRibbon.of(samples, intonation), overlay.ribbon)
+        // the ribbon by the ±12 of the recording: one piece in tune — by the ±8 of now it would be two
+        assertEquals(SessionRibbon.of(samples, intonation.copy(toleranceCents = 12.0)), overlay.ribbon)
+        assertEquals(1, overlay.ribbon.size)
     }
 
     private companion object {

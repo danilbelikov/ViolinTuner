@@ -1568,4 +1568,6 @@
     <string name="overlay_best_note">Mejor nota</string>
     <string name="overlay_drift_none">nada</string>
     <string name="overlay_previous_take">Toma anterior</string>
+    <!-- What TalkBack says of the chip of a variant's format (spec 3.36.5, 3.37): «файл mp4», not «точка mp4» -->
+    <string name="share_format_description">archivo %1$s</string>
 </resources>

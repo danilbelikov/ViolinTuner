@@ -1026,6 +1026,33 @@ class ShareViewModelTest {
     }
 
     @Test
+    fun `the size of the notes follows the frame rate and the sound of the file`() = runTest {
+        videoFiles.info = com.violinjourney.app.core.recording.video.VideoInfo(
+            durationMs = 60_000, width = 1920, height = 1080, createdAtEpochMs = null, hasSound = true, frameRate = 25f, soundBitrate = 256_000,
+        )
+        val (viewModel, _) = shareWithNotes(Renderer(tookMs = 100), NotesRenderer())
+        viewModel.start(videoTake())
+        runCurrent()
+        val offer = (viewModel.sheet.value as ShareSheet.Choose).info.notes!!
+        val config = NotesVideoConfig()
+        val format = com.violinjourney.app.core.recording.overlay.NotesVideoFormat.of(1920, 1080, 25f, config)
+        assertEquals("25 frames a second, the 256 kbps of its own sound", com.violinjourney.app.core.recording.overlay.NotesVideoFormat.bytes(format, 256_000, 10_000, config), offer.bytes)
+    }
+
+    @Test
+    fun `the time left of the notes is counted from the picture alone`() = runTest {
+        // the video's own sound: no sound to make, the progress opens at the tenth of the sound — the picture takes 20 s in ten steps
+        val (viewModel, _) = shareWithNotes(Renderer(tookMs = 100), NotesRenderer(tookMs = 20_000))
+        viewModel.start(videoTake())
+        runCurrent()
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        runCurrent()
+        advanceTimeBy(10_001)
+        val half = viewModel.sheet.value as ShareSheet.Preparing
+        assertEquals("half the picture: half of its 20 s is left — the tenth of the sound does not make it look quicker", 10, half.remainingSec)
+    }
+
+    @Test
     fun `a sound recording has no notes to offer`() = runTest {
         sound.setDefault(hall)
         val (viewModel, _) = shareWithNotes(Renderer(tookMs = 100), NotesRenderer())

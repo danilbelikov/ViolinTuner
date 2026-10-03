@@ -109,13 +109,16 @@ class AppVideoFiles @Inject constructor(
             val width = number(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toInt() ?: 0
             val height = number(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toInt() ?: 0
             val turned = rotation % HALF_TURN != 0L
+            val tracks = tracksOf(file)
             VideoInfo(
                 durationMs = number(MediaMetadataRetriever.METADATA_KEY_DURATION) ?: 0,
                 // as it is seen, not as it is stored
                 width = if (turned) height else width,
                 height = if (turned) width else height,
                 createdAtEpochMs = VideoDates.parse(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DATE)),
-                hasSound = hasSoundTrack(file),
+                hasSound = tracks.hasSound,
+                frameRate = tracks.frameRate,
+                soundBitrate = tracks.soundBitrate,
             )
         } catch (e: IllegalArgumentException) {
             Log.w(TAG, "not a video: ${file.name}", e)
@@ -130,16 +133,36 @@ class AppVideoFiles @Inject constructor(
     }
 
     // METADATA_KEY_HAS_AUDIO says "yes" for a track no decoder here may open; the extractor is what the analysis will use.
-    private fun hasSoundTrack(file: File): Boolean {
+    /** What the tracks say: whether there is sound, the frames a second of the picture and the bits a second of the sound. */
+    private class Tracks(val hasSound: Boolean, val frameRate: Float, val soundBitrate: Int?)
+
+    private fun tracksOf(file: File): Tracks {
         val extractor = MediaExtractor()
         return try {
             extractor.setDataSource(file.absolutePath)
-            (0 until extractor.trackCount).any { extractor.getTrackFormat(it).getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true }
+            val formats = (0 until extractor.trackCount).map(extractor::getTrackFormat)
+            val sound = formats.firstOrNull { it.getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true }
+            val picture = formats.firstOrNull { it.getString(MediaFormat.KEY_MIME)?.startsWith("video/") == true }
+            Tracks(
+                hasSound = sound != null,
+                frameRate = picture?.let(::frameRateOf) ?: 0f,
+                soundBitrate = sound?.takeIf { it.containsKey(MediaFormat.KEY_BIT_RATE) }?.getInteger(MediaFormat.KEY_BIT_RATE),
+            )
         } catch (e: IOException) {
             Log.w(TAG, "cannot look for sound in ${file.name}", e)
-            false
+            Tracks(hasSound = false, frameRate = 0f, soundBitrate = null)
         } finally {
             extractor.release()
+        }
+    }
+
+    /** The frame rate is an integer in some files and a float in others. */
+    private fun frameRateOf(format: MediaFormat): Float {
+        if (!format.containsKey(MediaFormat.KEY_FRAME_RATE)) return 0f
+        return try {
+            format.getInteger(MediaFormat.KEY_FRAME_RATE).toFloat()
+        } catch (e: ClassCastException) {
+            format.getFloat(MediaFormat.KEY_FRAME_RATE)
         }
     }
 
