@@ -2,6 +2,7 @@ package com.violinjourney.app.feature.backup
 
 import androidx.lifecycle.SavedStateHandle
 import com.violinjourney.app.core.analytics.NoOpAnalytics
+import com.violinjourney.app.core.audio.playback.FakeSessionWaveforms
 import com.violinjourney.app.core.backup.BackupCandidate
 import com.violinjourney.app.core.backup.BackupConfig
 import com.violinjourney.app.core.backup.BackupContents
@@ -85,13 +86,13 @@ class BackupViewModelsTest {
     )
 
     private fun TestScope.importer() = VideoTakeImporter(
-        FakeVideoFiles(), FakeFileTakeAnalyzer(), FakeSessionRepository(), SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), FakeRunningPracticeStore(),
+        FakeVideoFiles(), FakeFileTakeAnalyzer(), FakeSessionRepository(), FakeSessionWaveforms(), SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), FakeRunningPracticeStore(),
         PracticeConfig(), RepertoireConfig(), IntonationConfig(), clock, { testScheduler.currentTime }, AnalysisSpeed(), StandardTestDispatcher(testScheduler),
         analytics = NoOpAnalytics(),
     )
 
     private fun TestScope.audioImporter() = AudioTakeImporter(
-        FakePickedSounds(), FakeFileTakeAnalyzer(), FakeSessionRepository(), SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()),
+        FakePickedSounds(), FakeFileTakeAnalyzer(), FakeSessionRepository(), FakeSessionWaveforms(), SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()),
         RepertoireConfig(), IntonationConfig(), clock, { testScheduler.currentTime }, AnalysisSpeed(), StandardTestDispatcher(testScheduler),
         StandardTestDispatcher(testScheduler), analytics = NoOpAnalytics(),
     )
@@ -139,7 +140,7 @@ class BackupViewModelsTest {
         // review of stage 98a: a failure only the screen of its event shows would hold the copy for good once that screen is left
         val picked = FakePickedSounds().apply { probe = null }
         val sounds = AudioTakeImporter(
-            picked, FakeFileTakeAnalyzer(), FakeSessionRepository(), SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()),
+            picked, FakeFileTakeAnalyzer(), FakeSessionRepository(), FakeSessionWaveforms(), SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()),
             RepertoireConfig(), IntonationConfig(), clock, { testScheduler.currentTime }, AnalysisSpeed(), StandardTestDispatcher(testScheduler),
             StandardTestDispatcher(testScheduler), analytics = NoOpAnalytics(),
         )

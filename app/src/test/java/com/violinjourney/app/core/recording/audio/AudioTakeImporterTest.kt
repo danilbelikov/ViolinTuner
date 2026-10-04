@@ -2,6 +2,8 @@ package com.violinjourney.app.core.recording.audio
 
 import com.violinjourney.app.core.analytics.ErrorGroup
 import com.violinjourney.app.core.analytics.FakeAnalytics
+import com.violinjourney.app.core.audio.playback.FakeSessionWaveforms
+import com.violinjourney.app.core.audio.playback.SessionWaveforms
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
@@ -36,6 +38,7 @@ class AudioTakeImporterTest {
     private val sounds = FakePickedSounds()
     private val analyzer = FakeFileTakeAnalyzer()
     private val sessions = FakeSessionRepository()
+    private val waveforms = FakeSessionWaveforms()
     private val now = Instant.parse("2026-10-24T18:00:00Z")
     private val clock = FixedWallClock(now, TimeZone.of("Europe/Moscow"))
     private val analytics = FakeAnalytics()
@@ -44,7 +47,7 @@ class AudioTakeImporterTest {
     private fun TestScope.importer(): Pair<AudioTakeImporter, MutableList<AudioTakeImporter.Saved>> {
         val dispatcher = StandardTestDispatcher(testScheduler)
         val importer = AudioTakeImporter(
-            sounds, analyzer, sessions, SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), RepertoireConfig(), IntonationConfig(),
+            sounds, analyzer, sessions, waveforms, SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), RepertoireConfig(), IntonationConfig(),
             clock, { testScheduler.currentTime }, AnalysisSpeed(), io = dispatcher, dispatcher = dispatcher, analytics = analytics,
         )
         val saved = mutableListOf<AudioTakeImporter.Saved>()
@@ -84,6 +87,18 @@ class AudioTakeImporterTest {
         assertEquals(listOf(AudioTakeImporter.Saved(event, session.id)), saved)
         assertTrue("a pick that came in is the recording's now", sounds.released.isEmpty())
         assertTrue(sounds.discarded.isEmpty())
+    }
+
+    @Test
+    fun `the waveform heard with the notes is kept under the name of the copy`() = runTest {
+        val waveform = FloatArray(SessionWaveforms.BARS) { 1f - it / SessionWaveforms.BARS.toFloat() }
+        analyzer.waveform = waveform
+        val (importer, _) = importer()
+        importer.picked(event, "content://audio/1")
+        advance(6_000)
+        val name = sessions.sessions.value.single().audioPath!!
+        assertEquals(setOf(name), waveforms.stored.keys)
+        assertEquals(waveform.toList(), waveforms.stored.getValue(name).toList())
     }
 
     @Test

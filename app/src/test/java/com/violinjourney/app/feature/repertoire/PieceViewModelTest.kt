@@ -7,6 +7,7 @@ import com.violinjourney.app.core.audio.FakeScenario
 import com.violinjourney.app.core.audio.MicUnavailableException
 import com.violinjourney.app.core.audio.MicUnavailableReason
 import com.violinjourney.app.core.audio.PitchSource
+import com.violinjourney.app.core.audio.playback.FakeSessionWaveforms
 import com.violinjourney.app.core.audio.RecordingRate
 import com.violinjourney.app.core.audio.SampleClock
 import com.violinjourney.app.core.audio.recording.AudioTap
@@ -123,7 +124,7 @@ class PieceViewModelTest {
 
     // one importer for all the screens of a test, as it is one for the app
     private fun TestScope.importer() = videoImporter ?: VideoTakeImporter(
-        videoFiles, videoAnalyzer, sessions, SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), practice, PracticeConfig(), RepertoireConfig(), IntonationConfig(),
+        videoFiles, videoAnalyzer, sessions, FakeSessionWaveforms(), SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), practice, PracticeConfig(), RepertoireConfig(), IntonationConfig(),
         clock, { testScheduler.currentTime }, AnalysisSpeed(), StandardTestDispatcher(testScheduler), analytics = NoOpAnalytics(),
     ).also { videoImporter = it }
 

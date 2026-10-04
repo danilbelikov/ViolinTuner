@@ -2,6 +2,7 @@ package com.violinjourney.app.core.recording.audio
 
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.ErrorGroup
+import com.violinjourney.app.core.audio.playback.SessionWaveforms
 import com.violinjourney.app.core.di.ElapsedClock
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
@@ -60,6 +61,7 @@ class AudioTakeImporter(
     private val files: PickedSounds,
     private val analyzer: FileTakeAnalyzer,
     private val sessions: SessionRepository,
+    private val waveforms: SessionWaveforms,
     private val configSource: IntonationConfigSource,
     private val repertoireConfig: RepertoireConfig,
     private val intonationDefaults: IntonationConfig,
@@ -235,6 +237,8 @@ class AudioTakeImporter(
                 mutableState.update { if (it is MediaImport.Working) it.copy(percent = ImportPacing.PERCENT, remainingSec = null) else it }
                 val stillToShow = ImportPacing.MIN_SHOWN_MS - (elapsed.nowMs() - shownAt)
                 if (stillToShow > 0) delay(stillToShow)
+                // the waveform heard along with the notes: the first opening of the recording decodes nothing (spec 5.13, 0.94)
+                result.waveform?.let { waveforms.keep(file, it) }
                 val id = sessions.save(result.session.copy(pieceId = owner.pieceId, eventId = owner.eventId, videoPath = null))
                 current = null
                 mutableState.value = MediaImport.Idle

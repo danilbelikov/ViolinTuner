@@ -2,6 +2,7 @@ package com.violinjourney.app.core.recording.video
 
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.ErrorGroup
+import com.violinjourney.app.core.audio.playback.SessionWaveforms
 import com.violinjourney.app.core.di.ElapsedClock
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.practice.ForgottenPractice
@@ -70,6 +71,7 @@ class VideoTakeImporter(
     private val files: VideoFiles,
     private val analyzer: FileTakeAnalyzer,
     private val sessions: SessionRepository,
+    private val waveforms: SessionWaveforms,
     private val configSource: IntonationConfigSource,
     private val practice: RunningPracticeStore,
     private val practiceConfig: PracticeConfig,
@@ -276,6 +278,8 @@ class VideoTakeImporter(
                     val stillToShow = ImportPacing.MIN_SHOWN_MS - (elapsed.nowMs() - at)
                     if (stillToShow > 0) delay(stillToShow)
                 }
+                // the waveform heard along with the notes: the first opening of the take decodes nothing (spec 5.13, 0.94)
+                result.waveform?.let { waveforms.keep(file, it) }
                 val id = sessions.save(result.session.copy(pieceId = owner.pieceId, eventId = owner.eventId, videoPath = file.fileName))
                 current = null
                 // Filming oneself is practising: a practice with a video take in it is not a forgotten one (spec 3.12).

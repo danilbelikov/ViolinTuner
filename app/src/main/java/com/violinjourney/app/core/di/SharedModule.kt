@@ -140,6 +140,7 @@ object SharedModule {
         files: VideoFiles,
         analyzer: FileTakeAnalyzer,
         sessions: SessionRepository,
+        waveforms: SessionWaveforms,
         configSource: IntonationConfigSource,
         practice: RunningPracticeStore,
         practiceConfig: PracticeConfig,
@@ -150,7 +151,7 @@ object SharedModule {
         speed: AnalysisSpeed,
         @DefaultDispatcher dispatcher: CoroutineDispatcher,
         analytics: Analytics,
-    ) = VideoTakeImporter(files, analyzer, sessions, configSource, practice, practiceConfig, repertoireConfig, intonationDefaults, clock, elapsed, speed, dispatcher, analytics)
+    ) = VideoTakeImporter(files, analyzer, sessions, waveforms, configSource, practice, practiceConfig, repertoireConfig, intonationDefaults, clock, elapsed, speed, dispatcher, analytics)
 
     /** One per app, with a scope of its own, as the importer of videos: «Звук из файла» of an event (spec 3.35, 5.28). */
     @Provides
@@ -159,6 +160,7 @@ object SharedModule {
         files: PickedSounds,
         analyzer: FileTakeAnalyzer,
         sessions: SessionRepository,
+        waveforms: SessionWaveforms,
         configSource: IntonationConfigSource,
         repertoireConfig: RepertoireConfig,
         intonationDefaults: IntonationConfig,
@@ -168,7 +170,7 @@ object SharedModule {
         @IoDispatcher io: CoroutineDispatcher,
         @DefaultDispatcher dispatcher: CoroutineDispatcher,
         analytics: Analytics,
-    ) = AudioTakeImporter(files, analyzer, sessions, configSource, repertoireConfig, intonationDefaults, clock, elapsed, speed, io, dispatcher, analytics)
+    ) = AudioTakeImporter(files, analyzer, sessions, waveforms, configSource, repertoireConfig, intonationDefaults, clock, elapsed, speed, io, dispatcher, analytics)
 
     /** One per app: it measures how fast renders go on this phone (spec 5.11). */
     @Provides

@@ -7,6 +7,7 @@ import com.violinjourney.app.core.audio.MicUnavailableException
 import com.violinjourney.app.core.audio.MicUnavailableReason
 import com.violinjourney.app.core.audio.FakeScenario
 import com.violinjourney.app.core.audio.PitchSource
+import com.violinjourney.app.core.audio.playback.FakeSessionWaveforms
 import com.violinjourney.app.core.audio.SampleClock
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.audio.share.ShareFiles
@@ -155,13 +156,13 @@ class EventViewModelTest {
 
     // one importer of each kind for all the screens of a test, as it is one for the app
     private fun TestScope.videos() = videoImporter ?: VideoTakeImporter(
-        videoFiles, videoAnalyzer, sessions, SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), practice, PracticeConfig(),
+        videoFiles, videoAnalyzer, sessions, FakeSessionWaveforms(), SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), practice, PracticeConfig(),
         RepertoireConfig(), IntonationConfig(), clock, { testScheduler.currentTime }, AnalysisSpeed(), StandardTestDispatcher(testScheduler),
         analytics = NoOpAnalytics(),
     ).also { videoImporter = it }
 
     private fun TestScope.soundFiles() = soundImporter ?: AudioTakeImporter(
-        sounds, FakeFileTakeAnalyzer(), sessions, SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), RepertoireConfig(), IntonationConfig(),
+        sounds, FakeFileTakeAnalyzer(), sessions, FakeSessionWaveforms(), SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), RepertoireConfig(), IntonationConfig(),
         clock, { testScheduler.currentTime }, AnalysisSpeed(), StandardTestDispatcher(testScheduler), StandardTestDispatcher(testScheduler),
         analytics = NoOpAnalytics(),
     ).also { soundImporter = it }

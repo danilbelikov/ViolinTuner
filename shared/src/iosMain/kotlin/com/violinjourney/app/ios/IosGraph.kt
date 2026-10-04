@@ -173,8 +173,11 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val elapsed = ElapsedClock { (NSProcessInfo.processInfo.systemUptime * MS_PER_SECOND).toLong() }
     val analysisSpeed = AnalysisSpeed()
     val fileAnalyzer = DecodingFileTakeAnalyzer(PitchDetectorFactory(::MpmDetector), repertoireConfig, Dispatchers.Default, IosPcmFileOpener)
+    // reckoned again from the sound whenever it is missing: not for the backup of the phone (spec 5.14); the importers keep the ones
+    // they reckon along with an analysis (spec 5.13)
+    val waveforms = IosSessionWaveforms({ IosFolders.deviceOnlyFolder(DataLayout.WAVEFORMS) }, io)
     val videoImporter = VideoTakeImporter(
-        files = videoFiles, analyzer = fileAnalyzer, sessions = sessions, configSource = configSource,
+        files = videoFiles, analyzer = fileAnalyzer, sessions = sessions, waveforms = waveforms, configSource = configSource,
         practice = runningPractice, practiceConfig = practiceConfig, repertoireConfig = repertoireConfig,
         intonationDefaults = intonationConfig, clock = clock, elapsed = elapsed, speed = analysisSpeed,
         dispatcher = Dispatchers.Default, analytics = analytics,
@@ -182,7 +185,7 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
 
     /** «Звук из файла» of an event (spec 3.35, 5.28): one for the app, as the importer of videos. */
     val audioImporter = AudioTakeImporter(
-        files = IosPickedSounds(io), analyzer = fileAnalyzer, sessions = sessions, configSource = configSource,
+        files = IosPickedSounds(io), analyzer = fileAnalyzer, sessions = sessions, waveforms = waveforms, configSource = configSource,
         repertoireConfig = repertoireConfig, intonationDefaults = intonationConfig, clock = clock, elapsed = elapsed, speed = analysisSpeed,
         io = io, dispatcher = Dispatchers.Default, analytics = analytics,
     )
@@ -198,8 +201,6 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
         backingPlaybackFactory = backingPlayback, backingConfig = backingConfig, analytics = analytics,
     )
 
-    // reckoned again from the sound whenever it is missing: not for the backup of the phone (spec 5.14)
-    val waveforms = IosSessionWaveforms({ IosFolders.deviceOnlyFolder(DataLayout.WAVEFORMS) }, io)
     val shareFiles = IosShareFiles(io)
     val housekeeping = Housekeeping(
         sessions, waveforms, avatarFiles, profiles, shareFiles, repertoire, backings, backingPcm, videoFiles, thumbRules, clock, io,

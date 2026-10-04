@@ -7,6 +7,13 @@ interface SessionWaveforms {
     /** Null when the sound cannot be decoded. Cancellable: leaving the screen stops the reckoning. */
     suspend fun of(audio: PlatformFile): FloatArray?
 
+    /**
+     * Keeps [waveform] — reckoned already, along with the analysis of a file (spec 5.13, 0.94) — as the waveform of [audio]: its first
+     * opening reads it instead of decoding the whole sound again. Never throws: a waveform that cannot be kept is reckoned on that opening,
+     * as before.
+     */
+    suspend fun keep(audio: PlatformFile, waveform: FloatArray)
+
     /** [audioNames] — the sound files that still belong to a session; every waveform of another name goes. */
     suspend fun deleteOrphans(audioNames: Set<String>)
 

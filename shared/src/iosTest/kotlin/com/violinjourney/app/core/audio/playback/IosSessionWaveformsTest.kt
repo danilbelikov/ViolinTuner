@@ -53,4 +53,15 @@ class IosSessionWaveformsTest {
         assertTrue(NSFileManager.defaultManager.fileExistsAtPath("$folder/take.m4a.wave"))
         assertEquals(first.toList(), assertNotNull(waveforms.of(PlatformFile(audio))).toList())
     }
+
+    @Test
+    fun `a waveform kept along with an analysis is read without decoding anything`() = runTest {
+        val waveforms = IosSessionWaveforms({ folder }, Dispatchers.Default)
+        // no such file: the waveform can only come from what was kept
+        val video = PlatformFile("$folder/video.mov")
+        val kept = FloatArray(SessionWaveforms.BARS) { it / SessionWaveforms.BARS.toFloat() }
+        waveforms.keep(video, kept)
+        val read = assertNotNull(waveforms.of(video))
+        assertEquals(WaveformBuilder.decode(WaveformBuilder.encode(kept)).toList(), read.toList())
+    }
 }

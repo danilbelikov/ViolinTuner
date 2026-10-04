@@ -37,6 +37,10 @@ class AppSessionWaveforms @Inject constructor(
         }
     }
 
+    override suspend fun keep(audio: File, waveform: FloatArray) = withContext(io) {
+        store(File(directory, audio.name + EXTENSION), WaveformBuilder.encode(waveform))
+    }
+
     override suspend fun deleteOrphans(audioNames: Set<String>) = withContext(io) {
         directory.listFiles().orEmpty()
             .filter { it.name.removeSuffix(EXTENSION) !in audioNames }

@@ -1,6 +1,8 @@
 package com.violinjourney.app.core.recording
 
 import com.violinjourney.app.core.audio.FrameAnalyzer
+import com.violinjourney.app.core.audio.playback.SessionWaveforms
+import com.violinjourney.app.core.audio.playback.WaveformBuilder
 import com.violinjourney.app.core.audio.dsp.PitchDetector
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.IntonationEngine
@@ -30,7 +32,11 @@ interface PcmSource {
 data class FileAnalysisProgress(val fraction: Float, val bars: RecordingRibbon)
 
 sealed interface FileAnalysisResult {
-    data class Recorded(val session: NewSession) : FileAnalysisResult
+    /**
+     * [waveform] — the waveform of the player (spec 5.11), reckoned from the very samples the notes were heard in: kept with the
+     * recording when it is added, it is not reckoned again on its first opening (spec 5.13, 0.94). Null where nobody reckoned it.
+     */
+    data class Recorded(val session: NewSession, val waveform: FloatArray? = null) : FileAnalysisResult
 
     /** Long enough, but without a single countable note (spec 5.5). */
     data object NoNotes : FileAnalysisResult
@@ -78,6 +84,8 @@ object TakeFileAnalysis {
         // the file, so the notes line up with the sound — and the picture — they were found in.
         recorder.add(0, IntonationReading.Silence)
 
+        // the waveform of the player, from the samples the notes are heard in: the first opening of the recording reckons nothing (0.94)
+        val waveform = WaveformBuilder(source.totalSamples, SessionWaveforms.BARS)
         val hop = ShortArray(config.hopSizeSamples)
         val piece = ShortArray(config.hopSizeSamples)
         var filled = 0
@@ -88,6 +96,7 @@ object TakeFileAnalysis {
             coroutineContext.ensureActive()
             val read = source.read(piece)
             if (read == PcmSource.END) break
+            waveform.add(piece, read)
             // A decoder hands out what it has; the analyzer must see the same whole hops the microphone gives it.
             var taken = 0
             while (taken < read) {
@@ -108,7 +117,7 @@ object TakeFileAnalysis {
         }
         // The tail shorter than a hop is dropped, as the microphone loop drops a read it did not finish.
         return when (val result = recorder.finish(audioFileName)) {
-            is RecordingResult.Recorded -> FileAnalysisResult.Recorded(result.session)
+            is RecordingResult.Recorded -> FileAnalysisResult.Recorded(result.session, waveform.build())
             RecordingResult.NoNotes -> FileAnalysisResult.NoNotes
             RecordingResult.TooShort -> FileAnalysisResult.TooShort
         }

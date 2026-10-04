@@ -1,6 +1,8 @@
 package com.violinjourney.app.core.recording
 
 import com.violinjourney.app.core.audio.FrameAnalyzer
+import com.violinjourney.app.core.audio.playback.SessionWaveforms
+import com.violinjourney.app.core.audio.playback.WaveformBuilder
 import com.violinjourney.app.core.audio.dsp.MpmDetector
 import com.violinjourney.app.core.audio.dsp.SignalSynth
 import com.violinjourney.app.core.domain.IntonationConfig
@@ -66,6 +68,17 @@ class TakeFileAnalysisTest {
         assertEquals(live.samples, fromFile.samples)
         assertEquals(live.metrics, fromFile.metrics)
         assertEquals(live.durationMs, fromFile.durationMs)
+    }
+
+    @Test
+    fun `the waveform of the player comes with the notes - the one the sound itself gives`() = runTest {
+        val pcm = music()
+        val result = analyse(pcm, piece = 1_000) as FileAnalysisResult.Recorded
+        val waveform = WaveformBuilder(pcm.size.toLong(), SessionWaveforms.BARS).apply { add(pcm, pcm.size) }.build()
+        assertEquals(waveform.toList(), result.waveform?.toList(), "the same as a second reading of the sound would give")
+        // the half second between the two notes, 1.5…2 s of 3.5, is the quiet place of it
+        assertTrue(result.waveform!![SessionWaveforms.BARS / 2] < 0.05f, "the pause: ${result.waveform!![SessionWaveforms.BARS / 2]}")
+        assertTrue(result.waveform!![SessionWaveforms.BARS / 4] > 0.5f, "A4: ${result.waveform!![SessionWaveforms.BARS / 4]}")
     }
 
     @Test

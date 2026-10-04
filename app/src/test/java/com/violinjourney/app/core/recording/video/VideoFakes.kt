@@ -89,6 +89,9 @@ class FakeVideoFiles : VideoFiles {
 /** An analysis that takes [tookMs] of virtual time, reports progress ten times and ends as told — or throws [failWith] halfway. */
 class FakeFileTakeAnalyzer(var tookMs: Long = 2_000, var outcome: FileAnalysisResult? = null) : FileTakeAnalyzer {
     var calls = 0
+
+    /** The waveform a recorded analysis comes with, reckoned along with the notes (spec 5.13); null — none. */
+    var waveform: FloatArray? = null
     /** A codec that gives up in the middle of the file. */
     var failWith: Exception? = null
 
@@ -105,7 +108,7 @@ class FakeFileTakeAnalyzer(var tookMs: Long = 2_000, var outcome: FileAnalysisRe
             delay(tookMs / STEPS)
             onProgress(FileAnalysisProgress((step + 1f) / STEPS, RecordingRibbon(listOf(RecordingBar(step + 1, Zone.IN_TUNE)), span = 2f * STEPS)))
         }
-        return outcome ?: FileAnalysisResult.Recorded(sessionOf(config, startedAtEpochMs, audioFileName))
+        return outcome ?: FileAnalysisResult.Recorded(sessionOf(config, startedAtEpochMs, audioFileName), waveform)
     }
 
     companion object {

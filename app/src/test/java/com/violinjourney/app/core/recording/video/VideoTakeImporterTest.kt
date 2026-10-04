@@ -2,6 +2,8 @@ package com.violinjourney.app.core.recording.video
 
 import com.violinjourney.app.core.analytics.ErrorGroup
 import com.violinjourney.app.core.analytics.FakeAnalytics
+import com.violinjourney.app.core.audio.playback.SessionWaveforms
+import com.violinjourney.app.core.audio.playback.FakeSessionWaveforms
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.practice.FakeRunningPracticeStore
 import com.violinjourney.app.core.domain.practice.PracticeConfig
@@ -47,6 +49,7 @@ class VideoTakeImporterTest {
     private val files = FakeVideoFiles()
     private val analyzer = FakeFileTakeAnalyzer()
     private val sessions = FakeSessionRepository()
+    private val waveforms = FakeSessionWaveforms()
     private val practice = FakeRunningPracticeStore()
     private val now = Instant.parse("2026-09-20T10:00:00Z")
     private val clock = FixedWallClock(now, TimeZone.of("Europe/Moscow"))
@@ -60,7 +63,7 @@ class VideoTakeImporterTest {
         practice: RunningPracticeStore = this@VideoTakeImporterTest.practice,
     ): Pair<VideoTakeImporter, MutableList<VideoTakeImporter.Saved>> {
         val importer = VideoTakeImporter(
-            files, analyzer, sessions, SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), practice, PracticeConfig(), RepertoireConfig(), IntonationConfig(),
+            files, analyzer, sessions, waveforms, SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), practice, PracticeConfig(), RepertoireConfig(), IntonationConfig(),
             clock, { testScheduler.currentTime }, speed, StandardTestDispatcher(testScheduler), analytics,
         )
         val saved = mutableListOf<VideoTakeImporter.Saved>()
@@ -264,6 +267,37 @@ class VideoTakeImporterTest {
         assertFalse("the library is not asked for a file nobody takes", asked)
         assertTrue(files.released.isEmpty())
         assertEquals(listOf(7L), sessions.sessions.value.map { it.pieceId })
+    }
+
+    @Test
+    fun `the waveform heard with the notes is kept under the video's name before the take is saved`() = runTest {
+        val waveform = FloatArray(SessionWaveforms.BARS) { it / SessionWaveforms.BARS.toFloat() }
+        analyzer.waveform = waveform
+        var keptBySave: Set<String>? = null
+        val saving = object : SessionRepository by sessions {
+            override suspend fun save(session: NewSession): Long {
+                keptBySave = waveforms.stored.keys.toSet()
+                return this@VideoTakeImporterTest.sessions.save(session)
+            }
+        }
+        val (importer, _) = importer(sessions = saving)
+        importer.shot(piece, shot)
+        advance(6_000)
+        val name = sessions.sessions.value.single().videoPath!!
+        // the first opening of the take finds it there: nothing decodes the whole video again beside the player (spec 5.13, 0.94)
+        assertEquals(setOf(name), keptBySave)
+        assertEquals(waveform.toList(), waveforms.stored.getValue(name).toList())
+    }
+
+    @Test
+    fun `a video that did not become a take keeps no waveform`() = runTest {
+        analyzer.waveform = FloatArray(SessionWaveforms.BARS) { 0.5f }
+        analyzer.outcome = FileAnalysisResult.NoNotes
+        val (importer, _) = importer()
+        importer.picked(piece, "content://video/1")
+        advance(6_000)
+        assertTrue(importer.state.value is MediaImport.Failed)
+        assertTrue(waveforms.stored.isEmpty())
     }
 
     @Test

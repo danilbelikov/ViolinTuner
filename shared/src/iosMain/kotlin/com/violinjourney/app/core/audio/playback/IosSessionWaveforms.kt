@@ -37,6 +37,10 @@ class IosSessionWaveforms(private val directory: () -> String, private val io: C
         }
     }
 
+    override suspend fun keep(audio: PlatformFile, waveform: FloatArray) = withContext(io) {
+        store("${directory()}/${audio.fileName}$EXTENSION", WaveformBuilder.encode(waveform))
+    }
+
     override suspend fun deleteOrphans(audioNames: Set<String>) = withContext(io) {
         val files = NSFileManager.defaultManager
         val folder = directory()
