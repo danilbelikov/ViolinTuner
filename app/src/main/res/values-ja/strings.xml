@@ -1564,7 +1564,6 @@
     <string name="share_notes_too_long_one">%1$d分までの動画のみ</string>
     <string name="share_notes_too_long_few">%1$d分までの動画のみ</string>
     <string name="share_notes_too_long_many">%1$d分までの動画のみ</string>
-    <string name="overlay_badge">演奏分析</string>
     <string name="overlay_best_note">いちばん合っている音</string>
     <string name="overlay_drift_none">なし</string>
     <string name="overlay_previous_take">前回のテイク</string>

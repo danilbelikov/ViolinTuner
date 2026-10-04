@@ -75,16 +75,15 @@ data class NotesVideoConfig(
     val dustCorner: Float = 0.25f,
 
     // The opening title (since 0.90): the name and the date of the recording on a shade of their own at the top
-    val openingScrimU: Float = 30f,
-    val openingScrimLandscapeU: Float = 24f,
+    val openingScrimU: Float = 36f,
+    val openingScrimLandscapeU: Float = 33f,
     val openingScrimAlpha: Float = 0.55f,
     val openingTitleU: Float = 6f,
     val openingDateU: Float = 3.4f,
     val openingDateGapU: Float = 1.6f,
     val openingDateAlpha: Float = 0.7f,
-    /** The top of the line of the name: below the top of the frame. */
-    val openingTopU: Float = 9f,
-    val openingTopLandscapeU: Float = 6f,
+    /** The top of the line of the name: this far under the room of the line of the app (since 0.93; before — 9 u, lying 6 u, from the top). */
+    val openingUnderAppLineU: Float = 3f,
     /** It comes in from [openingInMs] to [openingShownMs], dropping [openingDropU] into place; stays to [openingOutMs]; is gone at [openingEndMs]. */
     val openingInMs: Long = 300,
     val openingShownMs: Long = 900,
@@ -98,27 +97,19 @@ data class NotesVideoConfig(
     /** The shortest a shortened coming in or going out may be. */
     val openingMinFadeMs: Long = 200,
 
-    // The badge: a spinner and «Анализ игры» on the glass, bottom left (since 0.90; before — a dot and the score)
-    val badgeU: Float = 7.2f,
-    val badgePadStartU: Float = 2.6f,
-    val badgePadEndU: Float = 2.8f,
-    /** The spinner: an arc of [spinnerSweepDegrees], [badgeSpinnerU] across, a line [spinnerLineU] wide, once round in [spinnerTurnMs]. */
-    val badgeSpinnerU: Float = 2.2f,
-    val spinnerLineU: Float = 0.45f,
-    val spinnerSweepDegrees: Float = 270f,
-    val spinnerTurnMs: Long = 1_000,
-    val badgeSpinnerGapU: Float = 1.4f,
-    val badgeTextU: Float = 3.4f,
-    val badgeInsetU: Float = 5f,
-    val badgeInsetLandscapeU: Float = 4f,
-
-    // The line of the app beside the badge (since 0.90): dimmed, in one or two lines up to the inset of the badge from the right edge
-    val appLineGapU: Float = 2.4f,
+    // The line of the app in the top right corner (since 0.93; 0.90–0.92 — beside a badge at the bottom left, gone since): dimmed,
+    // its lines to the right, no wider than [appLineMaxWidthU]; [appLineInsetU] from the top and the right edge. The top of the frame
+    // has no shade of its own, so the letters carry a soft shadow: on a window or a white wall the dimmed line would be gone
+    val appLineInsetU: Float = 5f,
+    val appLineInsetLandscapeU: Float = 4f,
+    val appLineMaxWidthU: Float = 48f,
     val appLineTextU: Float = 2.6f,
     val appLineHeightU: Float = 3.2f,
     val appLineAlpha: Float = 0.45f,
     val appLineNameAlpha: Float = 0.6f,
-    /** The line of the app, by the badge and in the summary, wraps to no more than this. */
+    val appLineShadowAlpha: Float = 0.6f,
+    val appLineShadowBlurU: Float = 0.5f,
+    /** The line of the app, in the corner and in the summary, wraps to no more than this. */
     val appLineMaxLines: Int = 2,
 
     // The summary: three seconds after the end of the video, over its last frame
@@ -182,18 +173,17 @@ data class NotesVideoConfig(
     // [safeBottomU] over the bottom, [safeLeftU] from the left edge and [safeRightU] from the right — the column of buttons.
     // Measured on a screenshot of YouTube Shorts on an iPhone (`docs/ideas/video-overlay/img.png`): the interface at the bottom
     // ≈ 26 u, at the top ≈ 31 u, the buttons ≈ 16 u, the edges cropped ≈ 5 u; the rest is room for the captions of Reels and TikTok.
+    // The buttons stand in the lower half: the line of the app in the top right corner keeps [safeLeftU] from the right edge too
+    // (since 0.93) — what the crop of the edges asks, and no more.
     val tallRatio: Float = 1.5f,
     val safeTopU: Float = 32f,
     val safeBottomU: Float = 36f,
     val safeLeftU: Float = 8f,
     val safeRightU: Float = 18f,
-    /** The shade under the lane of a tall frame: the lane, the tag and the badge over it stand higher. */
-    val scrimTallU: Float = 92f,
-    /** The badge of a tall frame stands over the tag, its bottom this far above the tag's top. */
-    val badgeTallGapU: Float = 2f,
-    /** The opening of a tall frame: the top of the name, and how far its shade reaches. */
-    val openingTopTallU: Float = 34f,
-    val openingScrimTallU: Float = 52f,
+    /** The shade under the lane of a tall frame, which stands higher with its tag (0.91–0.92 — 92 u: a badge stood over the tag). */
+    val scrimTallU: Float = 86f,
+    /** How far the shade of the opening of a tall frame reaches: the name stands under the line of the app, under the safe zone's top. */
+    val openingScrimTallU: Float = 60f,
 
     // The rules of the summary (spec 5.30)
     /** «Лучшая нота» is one that sounded at least this long in all and was in tune at least this share of its samples. */

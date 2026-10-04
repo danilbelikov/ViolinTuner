@@ -6,7 +6,6 @@ import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.dot_separator
 import com.violinjourney.app.shared.resources.overlay_app_icon
-import com.violinjourney.app.shared.resources.overlay_badge
 import com.violinjourney.app.shared.resources.overlay_best_note
 import com.violinjourney.app.shared.resources.overlay_drift_none
 import com.violinjourney.app.shared.resources.overlay_previous_take
@@ -28,9 +27,10 @@ import org.jetbrains.compose.resources.getSystemResourceEnvironment
  * numbers of the recording already in them. Note names stay Latin and are not here.
  */
 data class OverlayWords(
-    /** «Анализ игры» (since 0.90; before — «в строе 82%»). */
-    val badge: String,
-    /** «Анализируй свою игру в приложении Violin Journey» — beside the badge and under the summary; [APP_NAME] is drawn bolder. */
+    /**
+     * «Анализируй свою игру в приложении Violin Journey» — in the top right corner while the video runs (since 0.93; 0.90–0.92 —
+     * beside a badge «Анализ игры», gone since) and under the summary; [APP_NAME] is drawn bolder.
+     */
     val signature: String,
     /** «в строе · допуск ±8 ц». */
     val toleranceLine: String,
@@ -50,7 +50,6 @@ data class OverlayWords(
         const val APP_NAME = "Violin Journey"
 
         suspend fun of(overlay: NotesOverlay): OverlayWords = OverlayWords(
-            badge = getString(Res.string.overlay_badge),
             signature = getString(Res.string.overlay_signature, APP_NAME),
             toleranceLine = getString(Res.string.session_summary_in_tune) + getString(Res.string.dot_separator) +
                 getString(Res.string.session_summary_tolerance, overlay.toleranceCents),

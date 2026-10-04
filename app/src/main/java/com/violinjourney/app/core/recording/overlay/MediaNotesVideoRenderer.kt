@@ -298,10 +298,13 @@ class MediaNotesVideoRenderer @Inject constructor(
         private val canvas = Canvas(drawn.asImageBitmap())
         private val scope = CanvasDrawScope()
         private val size = Size(width.toFloat(), height.toFloat())
-        /** The band of the lane: its shade, and the tag and the badge, which stand over it in a tall frame (spec 5.30, since 0.91). */
+        /** The band of the lane: its shade and the tag over it (spec 5.30). */
         private val laneBandTop = painter.geometry.laneBandTop.toInt().coerceIn(0, height)
 
-        /** The band of the opening title, above the lane's (spec 5.30): it never reaches the lane, and is cut where it would. */
+        /** The band of the line of the app in the top right corner, which every frame of the video carries (spec 5.30, since 0.93). */
+        private val appLineBandBottom = ceil(painter.appLineBottom).toInt().coerceIn(0, laneBandTop)
+
+        /** The band of the opening title with the line of the app over it (spec 5.30): it never reaches the lane, and is cut where it would. */
         private val openingBandBottom = ceil(painter.openingBottom).toInt().coerceIn(0, laneBandTop)
         private val settledAtMs = videoEndMs + fadeMs
         private var settled = false
@@ -321,9 +324,10 @@ class MediaNotesVideoRenderer @Inject constructor(
                 copy(0, height)
             } else {
                 copy(laneBandTop, height)
-                // the opening title is copied while it shows, and once more after it, so that its last frame is wiped
+                // the opening title is copied while it shows, and once more after it, so that its last frame is wiped; the line of
+                // the app at the top always
                 val opening = painter.openingShows(nowMs, videoEndMs)
-                if (opening || openingInUpload) copy(0, openingBandBottom)
+                copy(0, if (opening || openingInUpload) openingBandBottom else appLineBandBottom)
                 openingInUpload = opening
             }
             settled = nowMs >= settledAtMs

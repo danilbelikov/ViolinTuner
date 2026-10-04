@@ -82,25 +82,18 @@ class NotesOverlayGeometryTest {
         assertEquals(portrait.laneBottom + 1.5f * 10.8f, portrait.playheadBottom, EPSILON)
     }
 
+    /** Since 0.93 the line of the app has the top right corner to itself: the badge at the bottom left is gone. */
     @Test
-    fun `the badge stands 5 u from the corner — 4 u lying`() {
-        assertEquals(5 * 10.8f, portrait.badgeLeft, EPSILON)
-        assertEquals(1_440f - 5 * 10.8f - 7.2f * 10.8f, portrait.badgeTop, EPSILON)
-        assertEquals(4 * 10.8f, landscape.badgeLeft, EPSILON)
-        assertEquals(1_080f - 4 * 10.8f - 7.2f * 10.8f, landscape.badgeTop, EPSILON)
-        assertEquals((2.6f + 2.2f + 1.4f + 2.8f) * 10.8f + 100f, portrait.badgeWidth(100f), EPSILON)
-        assertEquals(portrait.badgeLeft + (2.6f + 2.2f + 1.4f) * 10.8f, portrait.badgeTextX, EPSILON)
-        // the spinner: its line inside its 2.2 u
-        assertEquals(portrait.badgeLeft + (2.6f + 1.1f) * 10.8f, portrait.spinnerCenterX, EPSILON)
-        assertEquals((2.2f - 0.45f) / 2 * 10.8f, portrait.spinnerRadius, EPSILON)
-    }
-
-    @Test
-    fun `the line of the app follows the badge to the inset of the right edge`() {
-        val badge = portrait.badgeWidth(200f)
-        assertEquals(portrait.badgeLeft + badge + 2.4f * 10.8f, portrait.appLineLeft(badge), EPSILON)
-        assertEquals(1_080f - 5 * 10.8f, portrait.appLineLeft(badge) + portrait.appLineMaxWidth(badge), EPSILON)
-        assertEquals(1_920f - 4 * 10.8f, landscape.appLineLeft(badge) + landscape.appLineMaxWidth(badge), EPSILON)
+    fun `the line of the app stands in the top right corner — 5 u in — 4 u lying`() {
+        val u = 10.8f
+        assertEquals(1_080f - 5 * u, portrait.appLineRight, EPSILON)
+        assertEquals(5 * u, portrait.appLineTop, EPSILON)
+        assertEquals(1_920f - 4 * u, landscape.appLineRight, EPSILON)
+        assertEquals(4 * u, landscape.appLineTop, EPSILON)
+        // no wider than 48 u; two lines of 3.2 u are held for it, whether it takes them or not
+        assertEquals(48 * u, portrait.appLineMaxWidth, EPSILON)
+        assertEquals(5 * u + 2 * 3.2f * u, portrait.appLineBottom, EPSILON)
+        assertEquals(Rect(1_080f - 53 * u, 5 * u, 1_080f - 5 * u, portrait.appLineBottom), portrait.appLineBox)
     }
 
     @Test
@@ -118,15 +111,29 @@ class NotesOverlayGeometryTest {
     }
 
     @Test
-    fun `the opening stands at the top — lower in a portrait`() {
-        assertEquals(30 * 10.8f, portrait.openingScrimHeight, EPSILON)
-        assertEquals(24 * 10.8f, landscape.openingScrimHeight, EPSILON)
-        assertEquals(9 * 10.8f, portrait.openingTitleTop, EPSILON)
-        assertEquals(6 * 10.8f, landscape.openingTitleTop, EPSILON)
+    fun `the opening stands under the line of the app`() {
+        assertEquals(36 * 10.8f, portrait.openingScrimHeight, EPSILON)
+        assertEquals(33 * 10.8f, landscape.openingScrimHeight, EPSILON)
+        // 3 u under the room of the line of the app: 5 + 6.4 + 3 u in a portrait, 4 + 6.4 + 3 u lying
+        assertEquals(14.4f * 10.8f, portrait.openingTitleTop, EPSILON)
+        assertEquals(13.4f * 10.8f, landscape.openingTitleTop, EPSILON)
         assertEquals(portrait.openingTitleTop + (6f + 1.6f) * 10.8f, portrait.openingDateTop, EPSILON)
-        // by the baseline: the em box's top at 9 u, its share above the baseline under it
-        assertEquals(9 * 10.8f + 6 * 10.8f * 0.78f, portrait.openingTitleBaseline(0.78f), EPSILON)
+        // by the baseline: the em box's top at 14.4 u, its share above the baseline under it
+        assertEquals(14.4f * 10.8f + 6 * 10.8f * 0.78f, portrait.openingTitleBaseline(0.78f), EPSILON)
         assertEquals(portrait.openingDateTop + 3.4f * 10.8f * 0.78f, portrait.openingDateBaseline(0.78f), EPSILON)
+    }
+
+    /** The name and the line of the app (since 0.93): never one over the other, whatever the frame, even as the name drops in. */
+    @Test
+    fun `the opening never meets the line of the app`() {
+        for (geometry in listOf(portrait, landscape, square, tall, NotesOverlayGeometry(1_080f, 2_400f, config))) {
+            val where = "${geometry.width} × ${geometry.height}"
+            // the name comes in from 1.5 u higher than its place
+            val highest = geometry.openingTitleTop - config.openingDropU * geometry.u
+            assertTrue(highest >= geometry.appLineBottom - EPSILON, "$where: the name from $highest, the line of the app to ${geometry.appLineBottom}")
+            // and the shade of the opening reaches past its date
+            assertTrue(geometry.openingDateTop + config.openingDateU * geometry.u < geometry.openingScrimHeight, where)
+        }
     }
 
     @Test
@@ -187,18 +194,18 @@ class NotesOverlayGeometryTest {
         assertEquals(Rect(8 * 10.8f, 32 * 10.8f, 1_080f - 18 * 10.8f, 1_920f - 36 * 10.8f), tall.safe)
     }
 
-    /** What 0.91 changes is the tall frame alone: a portrait of 3 : 4, a square and a landscape draw where they drew. */
+    /** The safe zone is the tall frame's alone: a portrait of 3 : 4, a square and a landscape draw by the numbers of their shape. */
     @Test
-    fun `a 3 by 4 portrait a square and a landscape keep their numbers`() {
-        val badge = 200f
+    fun `a 3 by 4 portrait a square and a landscape keep to their own numbers`() {
+        val u = 10.8f
         val expected = mapOf(
-            portrait to listOf(1_440f - 65 * 10.8f, 1_440f - 15.2f * 10.8f, 5 * 10.8f, 1_440f - 12.2f * 10.8f, 1_080f - 5 * 10.8f, 30 * 10.8f, 9 * 10.8f, 84 * 10.8f, 8 * 10.8f, 1_440f - 6 * 10.8f),
-            square to listOf(1_080f - 65 * 10.8f, 1_080f - 15.2f * 10.8f, 5 * 10.8f, 1_080f - 12.2f * 10.8f, 1_080f - 5 * 10.8f, 30 * 10.8f, 9 * 10.8f, 84 * 10.8f, 8 * 10.8f, 1_080f - 6 * 10.8f),
-            landscape to listOf(1_080f - 47 * 10.8f, 1_080f - 13.6f * 10.8f, 4 * 10.8f, 1_080f - 11.2f * 10.8f, 1_920f - 4 * 10.8f, 24 * 10.8f, 6 * 10.8f, 84 * 10.8f, (1_920f - 84 * 10.8f) / 2, 1_080f - 4 * 10.8f),
+            portrait to listOf(1_440f - 65 * u, 1_440f - 15.2f * u, 1_080f - 5 * u, 5 * u, 36 * u, 14.4f * u, 84 * u, 8 * u, 1_440f - 6 * u),
+            square to listOf(1_080f - 65 * u, 1_080f - 15.2f * u, 1_080f - 5 * u, 5 * u, 36 * u, 14.4f * u, 84 * u, 8 * u, 1_080f - 6 * u),
+            landscape to listOf(1_080f - 47 * u, 1_080f - 13.6f * u, 1_920f - 4 * u, 4 * u, 33 * u, 13.4f * u, 84 * u, (1_920f - 84 * u) / 2, 1_080f - 4 * u),
         )
         expected.forEach { (geometry, numbers) ->
             val actual = listOf(
-                geometry.scrimTop, geometry.laneBottom, geometry.badgeLeft, geometry.badgeTop, geometry.appLineLeft(badge) + geometry.appLineMaxWidth(badge),
+                geometry.scrimTop, geometry.laneBottom, geometry.appLineRight, geometry.appLineTop,
                 geometry.openingScrimHeight, geometry.openingTitleTop, geometry.columnWidth, geometry.columnLeft, geometry.signatureBottom,
             )
             numbers.zip(actual).forEachIndexed { index, (want, was) -> assertEquals(want, was, EPSILON, "${geometry.width} × ${geometry.height}, number $index") }
@@ -210,31 +217,35 @@ class NotesOverlayGeometryTest {
     }
 
     @Test
-    fun `a tall frame lifts the lane over the interface below and the badge over the tag`() {
+    fun `a tall frame lifts the lane over the interface below`() {
         val u = 10.8f
         assertEquals(1_920f - 36 * u, tall.laneBottom, EPSILON)
         assertEquals(tall.laneBottom - 30 * u, tall.laneTop, EPSILON)
-        assertEquals(1_920f - 92 * u, tall.scrimTop, EPSILON)
+        assertEquals(1_920f - 86 * u, tall.scrimTop, EPSILON)
         // the tag and the playhead keep to the lane as in any portrait; the lane spans the width, the playhead in the middle
         assertEquals(tall.laneTop - 1.2f * u, tall.tagBottom, EPSILON)
         assertEquals(540f, tall.headX, EPSILON)
         assertEquals(9_092L, tall.shownToMs(60_000) - tall.shownFromMs(60_000))
-        // the badge 8 u from the left, its bottom 2 u over the top of the tag
-        assertEquals(8 * u, tall.badgeLeft, EPSILON)
-        assertEquals(tall.tagBottom - tall.tagHeight - 2 * u, tall.badgeTop + tall.badgeHeight, EPSILON)
-        // the line of the app stops 18 u short of the right edge: the buttons
-        val badge = tall.badgeWidth(200f)
-        assertEquals(1_080f - 18 * u, tall.appLineLeft(badge) + tall.appLineMaxWidth(badge), EPSILON)
-        // the shade still lies under the badge, and the band Media3 is handed reaches it
-        assertTrue(tall.scrimTop <= tall.badgeTop)
+        // the shade still lies under the tag, and the band Media3 is handed is the shade's
+        assertTrue(tall.scrimTop < tall.tagBottom - tall.tagHeight)
         assertEquals(tall.scrimTop, tall.laneBandTop, EPSILON)
+    }
+
+    /** The line of the app of a tall frame (since 0.93): under the top of the safe zone, 8 u from the right edge — the buttons are low. */
+    @Test
+    fun `a tall frame keeps the line of the app under its interface at the top`() {
+        val u = 10.8f
+        assertEquals(32 * u, tall.appLineTop, EPSILON)
+        assertEquals(1_080f - 8 * u, tall.appLineRight, EPSILON)
+        assertEquals(32 * u + 2 * 3.2f * u, tall.appLineBottom, EPSILON)
     }
 
     @Test
     fun `a tall frame lowers the opening and lifts the signature into the safe zone`() {
         val u = 10.8f
-        assertEquals(34 * u, tall.openingTitleTop, EPSILON)
-        assertEquals(52 * u, tall.openingScrimHeight, EPSILON)
+        // under the line of the app: 32 + 6.4 + 3 u
+        assertEquals(41.4f * u, tall.openingTitleTop, EPSILON)
+        assertEquals(60 * u, tall.openingScrimHeight, EPSILON)
         assertEquals(1_920f - 36 * u, tall.signatureBottom, EPSILON)
         // the column keeps its left edge of 8 u and stops at the buttons: 74 u, centred in the safe zone
         assertEquals(8 * u, tall.columnLeft, EPSILON)
@@ -244,7 +255,8 @@ class NotesOverlayGeometryTest {
 
     /**
      * Everything a tall frame draws is in the safe zone — the lane alone spans the whole width: its notes ride in from under
-     * the buttons on the right, the notes still to come. The boxes are the widest each may grow to.
+     * the buttons on the right, the notes still to come. The boxes are the widest each may grow to. The line of the app (since
+     * 0.93) keeps the top of the zone and goes nearer the right edge than the zone: the buttons stand in the lower half.
      */
     @Test
     fun `everything a tall frame draws lies inside the safe zone`() {
@@ -252,14 +264,14 @@ class NotesOverlayGeometryTest {
             val g = NotesOverlayGeometry(1_080f, height, config)
             val safe = assertNotNull(g.safe)
             val u = g.u
-            val badge = g.badgeWidth(30 * u)
             val tagWidth = g.tagWidth(g.tagLineWidth(nameWidth = 9 * u, numberWidth = 6 * u, inTune = false))
             val signature = g.signatureHeight(2 * g.signatureLineHeight)
+            val line = g.appLineBox
+            assertTrue(line.top >= safe.top - EPSILON && line.left >= safe.left && line.right <= g.width - config.safeLeftU * u + EPSILON, "the line of the app $line")
+            assertTrue(line.bottom < height / 2, "the line of the app $line over the buttons in the lower half")
             val boxes = mapOf(
                 "the lane" to Rect(safe.left, g.laneTop, safe.right, g.laneBottom),
                 "the tag" to Rect(g.headX - tagWidth / 2, g.tagBottom - g.tagHeight, g.headX + tagWidth / 2, g.tagBottom),
-                "the badge" to Rect(g.badgeLeft, g.badgeTop, g.badgeLeft + badge, g.badgeTop + g.badgeHeight),
-                "the line of the app" to Rect(g.appLineLeft(badge), g.badgeCenterY - g.appLineHeight, g.appLineLeft(badge) + g.appLineMaxWidth(badge), g.badgeCenterY + g.appLineHeight),
                 "the opening" to Rect(g.columnLeft, g.openingTitleTop - config.openingDropU * u, g.columnLeft + g.columnWidth, g.openingDateTop + config.openingDateU * u),
                 "the summary" to Rect(g.columnLeft, g.summaryTop(3, signature), g.columnLeft + g.columnWidth, g.summaryTop(3, signature) + g.summaryHeight(3)),
                 "the signature" to Rect(g.iconLeft(g.signatureTextMaxWidth), g.signatureTop(signature), g.iconLeft(g.signatureTextMaxWidth) + g.columnWidth, g.signatureBottom),

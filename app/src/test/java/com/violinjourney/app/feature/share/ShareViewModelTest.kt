@@ -866,7 +866,7 @@ class ShareViewModelTest {
             NoOpAnalytics(), events = events, eventWords = eventWords, notesRenderer = notes, notesSpeed = RenderSpeed(NotesVideoConfig().renderSpeedStart),
             overlayWords = { overlay ->
                 OverlayWords(
-                    badge = "Анализ игры ($language)", signature = language, toleranceLine = language, bestNote = language, drift = language,
+                    signature = language, toleranceLine = language, bestNote = language, drift = language,
                     driftCents = null, driftNone = language, previousTake = language, previousScore = null,
                 )
             },

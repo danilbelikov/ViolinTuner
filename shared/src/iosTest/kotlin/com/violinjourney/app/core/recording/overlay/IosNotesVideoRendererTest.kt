@@ -1,5 +1,6 @@
 package com.violinjourney.app.core.recording.overlay
 
+import androidx.compose.ui.geometry.Rect
 import com.violinjourney.app.core.audio.recording.Tone
 import com.violinjourney.app.core.audio.recording.writeAacTones
 import com.violinjourney.app.core.domain.Zone
@@ -109,7 +110,7 @@ class IosNotesVideoRendererTest {
     }
 
     private val words = OverlayWords(
-        badge = "Анализ игры", signature = "Анализируй свою игру в приложении Violin Journey", toleranceLine = "в строе · допуск ±8 ц", bestNote = "Лучшая нота", drift = "Что уходит",
+        signature = "Анализируй свою игру в приложении Violin Journey", toleranceLine = "в строе · допуск ±8 ц", bestNote = "Лучшая нота", drift = "Что уходит",
         driftCents = null, driftNone = "ничего", previousTake = "Прошлый дубль", previousScore = null,
     )
 
@@ -186,7 +187,8 @@ class IosNotesVideoRendererTest {
 
     /**
      * Since 0.90: the opening title darkens the top over the first seconds of a video long enough for it and is gone after; left
-     * of the playhead the capsule has crumbled to dust; the summary carries the icon of the app; the badge carries no score.
+     * of the playhead the capsule has crumbled to dust; the summary carries the icon of the app. Since 0.93: the line of the app
+     * stands in the top right corner the whole video, the opening's and after it.
      */
     @Test
     fun `the opening the dust and the icon reach the file`() = runTest {
@@ -219,8 +221,14 @@ class IosNotesVideoRendererTest {
         }
         assertTrue(warm, "the sun of the icon under the summary")
 
-        val badge = OverlayWords.of(overlay(LONGER_PICTURE * 1_000L)).badge
-        assertTrue(badge.isNotBlank() && badge.none { it.isDigit() || it == '%' }, "«$badge»")
+        assertTrue(lettersIn(opening, geometry.appLineBox) > 0, "the line of the app at 1.5 s")
+        assertTrue(lettersIn(after, geometry.appLineBox) > 0, "the line of the app at 3.5 s, after the opening")
+    }
+
+    /** The pixels of [box] that stand out of their row as letters do: lighter or darker than the picture at the left edge of the row. */
+    private fun lettersIn(frame: Frame, box: Rect): Int = (box.top.toInt() until box.bottom.toInt()).sumOf { y ->
+        val picture = luminance(frame.pixel(2, y))
+        (box.left.toInt() until box.right.toInt().coerceAtMost(frame.width)).count { abs(luminance(frame.pixel(it, y)) - picture) > LETTER_CONTRAST }
     }
 
     /** The frames of a portrait and of a landscape video at the opening, in the lane and in the summary, kept to be looked at. */
@@ -399,6 +407,9 @@ class IosNotesVideoRendererTest {
         const val RGBA = 4
         const val BITS = 8
         const val IN_TUNE = 0x47C97E
+
+        /** A letter of the line of the app — white at 0.45 or its shadow — against the picture beside it, past what the encoder moves. */
+        const val LETTER_CONTRAST = 0.12
 
         /** The encoder moves colours a little: chroma at a quarter of the pixels, and the picture compressed. */
         const val COLOR_SLACK = 28

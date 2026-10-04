@@ -10,9 +10,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -25,6 +24,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Constraints
@@ -46,7 +46,7 @@ import kotlin.math.roundToInt
  * Draws one frame of «Видео с нотами» (spec 3.37, 5.30) over a picture of [width] × [height] pixels as the player shows it: the
  * lane of notes while the video runs, the opening title over its first seconds, the summary over its last frame after it. One
  * drawing for Android (into the bitmap of Media3), iOS (into the pixel buffer itself) and the previews. Text is laid out once
- * and kept: a painter serves one file, on one thread. A frame depends on its own time alone — the spinner and the dust too.
+ * and kept: a painter serves one file, on one thread. A frame depends on its own time alone — the dust too.
  */
 class NotesOverlayPainter(
     private val overlay: NotesOverlay,
@@ -65,13 +65,28 @@ class NotesOverlayPainter(
     private val labels = HashMap<Int, TextLayoutResult>()
     private val tags = HashMap<Int, TextLayoutResult>()
     private val numbers = HashMap<String, TextLayoutResult>()
-    private val badge by lazy { measure(words.badge, config.badgeTextU, FontWeight.Bold) }
 
-    /** The dimmed line of the app right of the badge; null where the frame leaves it no room. */
-    private val appLine: TextLayoutResult? by lazy {
-        val room = geometry.appLineMaxWidth(geometry.badgeWidth(badge.size.width.toFloat()))
-        if (room <= 0f) null else measureLines(appWords(config.appLineAlpha, config.appLineNameAlpha), config.appLineTextU, config.appLineHeightU, room)
+    /** The dimmed line of the app in the top right corner (since 0.93): its lines to the right, a soft shadow under the letters. */
+    private val appLine: TextLayoutResult by lazy {
+        measureLines(
+            appWords(config.appLineAlpha, config.appLineNameAlpha),
+            config.appLineTextU,
+            config.appLineHeightU,
+            geometry.appLineMaxWidth,
+            align = TextAlign.End,
+            shadow = Shadow(Color.Black.copy(alpha = config.appLineShadowAlpha), Offset.Zero, config.appLineShadowBlurU * u),
+        )
     }
+
+    /** Where the line of the app is drawn: its right edge on [NotesOverlayGeometry.appLineRight]. */
+    private val appLineAt: Offset by lazy { Offset(geometry.appLineRight - appLine.size.width, geometry.appLineTop) }
+
+    /**
+     * How far down from the top the line of the app draws, its shadow with it: the band at the top a frame of the video always
+     * carries (since 0.93).
+     */
+    val appLineBottom: Float
+        get() = appLineAt.y + appLine.size.height + SHADOW_REACH * config.appLineShadowBlurU * u
 
     private val openingTitle by lazy { measure(overlay.heading, config.openingTitleU, FontWeight.ExtraBold, maxWidth = geometry.columnWidth) }
     private val openingDate by lazy { measure(overlay.date, config.openingDateU, FontWeight.SemiBold, maxWidth = geometry.columnWidth) }
@@ -101,9 +116,9 @@ class NotesOverlayPainter(
      */
     private val emAscent by lazy { openingDate.firstBaseline / openingDate.size.height.coerceAtLeast(1) }
 
-    /** How far down from the top the opening title draws: its shade, or its date where that reaches lower. */
+    /** How far down from the top the opening title draws: its shade, or its date where that reaches lower; the line of the app is above. */
     val openingBottom: Float
-        get() = max(geometry.openingScrimHeight, geometry.openingDateBaseline(emAscent) - openingDate.firstBaseline + openingDate.size.height)
+        get() = maxOf(geometry.openingScrimHeight, geometry.openingDateBaseline(emAscent) - openingDate.firstBaseline + openingDate.size.height, appLineBottom)
 
     /** The frame of the moment [nowMs] of a video that ends at [videoEndMs]; after it — the summary, coming in over the lane. */
     fun draw(scope: DrawScope, nowMs: Long, videoEndMs: Long) {
@@ -172,7 +187,8 @@ class NotesOverlayPainter(
             alpha = config.playheadAlpha * fade,
         )
         overlay.tagAt(nowMs)?.let { tag(it, fade) }
-        badge(nowMs, fade)
+        // the line of the app keeps its corner the whole video, and goes with the lane as the summary comes in
+        drawFaded(appLine, appLineAt, fade)
     }
 
     /** The tag over the playhead: the name in the colour of its zone, then — the arrow or the dot of in tune — and the grey number. */
@@ -206,27 +222,6 @@ class NotesOverlayPainter(
         // on the baseline of the name
         val baseline = nameTop + name.firstBaseline
         drawText(number, Color.White, Offset(g.tagNumberX(line, nameWidth, inTune), baseline - number.firstBaseline), config.tagNumberAlpha * alpha)
-    }
-
-    /** The badge: a spinner turning by the time of the frame and «Анализ игры» on the glass, the dimmed line of the app beside it. */
-    private fun DrawScope.badge(nowMs: Long, fade: Float) {
-        val g = geometry
-        val badgeWidth = g.badgeWidth(badge.size.width.toFloat())
-        drawRoundRect(Glass, Offset(g.badgeLeft, g.badgeTop), Size(badgeWidth, g.badgeHeight), CornerRadius(g.badgeHeight / 2), alpha = fade)
-        val turned = (nowMs % config.spinnerTurnMs).toFloat() / config.spinnerTurnMs * FULL_TURN
-        val radius = g.spinnerRadius
-        drawArc(
-            DarkZoneColors.inTune,
-            startAngle = turned,
-            sweepAngle = config.spinnerSweepDegrees,
-            useCenter = false,
-            topLeft = Offset(g.spinnerCenterX - radius, g.badgeCenterY - radius),
-            size = Size(radius * 2, radius * 2),
-            alpha = fade,
-            style = Stroke(width = g.spinnerLine, cap = StrokeCap.Round),
-        )
-        drawText(badge, Color.White, Offset(g.badgeTextX, g.badgeCenterY - badge.size.height / 2f), fade)
-        appLine?.let { line -> drawFaded(line, Offset(g.appLineLeft(badgeWidth), g.badgeCenterY - line.size.height / 2f), fade) }
     }
 
     /** The opening title: a shade from the top, the name and the date under it, coming in, staying and going out (spec 5.30). */
@@ -339,7 +334,7 @@ class NotesOverlayPainter(
 
     /**
      * Text whose colours are its own — of spans, which the alpha of `drawText` does not reach — shown at [alpha]: through a layer
-     * the size of the text while it fades, straight when whole.
+     * the size of the text and its shadow while it fades, straight when whole.
      */
     private fun DrawScope.drawFaded(layout: TextLayoutResult, topLeft: Offset, alpha: Float) {
         if (alpha <= 0f) return
@@ -347,7 +342,7 @@ class NotesOverlayPainter(
             drawText(layout, topLeft = topLeft)
             return
         }
-        val bounds = Rect(topLeft, Size(layout.size.width.toFloat(), layout.size.height.toFloat())).inflate(u)
+        val bounds = Rect(topLeft, Size(layout.size.width.toFloat(), layout.size.height.toFloat())).inflate(u + SHADOW_REACH * config.appLineShadowBlurU * u)
         drawIntoCanvas { canvas ->
             canvas.saveLayer(bounds, Paint().apply { this.alpha = alpha })
             drawText(layout, topLeft = topLeft)
@@ -408,8 +403,18 @@ class NotesOverlayPainter(
             constraints = maxWidth?.let { Constraints(maxWidth = ceil(it).toInt().coerceAtLeast(1)) } ?: Constraints(),
         )
 
-    /** Text in lines no wider than [maxWidth], at most [NotesVideoConfig.appLineMaxLines], every line [lineHeightU] high with the text in its middle. */
-    private fun measureLines(text: AnnotatedString, sizeU: Float, lineHeightU: Float, maxWidth: Float): TextLayoutResult =
+    /**
+     * Text in lines no wider than [maxWidth], at most [NotesVideoConfig.appLineMaxLines], every line [lineHeightU] high with the text
+     * in its middle; to the [align] side, with a [shadow] under the letters where given.
+     */
+    private fun measureLines(
+        text: AnnotatedString,
+        sizeU: Float,
+        lineHeightU: Float,
+        maxWidth: Float,
+        align: TextAlign = TextAlign.Start,
+        shadow: Shadow? = null,
+    ): TextLayoutResult =
         measurer.measure(
             text = text,
             style = TextStyle(
@@ -419,6 +424,8 @@ class NotesOverlayPainter(
                 fontSize = (sizeU * u).sp,
                 lineHeight = (lineHeightU * u).sp,
                 lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.None),
+                textAlign = align,
+                shadow = shadow,
             ),
             overflow = TextOverflow.Ellipsis,
             softWrap = true,
@@ -478,7 +485,9 @@ class NotesOverlayPainter(
         const val VALUE_SPACE = " "
         const val SPACE = ' '
         const val NO_BREAK_SPACE = '\u00A0'
-        const val FULL_TURN = 360f
+
+        /** How far a blurred shadow reaches past the letters, in its blur radii: its edge fades out there. */
+        const val SHADOW_REACH = 2f
 
         /** A pixel's overlap of two shapes that meet, so the frame never shows between them. */
         const val SEAM = 1f

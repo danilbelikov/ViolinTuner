@@ -100,7 +100,6 @@ private fun overlay(previous: Boolean, drift: Boolean): NotesOverlay {
 /** The words as `OverlayWords.of` reads them, from the resources of the preview's language. */
 @Composable
 private fun words(overlay: NotesOverlay) = OverlayWords(
-    badge = stringResource(R.string.overlay_badge),
     signature = stringResource(R.string.overlay_signature, OverlayWords.APP_NAME),
     toleranceLine = stringResource(R.string.session_summary_in_tune) + stringResource(R.string.dot_separator) +
         stringResource(R.string.session_summary_tolerance, overlay.toleranceCents),
@@ -165,11 +164,11 @@ private fun DrawScope.picture(width: Float, height: Float) {
     }
 }
 
-@Preview(name = "Видео с нотами · лента, портрет 3 : 4, 1080 × 1440: ярлык ноты над чертой, бейдж «Анализ игры» и строка приложения", locale = "ru", widthDp = 300, heightDp = 400)
+@Preview(name = "Видео с нотами · лента, портрет 3 : 4, 1080 × 1440: ярлык ноты над чертой, строка приложения в правом верхнем углу", locale = "ru", widthDp = 300, heightDp = 400)
 @Composable
 private fun LanePortraitPreview() = Frame(1_080, 1_440, nowMs = 7_200, shownWidthDp = 300, overlay = overlay(previous = true, drift = true))
 
-@Preview(name = "Видео с нотами · лента, высокий кадр 1080 × 1920: всё в безопасной зоне (пунктир), бейдж над ярлыком", locale = "ru", widthDp = 300, heightDp = 534)
+@Preview(name = "Видео с нотами · лента, высокий кадр 1080 × 1920: всё в безопасной зоне (пунктир), строка приложения под её верхом", locale = "ru", widthDp = 300, heightDp = 534)
 @Composable
 private fun LaneTallPreview() = Frame(1_080, 1_920, nowMs = 7_200, shownWidthDp = 300, overlay = overlay(previous = true, drift = true), showSafe = true)
 
@@ -210,7 +209,7 @@ private val AroundThePlayhead = NotesOverlayGeometry(1_080f, 1_920f, Config).let
     Rect(g.headX - 26 * g.u, g.laneBottom - 39.6f * g.u, g.headX + 14 * g.u, g.laneBottom + 9.4f * g.u)
 }
 
-@Preview(name = "Видео с нотами · заставка, портрет 3 : 4: название и дата наверху, 1,5 с", locale = "ru", widthDp = 300, heightDp = 400)
+@Preview(name = "Видео с нотами · заставка, портрет 3 : 4: название и дата под строкой приложения, 1,5 с", locale = "ru", widthDp = 300, heightDp = 400)
 @Composable
 private fun OpeningPortraitPreview() = Frame(1_080, 1_440, nowMs = 1_500, shownWidthDp = 300, overlay = overlay(previous = true, drift = true))
 
@@ -242,6 +241,6 @@ private fun DustPreview() = Frame(1_080, 1_920, nowMs = MinuetNotes.last().start
 @Composable
 private fun SummarySignatureLandscapePreview() = Frame(1_920, 1_080, nowMs = VideoEndMs + 1_000, shownWidthDp = 560, overlay = overlay(previous = true, drift = true))
 
-@Preview(name = "Видео с нотами · лента по-немецки: «Spielanalyse» и строка приложения в две строки", locale = "de", widthDp = 300, heightDp = 534)
+@Preview(name = "Видео с нотами · лента по-немецки: строка приложения в углу в две строки", locale = "de", widthDp = 300, heightDp = 534)
 @Composable
 private fun LaneGermanPreview() = Frame(1_080, 1_920, nowMs = 7_200, shownWidthDp = 300, overlay = overlay(previous = true, drift = true))

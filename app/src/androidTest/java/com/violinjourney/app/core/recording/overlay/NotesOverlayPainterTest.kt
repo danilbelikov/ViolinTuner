@@ -28,8 +28,8 @@ import org.junit.runner.RunWith
 
 /**
  * The drawing of «Видео с нотами» (spec 3.37, 5.30) on Android — with the app's own Manrope, into a bitmap, as the overlay of
- * Media3 gets it: the note under the playhead in its zone colour, the playhead white, the glass of the badge, the veil of the
- * summary. The frames are kept in the cache (`cache/overlay-frames/`) to be looked at: `adb exec-out run-as … cat`.
+ * Media3 gets it: the note under the playhead in its zone colour, the playhead white, the line of the app in its corner, the veil
+ * of the summary. The frames are kept in the cache (`cache/overlay-frames/`) to be looked at: `adb exec-out run-as … cat`.
  */
 @RunWith(AndroidJUnit4::class)
 class NotesOverlayPainterTest {
@@ -58,14 +58,14 @@ class NotesOverlayPainterTest {
     }
 
     private val words = OverlayWords(
-        badge = "Анализ игры", signature = "Анализируй свою игру в приложении Violin Journey", toleranceLine = "в строе · допуск ±8 ц", bestNote = "Лучшая нота", drift = "Что уходит",
+        signature = "Анализируй свою игру в приложении Violin Journey", toleranceLine = "в строе · допуск ±8 ц", bestNote = "Лучшая нота", drift = "Что уходит",
         driftCents = "+24 ц", driftNone = "ничего", previousTake = "Прошлый дубль", previousScore = "74%",
     )
 
-    /** The frame of [nowMs] over a plain grey picture. */
-    private fun frame(width: Int, height: Int, nowMs: Long, name: String): Pair<Bitmap, NotesOverlayPainter> {
+    /** The frame of [nowMs] over a plain picture of [background], grey unless given. */
+    private fun frame(width: Int, height: Int, nowMs: Long, name: String, background: Int = GREY): Pair<Bitmap, NotesOverlayPainter> {
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        bitmap.eraseColor(GREY)
+        bitmap.eraseColor(background)
         val painter = NotesOverlayPainter(overlay(), words, text, width.toFloat(), height.toFloat())
         CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, Canvas(bitmap.asImageBitmap()), Size(width.toFloat(), height.toFloat())) {
             painter.draw(this, nowMs, videoEndMs)
@@ -96,20 +96,40 @@ class NotesOverlayPainterTest {
         assertTrue("dimmed, not whole: ${Integer.toHexString(pixel)}", red(pixel) < 0xE0)
     }
 
+    /** The line of the app (since 0.93): in the top right corner, its lines to the right; left of it, in its rows, the picture alone. */
     @Test
-    fun theBadgeStandsOnTheGlass() {
-        val (bitmap, painter) = frame(1_080, 1_440, nowMs = 1_000, name = "portrait-badge")
-        val g = painter.geometry
-        // the start of the badge, before its spinner: the glass alone over the shade of the lane, dark at the bottom of the frame
-        val pixel = bitmap.getPixel((g.badgeLeft + g.u).toInt(), g.badgeCenterY.toInt())
-        assertTrue("dark glass: ${Integer.toHexString(pixel)}", luminance(pixel) < 0.12)
-        // a tall frame lifts the badge over the tag (since 0.91), where the shade is lighter: the glass is darker than the shade
-        // beside it — in its row under the playhead, which starts lower, at the tag
-        val (tall, tallPainter) = frame(1_080, 1_920, nowMs = 1_000, name = "tall-badge")
-        val t = tallPainter.geometry
-        val glass = tall.getPixel((t.badgeLeft + t.u).toInt(), t.badgeCenterY.toInt())
-        val shade = tall.getPixel(t.headX.toInt(), t.badgeCenterY.toInt())
-        assertTrue("glass ${Integer.toHexString(glass)} against the shade ${Integer.toHexString(shade)}", luminance(glass) < GLASS_SHARE * luminance(shade))
+    fun theLineOfTheAppStandsInTheTopRightCorner() {
+        listOf(1_080 to 1_440, 1_920 to 1_080, 1_080 to 1_920).forEach { (width, height) ->
+            // after the opening and before the summary: the corner alone at the top
+            val (bitmap, painter) = frame(width, height, nowMs = 5_000, name = "app-line-${width}x$height")
+            val g = painter.geometry
+            val box = g.appLineBox
+            val rows = box.top.toInt() until box.bottom.toInt()
+            val lit = rows.flatMap { y -> (box.left.toInt() until box.right.toInt()).filter { luminance(bitmap.getPixel(it, y)) > luminance(GREY) + TEXT_LIFT } }
+            assertTrue("the letters of $width × $height are drawn", lit.isNotEmpty())
+            assertTrue("$width × $height: the letters end at ${lit.max()}, the room at ${box.right}", box.right - lit.max() < RIGHT_SLACK_U * g.u)
+            // the shadow reaches a little past the letters, and no further
+            rows.forEach { y -> (0 until (box.left - SHADOW_ROOM_U * g.u).toInt()).forEach { x -> assertColor(GREY, bitmap.getPixel(x, y)) } }
+        }
+    }
+
+    /** On a white wall the dimmed line still reads (since 0.93): a shadow darkens round its letters. */
+    @Test
+    fun theLineOfTheAppReadsOnAWhiteWall() {
+        val (bitmap, painter) = frame(1_080, 1_440, nowMs = 5_000, name = "app-line-white-wall", background = WHITE)
+        val box = painter.geometry.appLineBox
+        val shadowed = (box.top.toInt() until box.bottom.toInt()).sumOf { y ->
+            (box.left.toInt() until box.right.toInt()).count { x -> luminance(bitmap.getPixel(x, y)) < SHADOWED }
+        }
+        assertTrue("$shadowed pixels under the shadow", shadowed > MIN_SHADOWED)
+    }
+
+    /** No badge at the bottom left (since 0.93): under the lane, the shade alone, the same across every row. */
+    @Test
+    fun theBottomLeftIsTheShadeAlone() {
+        // after the last note and its dust
+        val (bitmap, painter) = frame(1_080, 1_440, nowMs = 6_800, name = "portrait-3x4-6.8s")
+        assertRowsPlain(bitmap, (ceil(painter.geometry.playheadBottom).toInt() + 1) until bitmap.height, "under the lane")
     }
 
     @Test
@@ -144,7 +164,8 @@ class NotesOverlayPainterTest {
 
     /**
      * The opening's text (since 0.90): the heading — not the title, which carries the date too — and the date under it, each
-     * inside its em box, which the spec stands at 9 u and 1.6 u under the name; gone by 5 s.
+     * inside its em box, which the spec stands under the line of the app (since 0.93) and 1.6 u under the name; gone by 5 s. The
+     * line of the app above them stays: the rows looked through start under its room.
      */
     @Test
     fun theOpeningSaysTheHeadingAndTheDateInTheirPlaces() {
@@ -156,7 +177,7 @@ class NotesOverlayPainterTest {
         val dateBox = g.openingDateTop..(g.openingDateTop + config.openingDateU * g.u)
         // the two are told apart halfway through the gap between their em boxes
         val between = ((nameBox.endInclusive + dateBox.start) / 2).toInt()
-        val nameRows = brightRows(opening, NAME_BRIGHT, 0 until between)
+        val nameRows = brightRows(opening, NAME_BRIGHT, g.appLineBottom.toInt() until between)
         val dateRows = brightRows(opening, DATE_BRIGHT, between until g.openingScrimHeight.toInt())
         assertTrue("the name is drawn", nameRows.isNotEmpty())
         assertTrue("the date is drawn", dateRows.isNotEmpty())
@@ -165,7 +186,7 @@ class NotesOverlayPainterTest {
         // the heading alone: the title with its date would fill the column and end in «…»
         val span = brightSpan(opening, NAME_BRIGHT, nameRows)
         assertTrue("the name is ${span.last - span.first} px of a column of ${g.columnWidth}", span.last - span.first < g.columnWidth * HEADING_SHARE)
-        assertTrue("nothing bright at 5 s", brightRows(after, DATE_BRIGHT, 0 until g.openingScrimHeight.toInt()).isEmpty())
+        assertTrue("nothing bright at 5 s", brightRows(after, DATE_BRIGHT, g.appLineBottom.toInt() until g.openingScrimHeight.toInt()).isEmpty())
     }
 
     /** The tag's sign (since 0.90): the arrow up over a note that sits high, down under one that sits low, the dot in tune. */
@@ -236,13 +257,6 @@ class NotesOverlayPainterTest {
         }
     }
 
-    /** The badge says «Анализ игры» alone (since 0.90): no score, though the recording has one. */
-    @Test
-    fun theBadgeCarriesNoScore() {
-        val badge = runBlocking { OverlayWords.of(overlay()).badge }
-        assertTrue("«$badge»", badge.isNotBlank() && badge.none { it.isDigit() || it == '%' })
-    }
-
     /** The rows under the summary's block and its gap: the signature alone, one or two lines of it. */
     private fun signatureBand(g: NotesOverlayGeometry): IntRange {
         val top = g.signatureBottom - config.appLineMaxLines * g.signatureLineHeight
@@ -256,11 +270,11 @@ class NotesOverlayPainterTest {
      */
     @Test
     fun aTallFrameLeavesItsEdgesToTheInterface() {
-        // after the last note and its dust: the shade, the playhead, the badge and the line of the app
+        // after the last note and its dust: the shade, the playhead and the line of the app at the top
         val (lane, painter) = frame(1_080, 1_920, nowMs = 6_800, name = "tall-6.8s")
         val g = painter.geometry
         val safe = checkNotNull(g.safe)
-        assertTrue("the badge over the tag", g.badgeTop + g.badgeHeight < g.tagBottom - g.tagHeight)
+        assertRowsPlain(lane, 0 until safe.top.toInt(), "over the line of the app")
         assertRowsPlain(lane, (ceil(g.playheadBottom).toInt() + 1) until lane.height, "under the lane")
         frame(1_080, 1_920, nowMs = 1_000, name = "tall-1s")
         frame(1_080, 1_440, nowMs = 1_000, name = "portrait-3x4-1s")
@@ -352,8 +366,20 @@ class NotesOverlayPainterTest {
         const val WARM_RED = 170
         const val WARM_LEAD = 50
 
-        /** The glass at 0.72 over the shade is well under the shade beside it. */
-        const val GLASS_SHARE = 0.7
+        const val WHITE = 0xFFFFFFFF.toInt()
+
+        /** The letters of the line of the app — white at 0.45, its name at 0.6 — over grey 0x80, past the anti-aliasing. */
+        const val TEXT_LIFT = 0.15
+
+        /** Its lines end at the right edge of its room, give or take the side bearing of the last letter. */
+        const val RIGHT_SLACK_U = 1f
+
+        /** How far left of its room the shadow of a line as wide as the room may reach. */
+        const val SHADOW_ROOM_U = 1.5f
+
+        /** White under the shadow — black at 0.6 round the letters — is well under white. */
+        const val SHADOWED = 0.8
+        const val MIN_SHADOWED = 300
 
         /** One colour, give or take a level of the gradient. */
         const val PLAIN_SLACK = 2

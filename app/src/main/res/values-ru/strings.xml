@@ -1564,7 +1564,6 @@
     <string name="share_notes_too_long_one">только для видео до %1$d минуты</string>
     <string name="share_notes_too_long_few">только для видео до %1$d минут</string>
     <string name="share_notes_too_long_many">только для видео до %1$d минут</string>
-    <string name="overlay_badge">Анализ игры</string>
     <string name="overlay_best_note">Лучшая нота</string>
     <string name="overlay_drift_none">ничего</string>
     <string name="overlay_previous_take">Прошлый дубль</string>

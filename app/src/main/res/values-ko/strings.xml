@@ -1564,7 +1564,6 @@
     <string name="share_notes_too_long_one">%1$d분 이하 영상만</string>
     <string name="share_notes_too_long_few">%1$d분 이하 영상만</string>
     <string name="share_notes_too_long_many">%1$d분 이하 영상만</string>
-    <string name="overlay_badge">연주 분석</string>
     <string name="overlay_best_note">가장 정확한 음</string>
     <string name="overlay_drift_none">없음</string>
     <string name="overlay_previous_take">이전 테이크</string>

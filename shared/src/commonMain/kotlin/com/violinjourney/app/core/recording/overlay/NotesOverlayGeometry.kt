@@ -19,7 +19,10 @@ class NotesOverlayGeometry(val width: Float, val height: Float, private val conf
     /** A hundredth of the short side: every size of the overlay is counted in it. */
     val u: Float = min(width, height) / HUNDRED
 
-    /** What the interface of Shorts, Reels and TikTok leaves open over a [tall] frame; null for any other. */
+    /**
+     * What the interface of Shorts, Reels and TikTok leaves open over a [tall] frame; null for any other. The line of the app keeps
+     * to its top, not to its right edge: the column of buttons stands in the lower half (since 0.93).
+     */
     val safe: Rect? = if (tall) {
         Rect(config.safeLeftU * u, config.safeTopU * u, width - config.safeRightU * u, height - config.safeBottomU * u)
     } else {
@@ -83,39 +86,29 @@ class NotesOverlayGeometry(val width: Float, val height: Float, private val conf
     fun tagNumberX(lineWidth: Float, nameWidth: Float, inTune: Boolean): Float =
         tagSignX(lineWidth, nameWidth) + tagSignWidth(inTune) + config.tagNumberGapU * u
 
-    // The badge
+    /** The top of all the lane draws while the video runs — its shade and the tag over it; the dust stays under the tag. */
+    val laneBandTop: Float = minOf(scrimTop, tagBottom - tagHeight)
 
-    val badgeHeight: Float = config.badgeU * u
-    val badgeLeft: Float = safe?.left ?: ((if (portrait) config.badgeInsetU else config.badgeInsetLandscapeU) * u)
+    // The line of the app (since 0.93): in the top right corner, its lines to the right
 
-    /** As far from the bottom as from the left edge; in a tall frame — over the tag, out of the way of the interface below. */
-    val badgeTop: Float = if (tall) tagBottom - tagHeight - config.badgeTallGapU * u - badgeHeight else height - badgeLeft - badgeHeight
-    val badgeCenterY: Float = badgeTop + badgeHeight / 2
-    val spinnerCenterX: Float = badgeLeft + (config.badgePadStartU + config.badgeSpinnerU / 2) * u
-
-    /** The radius of the middle of the spinner's line: the line stays inside its [NotesVideoConfig.badgeSpinnerU]. */
-    val spinnerRadius: Float = (config.badgeSpinnerU - config.spinnerLineU) / 2 * u
-    val spinnerLine: Float = config.spinnerLineU * u
-    val badgeTextX: Float = badgeLeft + (config.badgePadStartU + config.badgeSpinnerU + config.badgeSpinnerGapU) * u
-
-    fun badgeWidth(textWidth: Float): Float =
-        (config.badgePadStartU + config.badgeSpinnerU + config.badgeSpinnerGapU + config.badgePadEndU) * u + textWidth
-
-    /** The line of the app right of a badge [badgeWidth] wide (since 0.90): where it begins and how wide it may grow. */
-    fun appLineLeft(badgeWidth: Float): Float = badgeLeft + badgeWidth + config.appLineGapU * u
-
-    fun appLineMaxWidth(badgeWidth: Float): Float = appLineRight - appLineLeft(badgeWidth)
-
-    /** Where the line of the app stops: as far from the right edge as the badge from the left; in a tall frame — short of the buttons. */
-    val appLineRight: Float = safe?.right ?: (width - badgeLeft)
-
-    val appLineHeight: Float = config.appLineHeightU * u
+    private val appLineInset: Float = (if (portrait) config.appLineInsetU else config.appLineInsetLandscapeU) * u
 
     /**
-     * The top of all the lane draws while the video runs — its shade, the tag, the badge and the line of the app beside it; the
-     * dust stays under the tag. What lies above is left to the opening title.
+     * Where the lines of the app end on the right: [NotesVideoConfig.appLineInsetU] from the edge; in a tall frame as far as the
+     * safe zone keeps from the left — its buttons stand in the lower half, the top right corner under its top is free.
      */
-    val laneBandTop: Float = minOf(scrimTop, tagBottom - tagHeight, badgeTop)
+    val appLineRight: Float = width - if (tall) config.safeLeftU * u else appLineInset
+
+    /** The top of the line of the app: as far from the top as from the right; in a tall frame — the top of the safe zone. */
+    val appLineTop: Float = safe?.top ?: appLineInset
+    val appLineMaxWidth: Float = config.appLineMaxWidthU * u
+    val appLineHeight: Float = config.appLineHeightU * u
+
+    /** The bottom of the room of the line of the app: all its lines, whether it takes them or not — the opening stands under it. */
+    val appLineBottom: Float = appLineTop + config.appLineMaxLines * appLineHeight
+
+    /** The room of the line of the app, the widest it may grow: in the top right corner. */
+    val appLineBox: Rect = Rect(appLineRight - appLineMaxWidth, appLineTop, appLineRight, appLineBottom)
 
     // The opening title (since 0.90)
 
@@ -126,15 +119,12 @@ class NotesOverlayGeometry(val width: Float, val height: Float, private val conf
     } * u
 
     /**
-     * The top of the em box of the name, at rest — not of its capitals; the date's em box stands under the name's own size and a gap.
-     * Text is placed by its baseline: [emAscent] is the share of the em above the baseline, the font's ascent over its ascent and
-     * descent (what a canvas means by the top of a line).
+     * The top of the em box of the name, at rest — not of its capitals: under the room of the line of the app (since 0.93), so the
+     * two never meet, whatever the name; the date's em box stands under the name's own size and a gap. Text is placed by its
+     * baseline: [emAscent] is the share of the em above the baseline, the font's ascent over its ascent and descent (what a canvas
+     * means by the top of a line).
      */
-    val openingTitleTop: Float = when {
-        tall -> config.openingTopTallU
-        portrait -> config.openingTopU
-        else -> config.openingTopLandscapeU
-    } * u
+    val openingTitleTop: Float = appLineBottom + config.openingUnderAppLineU * u
     val openingDateTop: Float = openingTitleTop + (config.openingTitleU + config.openingDateGapU) * u
 
     fun openingTitleBaseline(emAscent: Float): Float = openingTitleTop + config.openingTitleU * u * emAscent

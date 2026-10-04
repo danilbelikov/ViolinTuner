@@ -1564,7 +1564,6 @@
     <string name="share_notes_too_long_one">only for videos up to %1$d minute</string>
     <string name="share_notes_too_long_few">only for videos up to %1$d minutes</string>
     <string name="share_notes_too_long_many">only for videos up to %1$d minutes</string>
-    <string name="overlay_badge">Playing analysis</string>
     <string name="overlay_best_note">Best note</string>
     <string name="overlay_drift_none">nothing</string>
     <string name="overlay_previous_take">Previous take</string>
