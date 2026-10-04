@@ -51,8 +51,8 @@ android {
         applicationId = "com.violinjourney.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("boolean", "FAKE_PITCH_SOURCE", fakePitch.toString())
