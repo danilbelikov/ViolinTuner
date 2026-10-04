@@ -235,10 +235,14 @@ class VideoTakeImporter(
     }
 
     private suspend fun analyse(owner: TakeOwner, file: PlatformFile, shot: Boolean, returnedAtEpochMs: Long, fail: (ImportFailure) -> Unit) {
-        val info = files.info(file) ?: return fail(ImportFailure.CANNOT_OPEN)
+        val looked = files.info(file)
+        // «Отмена» while the platform looked into the file — blocking, no cancel reaches it: that answer stands, and no sheet comes back
+        currentCoroutineContext().ensureActive()
+        val info = looked ?: return fail(ImportFailure.CANNOT_OPEN)
         if (!info.hasSound) return fail(ImportFailure.NO_SOUND)
         if (info.durationMs > intonationDefaults.maxSessionMs) return fail(ImportFailure.TOO_LONG)
         files.makeThumb(file)
+        currentCoroutineContext().ensureActive()
 
         val started = elapsed.nowMs()
         val showAtOnce = info.durationMs * speed.factor > ImportPacing.SHOW_FROM_MS

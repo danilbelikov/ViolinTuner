@@ -4,13 +4,9 @@ import com.violinjourney.app.core.io.PickedCopies
 import com.violinjourney.app.core.io.pathOfFileUri
 import com.violinjourney.app.core.recording.video.VideoPick
 import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import okio.IOException
 import platform.Foundation.NSError
 import platform.Foundation.NSItemProvider
-import platform.Foundation.NSURL
 import platform.Foundation.NSUnderlyingErrorKey
 import platform.PhotosUI.PHPickerResult
 import platform.PhotosUI.PHPickerViewController
@@ -45,29 +41,12 @@ internal class VideoPickerDelegate(private val onPicked: (VideoPick?) -> Unit) :
 internal class LibraryVideo(private val provider: NSItemProvider) {
     /** The `file:` URI of the app's copy of the video; throws when the library did not hand it over. */
     suspend fun make(): String {
-        val handed = CompletableDeferred<String>()
-        val progress = provider.loadFileRepresentationForTypeIdentifier(movieTypeOf(provider)) { lent, error -> hand(handed, lent, error) }
-        return try {
-            handed.await()
-        } catch (e: CancellationException) {
-            // closed before the library is told: a callback on its way finds it closed and copies nothing
-            val late = !handed.completeExceptionally(e)
-            progress.cancel()
-            // whoever comes second lets the copy go — here, a copy made a moment before; in the callback, one made a moment after
-            if (late) handed.copyOrNull()?.let(::releaseCopy)
-            throw e
+        val handOver = FileHandOver(letGo = { releaseCopy(it) })
+        // on a queue of the system's; the lent file is gone once this returns
+        val progress = provider.loadFileRepresentationForTypeIdentifier(movieTypeOf(provider)) { lent, error ->
+            handOver.hand(copy = { lent?.let(::copyToTemporary) }, failure = { IOException("the library did not hand the video over: ${reasonOf(error)}") })
         }
-    }
-
-    /** On a queue of the system's; the lent file is gone once this returns. */
-    private fun hand(handed: CompletableDeferred<String>, lent: NSURL?, error: NSError?) {
-        // stopped meanwhile: nothing to keep
-        if (handed.isCompleted) return
-        val copy = lent?.let(::copyToTemporary)
-        when {
-            copy == null -> handed.completeExceptionally(IOException("the library did not hand the video over: ${reasonOf(error)}"))
-            !handed.complete(copy) -> releaseCopy(copy)
-        }
+        return handOver.await(stop = { progress.cancel() })
     }
 
     private companion object {
@@ -94,8 +73,5 @@ internal class LibraryVideo(private val provider: NSItemProvider) {
         fun releaseCopy(uri: String) {
             pathOfFileUri(uri)?.let { PickedCopies.release(it) }
         }
-
-        @OptIn(ExperimentalCoroutinesApi::class)
-        fun CompletableDeferred<String>.copyOrNull(): String? = if (isCompleted) runCatching { getCompleted() }.getOrNull() else null
     }
 }

@@ -27,13 +27,16 @@ import java.io.IOException
 import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.TimeZone
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -252,6 +255,41 @@ class VideoTakeImporterTest {
         assertEquals(0, analyzer.calls)
         importer.dismiss()
         assertEquals(MediaImport.Idle, importer.state.value)
+    }
+
+    @Test
+    fun `a file the library hands over after «Отмена» is let go`() = runTest {
+        val (importer, _) = importer()
+        // a library that does not stop when told: it hands the file over all the same, a moment later
+        importer.picked(piece, VideoPick.Coming {
+            withContext(NonCancellable) { delay(1_000) }
+            "file:///tmp/picked/c/late.mov"
+        })
+        advance(500)
+        importer.cancelClicked()
+        advance(1_000)
+        assertEquals(MediaImport.Idle, importer.state.value)
+        assertEquals("the app's copy of it goes", listOf("file:///tmp/picked/c/late.mov"), files.released)
+        assertTrue(sessions.sessions.value.isEmpty())
+    }
+
+    @Test
+    fun `«Отмена» while the copied video is looked into leaves no sheet behind`() = runTest {
+        val (importer, saved) = importer()
+        val sound = files.info
+        // the platform looks into the file — blocking, no cancel reaches it — and the player taps «Отмена» meanwhile
+        files.onInfo = {
+            files.onInfo = null
+            importer.cancelClicked()
+            sound
+        }
+        importer.picked(piece, "content://video/1")
+        advance(FakeVideoFiles.COPY_MS)
+        advance(5_000)
+        assertEquals("no «Слушаем запись…» over nothing", MediaImport.Idle, importer.state.value)
+        assertEquals(0, analyzer.calls)
+        assertTrue(saved.isEmpty() && sessions.sessions.value.isEmpty())
+        assertTrue("a stop is no failure to tell about", analytics.errors.isEmpty())
     }
 
     @Test
