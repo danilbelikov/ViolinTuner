@@ -98,7 +98,39 @@ class VideoPlaybackTest {
             await("a frame after the seek to $target") { frames.get() > before }
             Thread.sleep(150)
             assertTrue("at $target ms: frame ${frameOf(lastLuma.get())}", abs(frameOf(lastLuma.get()) - frameAt(target)) <= 1)
+            // on the frame asked for, the picture is no longer catching up: no spinner left on it (spec 3.19, 0.94)
+            assertFalse("still catching up after $target", renderer.state.value.catchingUp)
         }
+    }
+
+    @Test
+    fun aSeekPastTheLastFrameShowsTheLastFrameAndTheNextSeekStillComes() {
+        val renderer = start(positionMs = 1_000)
+        await("the first frame") { frames.get() > 0 }
+        // the slider at the very end: the sound of a take runs a little longer than its picture
+        val before = frames.get()
+        renderer.follow(3_400, playing = false)
+        await("the last frame") { frames.get() > before }
+        Thread.sleep(150)
+        assertTrue("frame ${frameOf(lastLuma.get())}", abs(frameOf(lastLuma.get()) - (frameAt(3_000) - 1)) <= 1)
+        assertFalse("no spinner left on the last frame", renderer.state.value.catchingUp)
+        val atTheEnd = frames.get()
+        renderer.follow(1_000, playing = false)
+        await("a frame back at 1 s") { frames.get() > atTheEnd }
+        Thread.sleep(150)
+        assertTrue("frame ${frameOf(lastLuma.get())}", abs(frameOf(lastLuma.get()) - frameAt(1_000)) <= 1)
+    }
+
+    @Test
+    fun aShortStepForwardWhilePausedMovesThePicture() {
+        val renderer = start(positionMs = 1_000)
+        await("the first frame") { frames.get() > 0 }
+        Thread.sleep(150)
+        val before = frames.get()
+        renderer.follow(1_400, playing = false)
+        await("a frame at 1.4 s") { frames.get() > before }
+        Thread.sleep(150)
+        assertTrue("frame ${frameOf(lastLuma.get())}", abs(frameOf(lastLuma.get()) - frameAt(1_400)) <= 1)
     }
 
     @Test

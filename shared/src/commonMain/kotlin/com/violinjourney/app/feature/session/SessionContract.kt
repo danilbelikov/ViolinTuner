@@ -201,6 +201,8 @@ data class VideoUi(
     /** This device cannot decode the picture; the sound and the analysis are there all the same. */
     val undecodable: Boolean = false,
     val sizeBytes: Long = 0,
+    /** The picture is on its way to the sound's place: the old frame stands, a spinner on it if that takes long (spec 3.19, 0.94). */
+    val catchingUp: Boolean = false,
 ) {
     /** There is a picture to show: the frame, the full screen, «Смотреть это место». */
     val pictured: Boolean get() = !lost && !undecodable

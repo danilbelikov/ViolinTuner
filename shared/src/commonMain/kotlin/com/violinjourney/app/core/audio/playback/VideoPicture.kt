@@ -14,6 +14,11 @@ data class VideoState(
     val showing: Boolean = false,
     /** No picture this device can decode. The sound and the analysis do not depend on it (spec 3.19). */
     val failed: Boolean = false,
+    /**
+     * On its way to the sound's place — a seek, the frames up to it decoded unseen: the frame on the surface is an old one meanwhile, and
+     * a wait longer than a moment shows a spinner on it (spec 3.19, 0.94).
+     */
+    val catchingUp: Boolean = false,
 )
 
 /** The picture of one video take, as the screen's view model sees it; the real ones are the platform's. */

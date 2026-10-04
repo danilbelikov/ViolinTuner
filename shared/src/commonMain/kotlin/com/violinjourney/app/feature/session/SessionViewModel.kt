@@ -292,7 +292,11 @@ open class SessionViewModel(
         viewModelScope.launch {
             created.state.collect { picture ->
                 updateLoaded {
-                    it.copy(video = it.video?.copy(width = picture.width, height = picture.height, showing = picture.showing, undecodable = picture.failed))
+                    it.copy(
+                        video = it.video?.copy(
+                            width = picture.width, height = picture.height, showing = picture.showing, undecodable = picture.failed, catchingUp = picture.catchingUp,
+                        ),
+                    )
                 }
             }
         }

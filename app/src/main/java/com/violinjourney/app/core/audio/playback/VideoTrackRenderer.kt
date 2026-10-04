@@ -115,7 +115,7 @@ class VideoTrackRenderer(
                 } catch (e: IllegalStateException) {
                     // the codec died — a surface torn away, a decoder that gave up
                     Log.w(TAG, "decoder stopped", e)
-                    mutableState.value = mutableState.value.copy(failed = true, showing = false)
+                    mutableState.value = mutableState.value.copy(failed = true, showing = false, catchingUp = false)
                 } finally {
                     session.close()
                     lock.withLock {
@@ -186,6 +186,16 @@ class VideoTrackRenderer(
         /** After a seek: frames before this are decoded and thrown away. */
         private var dropBeforeUs = NOTHING
 
+        /**
+         * The newest frame decoded on the way to the place a seek asked for, kept unseen: it is shown if the stream ends before that
+         * place — a seek past the last frame, the slider at the very end — instead of the old frame standing for good (spec 3.19, 0.94).
+         */
+        private var windingIndex = -1
+        private var windingUs = 0L
+
+        /** Where the last seek went: a new place is still a jump when the stream ended before anything after it was shown. */
+        private var soughtUs = NOTHING
+
         // A codec flushed before it has put out anything loses the codec-specific data it was configured
         // with, and a hardware decoder then fails on every frame (the emulator's does; a software one forgives).
         // So: nothing queued yet — no flush is needed; queued but silent so far — the seek waits for the first output.
@@ -199,8 +209,12 @@ class VideoTrackRenderer(
                 val (alive, moving) = lock.withLock { (!released && surfaceSerial == serial) to playing }
                 if (!alive) return
                 val target = targetUs()
-                // The sound jumped — a drag of the slider, «Смотреть это место», the return to the start at the end.
-                val jumped = shownUs != NOTHING && (target < shownUs - BACK_TOLERANCE_US || target > shownUs + FORWARD_SEEK_US)
+                // The sound jumped — a drag of the slider, «Смотреть это место», the return to the start at the end. A picture that
+                // stands follows a short step forward too: nothing else would bring it there (spec 3.19, 0.94). Past the end of the
+                // stream there is nothing ahead to go to: the sound of a take outlasts its last frame.
+                val from = if (shownUs != NOTHING) shownUs else soughtUs.takeIf { outputDone } ?: NOTHING
+                val forward = if (moving) FORWARD_SEEK_US else BACK_TOLERANCE_US
+                val jumped = from != NOTHING && (target < from - BACK_TOLERANCE_US || (!outputDone && target > from + forward))
                 if (jumped) seek(target)
 
                 if (heldIndex >= 0) {
@@ -243,35 +257,68 @@ class VideoTrackRenderer(
             // well report frames of size zero (the emulator's does): the size says nothing here.
             if (ended && info.size == 0) {
                 codec.releaseOutputBuffer(index, false)
+                // the stream ended on the way to the place asked for: the last frame stands there
+                arriveAtTheEnd()
                 return
             }
             val us = info.presentationTimeUs
             val winding = dropBeforeUs != NOTHING && us < dropBeforeUs && !outputDone
-            val late = moving && shownUs != NOTHING && us < target - LATE_US
-            if (winding || late) {
-                // not shown: on the way to the place asked for, or too late to matter — the sound does not wait
+            if (winding) {
+                // not shown: on the way to the place asked for — the newest is kept, in case the stream ends before that place
+                dropWinding()
+                windingIndex = index
+                windingUs = us
+                return
+            }
+            if (moving && shownUs != NOTHING && us < target - LATE_US) {
+                // too late to matter: the sound does not wait
                 codec.releaseOutputBuffer(index, false)
                 return
             }
+            dropWinding()
             dropBeforeUs = NOTHING
             heldIndex = index
             heldUs = us
+        }
+
+        /** The stream ended before the place a seek asked for: its newest frame is the picture there; with none, nothing is coming. */
+        private fun arriveAtTheEnd() {
+            if (dropBeforeUs == NOTHING) return
+            dropBeforeUs = NOTHING
+            if (windingIndex >= 0) {
+                heldIndex = windingIndex
+                heldUs = windingUs
+                windingIndex = -1
+            } else if (mutableState.value.catchingUp) {
+                mutableState.value = mutableState.value.copy(catchingUp = false)
+            }
+        }
+
+        private fun dropWinding() {
+            if (windingIndex >= 0) codec.releaseOutputBuffer(windingIndex, false)
+            windingIndex = -1
         }
 
         private fun show() {
             codec.releaseOutputBuffer(heldIndex, true)
             shownUs = heldUs
             heldIndex = -1
-            if (!mutableState.value.showing) mutableState.value = mutableState.value.copy(showing = true)
+            // the first frame after a seek is the one at its target: caught up
+            if (!mutableState.value.showing || mutableState.value.catchingUp) mutableState.value = mutableState.value.copy(showing = true, catchingUp = false)
         }
 
         private fun seek(targetUs: Long) {
+            // the frame on the surface stands until the one at the target is decoded: the picture is catching up (spec 3.19, 0.94)
+            if (mutableState.value.showing && !mutableState.value.catchingUp) mutableState.value = mutableState.value.copy(catchingUp = true)
             if (queuedAny && !gotOutput) {
                 pendingSeekUs = targetUs
                 return
             }
             if (heldIndex >= 0) codec.releaseOutputBuffer(heldIndex, false)
             heldIndex = -1
+            // before the flush: it takes every output buffer back
+            dropWinding()
+            soughtUs = targetUs
             extractor.seekTo(targetUs.coerceAtLeast(0), MediaExtractor.SEEK_TO_PREVIOUS_SYNC)
             if (queuedAny) codec.flush()
             inputDone = false
@@ -304,6 +351,7 @@ class VideoTrackRenderer(
 
         fun close() {
             runCatching { if (heldIndex >= 0) codec.releaseOutputBuffer(heldIndex, false) }
+            runCatching { if (windingIndex >= 0) codec.releaseOutputBuffer(windingIndex, false) }
             runCatching { codec.stop() }.onFailure { Log.w(TAG, "codec did not stop cleanly", it) }
             codec.release()
             extractor.release()

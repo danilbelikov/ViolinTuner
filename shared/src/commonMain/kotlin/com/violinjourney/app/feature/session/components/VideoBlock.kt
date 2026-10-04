@@ -61,6 +61,7 @@ private val CornerButton = 48.dp
 private val CornerButtonIcon = 24.dp
 private val CornerButtonInset = 8.dp
 private val PauseGlyphCircle = 64.dp
+private val CatchingUpCircle = 40.dp
 
 /** The picture's corner (5.29 R5): that of a card. */
 internal val VideoCorner = 18.dp
@@ -128,6 +129,8 @@ fun VideoFrame(
             Box(Modifier.fillMaxSize().background(colors.surfaceContainer), contentAlignment = Alignment.Center) {
                 if (slow) CircularProgressIndicator(modifier = Modifier.size(24.dp), color = colors.onSurfaceVariant, strokeWidth = 2.dp)
             }
+        } else if (video.catchingUp) {
+            CatchingUp()
         }
         TapGlyph(taps, playing)
         if (waiting) Box(Modifier.fillMaxSize().background(videoColors.scrim))
@@ -145,6 +148,25 @@ fun VideoFrame(
                     .semantics { contentDescription = label },
                 contentAlignment = Alignment.Center,
             ) { AppIcon(AppIcons.Fullscreen, contentDescription = null, tint = colors.onSurface, size = CornerButtonIcon) }
+        }
+    }
+}
+
+/**
+ * The picture on its way to the sound's place — after a seek, «Смотреть это место», the return to the start — for longer than a moment
+ * (spec 3.19, 0.94): the old frame stands, and a spinner on it says the picture is coming, not stuck. On the scrim of the video, as the
+ * glyph of a tap: a frame may be white.
+ */
+@Composable
+private fun CatchingUp() {
+    var slow by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(SPINNER_AFTER_MS)
+        slow = true
+    }
+    if (slow) {
+        Box(Modifier.size(CatchingUpCircle).background(ViolinTheme.videoColors.scrim, CircleShape), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White, strokeWidth = 2.dp)
         }
     }
 }
