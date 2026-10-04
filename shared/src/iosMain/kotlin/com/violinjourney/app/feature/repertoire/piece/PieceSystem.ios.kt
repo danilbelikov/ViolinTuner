@@ -4,10 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import com.violinjourney.app.core.recording.video.VideoPick
 import com.violinjourney.app.core.ui.components.CameraDelegate
 import com.violinjourney.app.core.ui.components.DocumentDelegate
 import com.violinjourney.app.core.ui.components.MediaPickerDelegate
 import com.violinjourney.app.core.ui.components.SystemScreens
+import com.violinjourney.app.core.ui.components.VideoPickerDelegate
 
 /**
  * The system screens of a piece on iOS. The camera asks for its permission by itself; where there is no camera (the
@@ -18,7 +20,7 @@ actual fun rememberPieceSystem(
     onPhotosPicked: (uris: List<String>) -> Unit,
     onCameraFinished: (saved: Boolean) -> Unit,
     onVideoShot: (saved: Boolean) -> Unit,
-    onVideoPicked: (uri: String?) -> Unit,
+    onVideoPicked: (pick: VideoPick?) -> Unit,
     onBackingPicked: (uri: String?) -> Unit,
 ): PieceSystem {
     val photosPicked by rememberUpdatedState(onPhotosPicked)
@@ -31,7 +33,7 @@ actual fun rememberPieceSystem(
         var photoPath: String? = null
         var videoPath: String? = null
         val photos = MediaPickerDelegate(IMAGE_TYPE) { photosPicked(it) }
-        val video = MediaPickerDelegate(MOVIE_TYPE) { videoPicked(it.firstOrNull()) }
+        val video = VideoPickerDelegate { videoPicked(it) }
         val photoCamera = CameraDelegate(video = false, outPath = { photoPath }) { cameraFinished(it) }
         val videoCamera = CameraDelegate(video = true, outPath = { videoPath }) { videoShot(it) }
         val document = DocumentDelegate { backingPicked(it) }
@@ -44,8 +46,8 @@ actual fun rememberPieceSystem(
                 videoPath = path
                 if (SystemScreens.cameraAvailable()) SystemScreens.present(SystemScreens.camera(video = true, videoCamera, quality)) else videoShot(false)
             },
-            pickPhotos = { SystemScreens.present(SystemScreens.mediaPicker(videos = false, limit = ANY_NUMBER, delegate = photos)) },
-            pickVideo = { SystemScreens.present(SystemScreens.mediaPicker(videos = true, limit = 1, delegate = video)) },
+            pickPhotos = { SystemScreens.present(SystemScreens.photoPicker(limit = ANY_NUMBER, delegate = photos)) },
+            pickVideo = { SystemScreens.present(SystemScreens.videoPicker(video)) },
             pickBacking = { SystemScreens.present(SystemScreens.audioPicker(document)) },
             shareVideo = SystemScreens::share,
         )
@@ -53,5 +55,4 @@ actual fun rememberPieceSystem(
 }
 
 private const val IMAGE_TYPE = "public.image"
-private const val MOVIE_TYPE = "public.movie"
 private const val ANY_NUMBER = 0L

@@ -42,6 +42,7 @@ import com.violinjourney.app.core.recording.testTakePipeline
 import com.violinjourney.app.core.recording.video.AnalysisSpeed
 import com.violinjourney.app.core.recording.video.FakeFileTakeAnalyzer
 import com.violinjourney.app.core.recording.video.FakeVideoFiles
+import com.violinjourney.app.core.recording.video.VideoPick
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
 import com.violinjourney.app.core.settings.FakeSettingsRepository
 import com.violinjourney.app.core.settings.SettingsConfigSource
@@ -342,7 +343,7 @@ class EventViewModelTest {
         viewModel.onIntent(EventIntent.ProgramAddClicked)
         viewModel.onIntent(EventIntent.ProgramRemoved(pieceId))
         viewModel.onIntent(EventIntent.AddRecordClicked)
-        viewModel.onIntent(EventIntent.VideoPicked("content://video/1"))
+        viewModel.onIntent(EventIntent.VideoPicked(VideoPick.Ready("content://video/1")))
         runCurrent()
         assertTrue(effects.isEmpty())
         assertNull(viewModel.loaded.sheet)
@@ -359,7 +360,7 @@ class EventViewModelTest {
         viewModel.add(RecordWay.GALLERY)
         runCurrent()
         assertEquals(listOf<EventEffect>(EventEffect.PickVideo), effects)
-        viewModel.onIntent(EventIntent.VideoPicked("content://video/1"))
+        viewModel.onIntent(EventIntent.VideoPicked(VideoPick.Ready("content://video/1")))
         advance(1_000)
         assertEquals(ImportWords.VIDEO_RECORD, viewModel.mediaImport.value.words)
         assertTrue(viewModel.mediaImport.value.import is MediaImport.Working)
@@ -396,7 +397,7 @@ class EventViewModelTest {
         viewModel.onIntent(EventIntent.AddRecordClicked)
         runCurrent()
         assertNull(viewModel.loaded.sheet)
-        viewModel.onIntent(EventIntent.VideoPicked("content://video/1"))
+        viewModel.onIntent(EventIntent.VideoPicked(VideoPick.Ready("content://video/1")))
         runCurrent()
         assertEquals("a pick not wanted now is let go", listOf("content://video/1"), videoFiles.released)
         advance(6_000)

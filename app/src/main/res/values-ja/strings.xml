@@ -376,6 +376,7 @@
     <string name="video_listening">録音を聴いています…</string>
     <string name="video_percent">%1$d %%</string>
     <string name="video_remaining">残り約 %1$d 秒</string>
+    <string name="video_copying_slow">大きな動画は準備に時間がかかります。画面を離れても追加は続きます</string>
     <string name="video_cancel">キャンセル</string>
     <string name="video_stop_title">分析を中止しますか？</string>
     <string name="video_stop_text">この動画は撮ったばかりで、ほかのどこにも保存されていません。なくさないようにどこかへ送信するか、削除できます。</string>
@@ -539,6 +540,7 @@
     <string name="event_mic_reason">音を録音するにはマイクへのアクセスが必要です。</string>
     <string name="event_recording_description">録音中、%1$s</string>
     <string name="file_copying">ファイルを追加中…</string>
+    <string name="file_copying_slow">大きなファイルはコピーに時間がかかります。画面を離れても追加は続きます</string>
     <string name="file_error_too_long">60分を超えるファイルは分析できません</string>
     <string name="file_error_cannot_open">ファイルを開けませんでした</string>
     <string name="file_error_no_sound">ファイルに音がありません</string>

@@ -6,6 +6,7 @@ import com.violinjourney.app.core.domain.events.EventName
 import com.violinjourney.app.core.domain.events.Repeat
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.core.domain.VideoQuality
+import com.violinjourney.app.core.recording.video.VideoPick
 import com.violinjourney.app.feature.history.HistoryCard
 import com.violinjourney.app.feature.live.block.PickerSection
 import com.violinjourney.app.feature.repertoire.piece.ImportAction
@@ -163,8 +164,8 @@ sealed interface EventIntent {
     /** The system camera came back; [saved] is false when the person backed out. */
     data class VideoShotFinished(val saved: Boolean) : EventIntent
 
-    /** The system picker of videos came back; null — nothing was picked. */
-    data class VideoPicked(val uri: String?) : EventIntent
+    /** The system picker of videos came back — its file there already, or still to be made by the library; null — nothing was picked. */
+    data class VideoPicked(val pick: VideoPick?) : EventIntent
 
     /** The system picker of files came back with a sound; null — nothing was picked. */
     data class SoundPicked(val uri: String?) : EventIntent

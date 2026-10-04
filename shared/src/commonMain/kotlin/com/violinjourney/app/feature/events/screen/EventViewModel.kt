@@ -232,7 +232,7 @@ open class EventViewModel(
                 if (intent.saved) importer.shot(owner, file) else file.deleteFile()
             }
             // a pick that is not wanted now is let go: on iOS it is the app's own copy, maybe gigabytes
-            is EventIntent.VideoPicked -> intent.uri?.let { uri -> if (mayAdd()) importer.picked(owner, uri) else importer.release(uri) }
+            is EventIntent.VideoPicked -> intent.pick?.let { pick -> if (mayAdd()) importer.picked(owner, pick) else importer.release(pick) }
             is EventIntent.SoundPicked -> intent.uri?.let { uri -> if (mayAdd()) audioImporter.picked(owner, uri) else audioImporter.release(uri) }
             is EventIntent.Import -> onImport(intent.action)
             EventIntent.SheetHidden -> local.update { it.copy(sheet = null) }

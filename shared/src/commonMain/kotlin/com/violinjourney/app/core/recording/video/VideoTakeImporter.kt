@@ -120,20 +120,27 @@ class VideoTakeImporter(
         }
     }
 
-    /** The system picker returned [uri], for a recording of [owner]. */
-    fun picked(owner: TakeOwner, uri: String) {
+    /** The system picker returned the file at [uri], for a recording of [owner]. */
+    fun picked(owner: TakeOwner, uri: String) = picked(owner, VideoPick.Ready(uri))
+
+    /**
+     * The system picker returned [pick], for a recording of [owner]. The sheet is up at once and stays (spec 3.19, 0.94): the library
+     * of an iPhone may still be making the file — from iCloud, a trim rendered — then the room is measured and the file copied, all of
+     * it «Добавляем видео…». All of it off the caller's thread, the main one: a library and a provider answer when they will, and iOS
+     * counts in the room what it would free, which takes a while on a full phone.
+     */
+    fun picked(owner: TakeOwner, pick: VideoPick) {
         if (mutableState.value != MediaImport.Idle) {
-            release(uri)
+            release(pick)
             return
         }
-        // Nothing is shown while the room is measured, and it is measured off the caller's thread — the main one: a
-        // provider answers when it will, and iOS counts in the room what it would free, which takes a while on a full phone.
-        val measuring = MediaImport.Working(owner, shot = false, copying = true, visible = false)
-        mutableState.value = measuring
+        val adding = MediaImport.Working(owner, shot = false, copying = true, visible = true)
+        mutableState.value = adding
         job = scope.launch {
+            val uri = fileOf(owner, pick) ?: return@launch
             var file: PlatformFile? = null
             try {
-                file = copyIn(owner, uri, measuring)
+                file = copyIn(owner, uri, adding)
             } finally {
                 // Refused for room, failed, or stopped while measured or copied: what the platform holds of the pick goes
                 // (on iOS a copy in tmp — maybe the very gigabytes the room was short of).
@@ -143,20 +150,41 @@ class VideoTakeImporter(
         }
     }
 
-    /** A pick this screen will not import: one video at a time, none while a take is recorded (spec 3.19). */
-    fun release(uri: String) = files.release(uri)
+    /**
+     * A pick this screen will not import — one video at a time, none while a take is recorded (spec 3.19): what the platform holds of
+     * it goes; a file the library was still to make is never made.
+     */
+    fun release(pick: VideoPick) {
+        if (pick is VideoPick.Ready) files.release(pick.uri)
+    }
+
+    /** The URI of the picked video's file — made by the library now, if it has to be; null when it was not, the state saying so. */
+    private suspend fun fileOf(owner: TakeOwner, pick: VideoPick): String? = when (pick) {
+        is VideoPick.Ready -> pick.uri
+        is VideoPick.Coming -> try {
+            pick.make()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // stopped meanwhile: that answer stands
+            currentCoroutineContext().ensureActive()
+            analytics.error(ErrorGroup.MEDIA, "the library did not hand a picked video over", e)
+            mutableState.value = MediaImport.Failed(owner, ImportFailure.CANNOT_OPEN)
+            null
+        }
+    }
 
     /** The picked video copied in; null when it does not come in, the state saying why. */
-    private suspend fun copyIn(owner: TakeOwner, uri: String, measuring: MediaImport.Working): PlatformFile? {
+    private suspend fun copyIn(owner: TakeOwner, uri: String, adding: MediaImport.Working): PlatformFile? {
         val missing = missingBytes(uri)
         // stopped meanwhile: that answer stands
         currentCoroutineContext().ensureActive()
         if (missing > 0) {
-            mutableState.compareAndSet(measuring, MediaImport.Failed(owner, ImportFailure.NO_SPACE, missingMb = ImportPacing.missingMb(missing)))
+            mutableState.compareAndSet(adding, MediaImport.Failed(owner, ImportFailure.NO_SPACE, missingMb = ImportPacing.missingMb(missing)))
             return null
         }
-        // Copying is shown at once and without a number: it is seconds as a rule, and no estimate of it is worth the name.
-        if (!mutableState.compareAndSet(measuring, measuring.copy(visible = true))) return null
+        // The copy is shown as the wait before it was, without a number: it is seconds as a rule, and no estimate of it is worth the name.
+        if (mutableState.value != adding) return null
         val file = try {
             files.import(uri)
         } catch (e: CancellationException) {

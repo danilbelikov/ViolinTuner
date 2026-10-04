@@ -8,6 +8,7 @@ import platform.Foundation.NSFileManager
 import platform.Foundation.NSURL
 import platform.Foundation.NSUUID
 import platform.PhotosUI.PHPickerConfiguration
+import platform.PhotosUI.PHPickerConfigurationAssetRepresentationModeCurrent
 import platform.PhotosUI.PHPickerFilter
 import platform.PhotosUI.PHPickerResult
 import platform.PhotosUI.PHPickerViewController
@@ -95,11 +96,25 @@ internal object SystemScreens {
      */
     fun nothingUp(): Boolean = waiting == 0 && topController()?.presentingViewController == null
 
-    /** The photo library: pictures or videos, up to [limit] (0 — any number); each lent file is copied into `tmp/picked/` ([PickedCopies]). */
-    fun mediaPicker(videos: Boolean, limit: Long, delegate: MediaPickerDelegate): PHPickerViewController {
+    /** The photo library: pictures, up to [limit] (0 — any number); each lent file is copied into `tmp/picked/` ([PickedCopies]). */
+    fun photoPicker(limit: Long, delegate: MediaPickerDelegate): PHPickerViewController {
         val configuration = PHPickerConfiguration().apply {
-            filter = if (videos) PHPickerFilter.videosFilter else PHPickerFilter.imagesFilter
+            filter = PHPickerFilter.imagesFilter
             selectionLimit = limit
+        }
+        return PHPickerViewController(configuration).apply { this.delegate = delegate }
+    }
+
+    /**
+     * The photo library: one video, handed over the moment it is picked ([VideoPickerDelegate]), its file made later. The video is asked
+     * for as the library keeps it (`current`): left to itself (`automatic`) the library may re-encode it first, and that is minutes of
+     * «Добавляем видео…» (spec 5.13, 0.94); a trim, a slow motion or a cinematic video it renders all the same.
+     */
+    fun videoPicker(delegate: VideoPickerDelegate): PHPickerViewController {
+        val configuration = PHPickerConfiguration().apply {
+            filter = PHPickerFilter.videosFilter
+            selectionLimit = 1
+            preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent
         }
         return PHPickerViewController(configuration).apply { this.delegate = delegate }
     }
@@ -236,7 +251,7 @@ internal fun copyKeepingName(lent: NSURL, folder: String = PickedCopies.root()):
 
 /** A copy of [lent] in a pick of its own in `tmp/picked/`, under a new name with the lent file's extension: its `file:` URI. */
 @OptIn(ExperimentalForeignApi::class)
-private fun copyToTemporary(lent: NSURL): String? {
+internal fun copyToTemporary(lent: NSURL): String? {
     val extension = lent.pathExtension?.takeIf { it.isNotEmpty() }?.let { ".$it" }.orEmpty()
     return PickedCopies.copy(lent, "${NSUUID().UUIDString}$extension")?.let { NSURL.fileURLWithPath(it).absoluteString }
 }

@@ -14,6 +14,11 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +44,7 @@ import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.event_video_error_no_notes
 import com.violinjourney.app.shared.resources.file_copying
+import com.violinjourney.app.shared.resources.file_copying_slow
 import com.violinjourney.app.shared.resources.file_error_cannot_open
 import com.violinjourney.app.shared.resources.file_error_no_notes
 import com.violinjourney.app.shared.resources.file_error_no_sound
@@ -46,6 +52,7 @@ import com.violinjourney.app.shared.resources.file_error_too_long
 import com.violinjourney.app.shared.resources.video_cancel
 import com.violinjourney.app.shared.resources.video_continue
 import com.violinjourney.app.shared.resources.video_copying
+import com.violinjourney.app.shared.resources.video_copying_slow
 import com.violinjourney.app.shared.resources.video_delete
 import com.violinjourney.app.shared.resources.video_error_cannot_open
 import com.violinjourney.app.shared.resources.video_error_no_notes
@@ -62,6 +69,7 @@ import com.violinjourney.app.shared.resources.video_stop_text
 import com.violinjourney.app.shared.resources.video_stop_title
 import com.violinjourney.app.shared.resources.video_stopped_title
 import com.violinjourney.app.shared.resources.video_thumb
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -74,6 +82,9 @@ private val StripBar = 6.dp
 private val StripCursor = 2.dp
 private val FaceGap = 14.dp
 private const val TABULAR_FIGURES = "tnum"
+
+/** «Добавляем…» this long says why it may go on (spec 3.19, 0.94). */
+private const val SLOW_COPY_AFTER_MS = 3_000L
 
 /**
  * Whose words the sheet speaks (plan D19): a video that is to be a take of a piece («дубль не добавлен»), a video of an event that is
@@ -177,10 +188,24 @@ private fun Working(import: MediaImport.Working, words: ImportWords, onAction: (
     } else {
         EmergingStrip(import.bars, import.percent / 100f)
     }
+    // A copy that goes on — the library of an iPhone making the file, a big one copied: said after a moment, so the wait is not taken
+    // for a failure and the screen not left for good (spec 3.19, 0.94). The same line holds the seconds left of the analysis.
+    var slow by remember { mutableStateOf(false) }
+    LaunchedEffect(import.copying) {
+        slow = false
+        if (import.copying) {
+            delay(SLOW_COPY_AFTER_MS)
+            slow = true
+        }
+    }
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
             // the line keeps its height while the speed is still being measured
-            text = import.remainingSec?.let { stringResource(Res.string.video_remaining, it) }.orEmpty(),
+            text = when {
+                import.copying && slow -> stringResource(if (words == ImportWords.SOUND_FILE) Res.string.file_copying_slow else Res.string.video_copying_slow)
+                import.copying -> ""
+                else -> import.remainingSec?.let { stringResource(Res.string.video_remaining, it) }.orEmpty()
+            },
             modifier = Modifier.weight(1f),
             color = colors.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),

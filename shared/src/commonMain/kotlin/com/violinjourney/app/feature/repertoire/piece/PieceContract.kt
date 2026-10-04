@@ -3,6 +3,7 @@ package com.violinjourney.app.feature.repertoire.piece
 import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.scale.Scale
 import com.violinjourney.app.core.domain.VideoQuality
+import com.violinjourney.app.core.recording.video.VideoPick
 import com.violinjourney.app.feature.history.HistoryCard
 import com.violinjourney.app.feature.history.Selection
 import com.violinjourney.app.feature.history.SelectionIntent
@@ -156,8 +157,8 @@ sealed interface PieceIntent {
     /** The system camera came back; [saved] is false when the player backed out. */
     data class VideoShotFinished(val saved: Boolean) : PieceIntent
 
-    /** The system picker returned this video; null when nothing was picked. */
-    data class VideoPicked(val uri: String?) : PieceIntent
+    /** The system picker returned this video — its file there already, or still to be made by the library; null when nothing was picked. */
+    data class VideoPicked(val pick: VideoPick?) : PieceIntent
 
     data object VideoImportCancelClicked : PieceIntent
 

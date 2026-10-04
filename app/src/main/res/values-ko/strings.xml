@@ -376,6 +376,7 @@
     <string name="video_listening">녹음을 듣는 중…</string>
     <string name="video_percent">%1$d%%</string>
     <string name="video_remaining">약 %1$d초 남음</string>
+    <string name="video_copying_slow">큰 영상은 준비하는 데 시간이 더 걸려요. 화면을 나가도 추가는 계속돼요</string>
     <string name="video_cancel">취소</string>
     <string name="video_stop_title">분석을 중지할까요?</string>
     <string name="video_stop_text">방금 촬영한 영상이라 다른 곳에는 저장되어 있지 않습니다. 잃지 않도록 어딘가로 보내거나, 삭제할 수 있어요.</string>
@@ -539,6 +540,7 @@
     <string name="event_mic_reason">소리를 녹음하려면 마이크 접근 권한이 필요해요.</string>
     <string name="event_recording_description">녹음 중, %1$s</string>
     <string name="file_copying">파일을 추가하는 중…</string>
+    <string name="file_copying_slow">큰 파일은 복사하는 데 시간이 더 걸려요. 화면을 나가도 추가는 계속돼요</string>
     <string name="file_error_too_long">파일이 60분보다 길어 분석할 수 없어요</string>
     <string name="file_error_cannot_open">파일을 열지 못했어요</string>
     <string name="file_error_no_sound">파일에 소리가 없어요</string>

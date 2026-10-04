@@ -34,6 +34,7 @@ import com.violinjourney.app.core.recording.testTakePipeline
 import com.violinjourney.app.core.recording.video.AnalysisSpeed
 import com.violinjourney.app.core.recording.video.FakeFileTakeAnalyzer
 import com.violinjourney.app.core.recording.video.FakeVideoFiles
+import com.violinjourney.app.core.recording.video.VideoPick
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
 import com.violinjourney.app.core.settings.FakeSettingsRepository
 import com.violinjourney.app.core.settings.SettingsConfigSource
@@ -895,7 +896,7 @@ class PieceViewModelTest {
         viewModel.onIntent(PieceIntent.RecordClicked)
         advance(1_000)
         viewModel.onIntent(PieceIntent.VideoShootClicked)
-        viewModel.onIntent(PieceIntent.VideoPicked("content://video/1"))
+        viewModel.onIntent(PieceIntent.VideoPicked(VideoPick.Ready("content://video/1")))
         assertEquals("a pick not wanted now is let go", listOf("content://video/1"), videoFiles.released)
         viewModel.onIntent(PieceIntent.RecordClicked)
         advance(3_000)
@@ -907,7 +908,7 @@ class PieceViewModelTest {
         assertTrue(effects.none { it is PieceEffect.LaunchVideoCamera })
         assertEquals(0, videoAnalyzer.calls)
 
-        viewModel.onIntent(PieceIntent.VideoPicked("content://video/2"))
+        viewModel.onIntent(PieceIntent.VideoPicked(VideoPick.Ready("content://video/2")))
         viewModel.onIntent(PieceIntent.VideoShootClicked)
         runCurrent()
         assertTrue("one at a time", effects.none { it is PieceEffect.LaunchVideoCamera })
@@ -923,7 +924,7 @@ class PieceViewModelTest {
         backgroundScope.launch { viewModel.videoImport.collect {} }
         backgroundScope.launch { otherScreen.videoImport.collect {} }
 
-        otherScreen.onIntent(PieceIntent.VideoPicked("content://video/1"))
+        otherScreen.onIntent(PieceIntent.VideoPicked(VideoPick.Ready("content://video/1")))
         advance(1_000)
         assertTrue(otherScreen.videoImport.value is MediaImport.Working)
         assertEquals(MediaImport.Idle, viewModel.videoImport.value)

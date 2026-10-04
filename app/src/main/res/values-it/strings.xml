@@ -376,6 +376,7 @@
     <string name="video_listening">Ascolto della registrazione…</string>
     <string name="video_percent">%1$d %%</string>
     <string name="video_remaining">mancano circa %1$d s</string>
+    <string name="video_copying_slow">I video grandi richiedono più tempo. Si può lasciare la schermata: l\'aggiunta continua</string>
     <string name="video_cancel">Annulla</string>
     <string name="video_stop_title">Interrompere l\'analisi?</string>
     <string name="video_stop_text">Il video è appena stato girato e non è conservato altrove. Si può inviarlo da qualche parte per non perderlo, oppure eliminarlo.</string>
@@ -539,6 +540,7 @@
     <string name="event_mic_reason">Per registrare l\'audio serve l\'accesso al microfono.</string>
     <string name="event_recording_description">Registrazione in corso, %1$s</string>
     <string name="file_copying">Aggiunta del file…</string>
+    <string name="file_copying_slow">I file grandi richiedono più tempo per la copia. Si può lasciare la schermata: l\'aggiunta continua</string>
     <string name="file_error_too_long">Il file supera i 60 minuti\u00A0— non si può analizzare</string>
     <string name="file_error_cannot_open">Impossibile aprire il file</string>
     <string name="file_error_no_sound">Il file non ha audio</string>

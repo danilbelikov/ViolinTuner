@@ -23,7 +23,9 @@ import com.violinjourney.app.core.time.WallClock
 import java.io.File
 import java.io.IOException
 import kotlin.time.Instant
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -194,6 +196,77 @@ class VideoTakeImporterTest {
     }
 
     @Test
+    fun `a video the library still makes has its sheet at once, and becomes a take once the file is there`() = runTest {
+        val file = CompletableDeferred<String>()
+        var asked = 0
+        val (importer, saved) = importer()
+        importer.picked(piece, VideoPick.Coming {
+            asked++
+            file.await()
+        })
+        // up the moment the video is picked, not when the library of an iPhone hands its file over (spec 3.19, 0.94)
+        assertTrue(importer.working.copying && importer.working.visible)
+        advance(60_000)
+        assertEquals("the library is asked once, by the importer", 1, asked)
+        assertTrue("a minute of iCloud is «Добавляем видео…» still", importer.working.copying && importer.working.visible)
+        file.complete("file:///tmp/picked/a/clip.mov")
+        advance(FakeVideoFiles.COPY_MS)
+        assertFalse(importer.working.copying)
+        advance(5_000)
+        assertEquals(listOf(7L), sessions.sessions.value.map { it.pieceId })
+        assertEquals(1, saved.size)
+    }
+
+    @Test
+    fun `«Отмена» while the library makes the file stops the library, and nothing is kept`() = runTest {
+        var stopped = false
+        val (importer, _) = importer()
+        importer.picked(piece, VideoPick.Coming {
+            try {
+                awaitCancellation()
+            } finally {
+                stopped = true
+            }
+        })
+        advance(10_000)
+        importer.cancelClicked()
+        runCurrent()
+        assertEquals(MediaImport.Idle, importer.state.value)
+        assertTrue("the wait for the library is cancelled with the import", stopped)
+        assertTrue(files.released.isEmpty() && files.discarded.isEmpty())
+        assertTrue("a stop is no failure to tell about", analytics.errors.isEmpty())
+    }
+
+    @Test
+    fun `a video the library does not hand over is said so`() = runTest {
+        val (importer, _) = importer()
+        importer.picked(piece, VideoPick.Coming { throw IOException("no network for iCloud") })
+        runCurrent()
+        val failed = importer.state.value as MediaImport.Failed
+        assertEquals(ImportFailure.CANNOT_OPEN, failed.reason)
+        assertNull("its original is in the library", failed.rescuePath)
+        assertEquals(listOf(ErrorGroup.MEDIA), analytics.errors.map { it.first })
+        assertEquals(0, analyzer.calls)
+        importer.dismiss()
+        assertEquals(MediaImport.Idle, importer.state.value)
+    }
+
+    @Test
+    fun `a video picked while another is on its way is never made`() = runTest {
+        var asked = false
+        val (importer, _) = importer()
+        importer.shot(piece, shot)
+        importer.picked(TakeOwner.Piece(8), VideoPick.Coming {
+            asked = true
+            "file:///tmp/picked/b/clip.mov"
+        })
+        advance(6_000)
+        assertFalse("the library is not asked for a file nobody takes", asked)
+        assertTrue(files.released.isEmpty())
+        assertEquals(listOf(7L), sessions.sessions.value.map { it.pieceId })
+    }
+
+    @Test
     fun `a video without sound, too long, or unreadable is said so - and a picked one is not kept`() = runTest {
         val cases = listOf<Pair<() -> Unit, ImportFailure>>(
             { files.info = files.info!!.copy(hasSound = false) } to ImportFailure.NO_SOUND,
@@ -224,9 +297,9 @@ class VideoTakeImporterTest {
         files.free = 100L * 1024 * 1024
         val (importer, _) = importer()
         importer.picked(piece, "content://video/1")
-        // the room is measured on the importer's thread, not on the main one that called — and nothing is shown meanwhile
+        // the room is measured on the importer's thread, not on the main one that called — and the sheet is up meanwhile (0.94)
         assertEquals(0, files.freeAsked)
-        assertFalse(importer.working.visible)
+        assertTrue(importer.working.visible)
         runCurrent()
         val failed = importer.state.value as MediaImport.Failed
         assertEquals(ImportFailure.NO_SPACE, failed.reason)

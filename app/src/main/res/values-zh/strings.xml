@@ -376,6 +376,7 @@
     <string name="video_listening">正在聆听录音…</string>
     <string name="video_percent">%1$d\u00A0%%</string>
     <string name="video_remaining">还剩约 %1$d 秒</string>
+    <string name="video_copying_slow">大视频需要更长时间准备。可以离开此页面，添加不会中断</string>
     <string name="video_cancel">取消</string>
     <string name="video_stop_title">停止分析？</string>
     <string name="video_stop_text">视频刚刚拍摄，别处没有保存。可以把它发送到别处以免丢失，或者删除。</string>
@@ -539,6 +540,7 @@
     <string name="event_mic_reason">录音需要麦克风权限。</string>
     <string name="event_recording_description">正在录音，%1$s</string>
     <string name="file_copying">正在添加文件…</string>
+    <string name="file_copying_slow">大文件需要更长时间复制。可以离开此页面，添加不会中断</string>
     <string name="file_error_too_long">文件超过 60 分钟，无法分析</string>
     <string name="file_error_cannot_open">无法打开文件</string>
     <string name="file_error_no_sound">文件中没有声音</string>

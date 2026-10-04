@@ -22,6 +22,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.violinjourney.app.core.audio.share.ShareNames
+import com.violinjourney.app.core.recording.video.VideoPick
 import com.violinjourney.app.core.ui.components.LocalMessages
 import com.violinjourney.app.core.ui.permission.MicRequestVerdict
 import com.violinjourney.app.core.ui.permission.PermissionMark
@@ -40,7 +41,7 @@ actual fun rememberPieceSystem(
     onPhotosPicked: (uris: List<String>) -> Unit,
     onCameraFinished: (saved: Boolean) -> Unit,
     onVideoShot: (saved: Boolean) -> Unit,
-    onVideoPicked: (uri: String?) -> Unit,
+    onVideoPicked: (pick: VideoPick?) -> Unit,
     onBackingPicked: (uri: String?) -> Unit,
 ): PieceSystem {
     val context = LocalContext.current
@@ -84,7 +85,8 @@ actual fun rememberPieceSystem(
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved -> cameraFinished(saved) }
     // A video take (spec 3.19): the system camera (the permission above) and the system picker.
     val videoCamera = rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) { saved -> videoShot(saved) }
-    val videoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> videoPicked(uri?.toString()) }
+    // the picker of Android hands over the file itself: it is there the moment it is picked
+    val videoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> videoPicked(uri?.let { VideoPick.Ready(it.toString()) }) }
     // A backing (spec 3.32): any sound file the system can hand over; no permission, the pick is the permission.
     val backingPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> backingPicked(uri?.toString()) }
 
